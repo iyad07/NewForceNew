@@ -224,82 +224,180 @@ class NewsScraperService {
   static Future<List<Map<String, dynamic>>> scrapePanAfricanNews() async {
     try {
       print('Starting to scrape Pan African News...');
-      const String url = 'https://panafricanvisions.com/news/';
-      final response = await http.get(Uri.parse(url), headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }).timeout(Duration(seconds: 30));
+      // Try multiple URLs for Pan African News
+      final urls = [
+        'https://panafricanvisions.com/',
+        'https://panafricanvisions.com/news/',
+        'https://panafricanvisions.com/category/news/'
+      ];
+      
+      List<Map<String, dynamic>> articles = [];
+      
+      // Try each URL until we get articles
+      for (final url in urls) {
+        print('Trying URL: $url');
+        final response = await http.get(Uri.parse(url), headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }).timeout(Duration(seconds: 30));
 
-      print('Pan African News response status code: ${response.statusCode}');
+        print('Pan African News response status code: ${response.statusCode} for URL: $url');
 
-      if (response.statusCode != 200) {
-        print('Failed to load Pan African News: ${response.statusCode}');
-        return _getFallbackPanAfricanNews();
-      }
+        if (response.statusCode != 200) {
+          print('Failed to load Pan African News from $url: ${response.statusCode}');
+          continue; // Try next URL
+        }
 
-      final document = html_parser.parse(response.body);
-      final articles = <Map<String, dynamic>>[];
+        final document = html_parser.parse(response.body);
+        
+        // Try different selectors that might contain news articles
+        final selectors = [
+          'article', 
+          '.post', 
+          '.entry', 
+          '.article', 
+          '.news-item',
+          '.blog-post',
+          '.item',
+          'article.post',
+          '.news-article'
+        ];
 
-      // Try different selectors that might contain news articles
-      final selectors = ['article.post', '.news-article', '.post', 'article'];
+        var articleElements = <dynamic>[];
+        var usedSelector = '';
 
-      var articleElements = <dynamic>[];
-
-      for (final selector in selectors) {
-        articleElements = document.querySelectorAll(selector);
-        print(
-            'Found ${articleElements.length} elements with selector: $selector');
-        if (articleElements.isNotEmpty) break;
-      }
-
-      if (articleElements.isEmpty) {
-        print('No article elements found on Pan African News');
-        return _getFallbackPanAfricanNews();
-      }
-
-      for (final element in articleElements) {
-        try {
-          final titleElement = element.querySelector('.entry-title a');
-          final imageElement = element.querySelector('.post-thumbnail img');
-          final descriptionElement = element.querySelector('.entry-content p');
-
-          if (titleElement != null) {
-            final title = titleElement.text.trim();
-            final articleUrl = titleElement.attributes['href'] ?? '';
-            final imageUrl = imageElement?.attributes['src'] ?? '';
-            final description = descriptionElement?.text.trim() ?? '';
-
-            // Get full article content
-            final articleContent = await _getArticleContent(articleUrl);
-            final now = DateTime.now().toIso8601String();
-            
-            articles.add({
-              'title': title,
-              'description': description,
-              'publishers': 'Pan African Visions',
-              'articleUrl': articleUrl,
-              'articeImage': imageUrl,
-              'articleBody': articleContent,
-              'urlLink': articleUrl,
-              'created_at': now,
-            });
-
-            // Limit to 10 articles to avoid overloading
-            if (articles.length >= 10) break;
+        for (final selector in selectors) {
+          articleElements = document.querySelectorAll(selector);
+          print('Found ${articleElements.length} elements with selector: $selector on $url');
+          if (articleElements.isNotEmpty) {
+            usedSelector = selector;
+            break;
           }
-        } catch (e) {
-          print('Error parsing article: $e');
-          continue;
+        }
+
+        if (articleElements.isEmpty) {
+          print('No article elements found on Pan African News at $url');
+          continue; // Try next URL
+        }
+
+        print('Using selector: $usedSelector for ${articleElements.length} articles');
+
+        // Print the HTML structure of the first article element for debugging
+        if (articleElements.isNotEmpty) {
+          print('First article element HTML structure from $url:');
+          final htmlLength = articleElements.first.outerHtml.length;
+          final maxLength = htmlLength < 500 ? htmlLength : 500;
+          print(articleElements.first.outerHtml.substring(0, maxLength));
+        }
+
+        // Define multiple possible selectors for each element
+        final titleSelectors = ['.entry-title a', 'h2 a', 'h3 a', '.title a', 'a.title', 'header h2 a', 'a'];
+        final imageSelectors = ['.post-thumbnail img', 'img', '.featured-image img', '.entry-image img'];
+        final descriptionSelectors = ['.entry-content p', '.excerpt', '.entry-excerpt', '.summary', 'p', '.content p'];
+        
+        for (final element in articleElements) {
+          try {
+            // Try to find title using multiple selectors
+            var titleElement;
+            for (final selector in titleSelectors) {
+              titleElement = element.querySelector(selector);
+              if (titleElement != null) {
+                print('Found title with selector: $selector');
+                break;
+              }
+            }
+            
+            if (titleElement != null) {
+              final title = titleElement.text.trim();
+              print('Found title: $title');
+              
+              var articleUrl = '';
+              // Handle relative URLs
+              if (titleElement.attributes.containsKey('href')) {
+                final href = titleElement.attributes['href'] ?? '';
+                articleUrl = href.startsWith('http') ? href : 'https://panafricanvisions.com$href';
+              }
+              print('Article URL: $articleUrl');
+              
+              // Try to find image using multiple selectors
+              var imageElement;
+              var imageUrl = '';
+              for (final selector in imageSelectors) {
+                imageElement = element.querySelector(selector);
+                if (imageElement != null) {
+                  imageUrl = imageElement.attributes['src'] ?? '';
+                  if (imageUrl.isNotEmpty) {
+                    print('Found image with selector: $selector');
+                    break;
+                  }
+                }
+              }
+              print('Image URL: $imageUrl');
+              
+              // Try to find description using multiple selectors
+              var descriptionElement;
+              var description = '';
+              for (final selector in descriptionSelectors) {
+                descriptionElement = element.querySelector(selector);
+                if (descriptionElement != null) {
+                  description = descriptionElement.text.trim();
+                  if (description.isNotEmpty) {
+                    print('Found description with selector: $selector');
+                    break;
+                  }
+                }
+              }
+              
+              if (description.isNotEmpty) {
+                final maxPreviewLength = description.length > 50 ? 50 : description.length;
+                print('Description: ${description.substring(0, maxPreviewLength)}...');
+              }
+              
+              // Only add if we have at least a title and URL
+              if (title.isNotEmpty && articleUrl.isNotEmpty) {
+                // Get full article content
+                final articleContent = await _getArticleContent(articleUrl);
+                final now = DateTime.now().toIso8601String();
+                
+                articles.add({
+                  'title': title,
+                  'description': description.isNotEmpty ? description : 'Read more...',
+                  'publishers': 'Pan African Visions',
+                  'articleUrl': articleUrl,
+                  'articeImage': imageUrl,
+                  'articleBody': articleContent.isNotEmpty ? articleContent : 'Click to read the full article.',
+                  'urlLink': articleUrl,
+                  'created_at': now,
+                });
+                
+                print('Successfully added article: $title');
+
+                // Limit to 10 articles to avoid overloading
+                if (articles.length >= 10) break;
+              } else {
+                print('Skipping article with empty title or URL');
+              }
+            } else {
+              print('No title element found in article');
+            }
+          } catch (e) {
+            print('Error parsing article: $e');
+            continue;
+          }
+        }
+        
+        // If we found articles from this URL, stop trying other URLs
+        if (articles.isNotEmpty) {
+          break;
         }
       }
 
       if (articles.isEmpty) {
-        print('No articles found from Pan African News, using fallback data');
+        print('No articles found from Pan African News on any URL, using fallback data');
         return _getFallbackPanAfricanNews();
       }
 
-      print(
-          'Successfully scraped ${articles.length} articles from Pan African News');
+      print('Successfully scraped ${articles.length} articles from Pan African News');
       return articles;
     } catch (e) {
       print('Error scraping Pan African News: $e');

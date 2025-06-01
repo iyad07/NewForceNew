@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '/home_page/new_force_article_details/new_force_article_details_widget.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -282,38 +283,19 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
           padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
           child: InkWell(
             onTap: () async {
-              context.pushNamed(
-                'newForceArticleDetails',
-                queryParameters: {
-                  'articleTitle': serializeParam(
-                    article.title ?? 'No Title',
-                    ParamType.String,
+              // Navigate to the article details page using the Navigator directly
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => NewForceArticleDetailsWidget(
+                    publisher: article.publishers,
+                    articleImage: article.articeImage,
+                    description: article.description,
+                    newsbody: article.articleBody,
+                    title: article.title,
+                    datecreated: article.createdAt,
+                    newsUrl: article.articleUrl,
                   ),
-                  'articleImage': serializeParam(
-                    article.articeImage ?? '',
-                    ParamType.String,
-                  ),
-                  'articleDescription': serializeParam(
-                    article.description ?? 'No description available',
-                    ParamType.String,
-                  ),
-                  'articleNews': serializeParam(
-                    article.articleBody ?? 'No content available',
-                    ParamType.String,
-                  ),
-                  'articlePublisher': serializeParam(
-                    article.publishers ?? 'Unknown Publisher',
-                    ParamType.String,
-                  ),
-                  'datecreated': serializeParam(
-                    article.createdAt,
-                    ParamType.DateTime,
-                  ),
-                  'newsUrl': serializeParam(
-                    article.articleUrl ?? '',
-                    ParamType.String,
-                  ),
-                }.withoutNulls,
+                ),
               );
             },
             child: Container(
