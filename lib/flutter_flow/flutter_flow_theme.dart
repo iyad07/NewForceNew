@@ -181,107 +181,92 @@ class ThemeTypography extends Typography {
 
   final FlutterFlowTheme theme;
 
-  String get displayLargeFamily => 'SFPro';
+  String get displayLargeFamily => 'Roboto';
   TextStyle get displayLarge => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 36.0,
       );
-  String get displayMediumFamily => 'SFPro';
+  String get displayMediumFamily => 'Roboto';
   TextStyle get displayMedium => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 34.0,
       );
-  String get displaySmallFamily => 'SFPro';
+  String get displaySmallFamily => 'Roboto';
   TextStyle get displaySmall => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 32.0,
       );
-  String get headlineLargeFamily => 'SFPro';
+  String get headlineLargeFamily => 'Roboto';
   TextStyle get headlineLarge => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 30.0,
       );
-  String get headlineMediumFamily => 'SFPro';
+  String get headlineMediumFamily => 'Roboto';
   TextStyle get headlineMedium => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 28.0,
       );
-  String get headlineSmallFamily => 'SFPro';
+  String get headlineSmallFamily => 'Roboto';
   TextStyle get headlineSmall => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 26.0,
       );
-  String get titleLargeFamily => 'SFPro';
+  String get titleLargeFamily => 'Roboto';
   TextStyle get titleLarge => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 24.0,
       );
-  String get titleMediumFamily => 'SFPro';
+  String get titleMediumFamily => 'Roboto';
   TextStyle get titleMedium => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.accent2,
         fontWeight: FontWeight.normal,
         fontSize: 22.0,
       );
-  String get titleSmallFamily => 'SFPro';
+  String get titleSmallFamily => 'Roboto';
   TextStyle get titleSmall => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.accent2,
         fontWeight: FontWeight.w500,
         fontSize: 20.0,
       );
-  String get labelLargeFamily => 'SFPro';
+  String get labelLargeFamily => 'Roboto';
   TextStyle get labelLarge => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 18.0,
       );
-  String get labelMediumFamily => 'SFPro';
+  String get labelMediumFamily => 'Roboto';
   TextStyle get labelMedium => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16.0,
       );
-  String get labelSmallFamily => 'SFPro';
+  String get labelSmallFamily => 'Roboto';
   TextStyle get labelSmall => TextStyle(
-        fontFamily: 'SFPro',
         color: theme.secondaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14.0,
       );
-  String get bodyLargeFamily => 'Tiro Bangla';
-  TextStyle get bodyLarge => GoogleFonts.getFont(
-        'Tiro Bangla',
+  String get bodyLargeFamily => 'Roboto';
+  TextStyle get bodyLarge => TextStyle(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16.0,
       );
-  String get bodyMediumFamily => 'Tiro Bangla';
-  TextStyle get bodyMedium => GoogleFonts.getFont(
-        'Tiro Bangla',
+  String get bodyMediumFamily => 'Roboto';
+  TextStyle get bodyMedium => TextStyle(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14.0,
       );
-  String get bodySmallFamily => 'Tiro Bangla';
-  TextStyle get bodySmall => GoogleFonts.getFont(
-        'Tiro Bangla',
+  String get bodySmallFamily => 'Roboto';
+  TextStyle get bodySmall => TextStyle(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12.0,
@@ -326,28 +311,33 @@ extension TextStyleHelper on TextStyle {
     TextDecoration? decoration,
     double? lineHeight,
     List<Shadow>? shadows,
-  }) =>
-      useGoogleFonts
-          ? GoogleFonts.getFont(
-              fontFamily!,
-              color: color ?? this.color,
-              fontSize: fontSize ?? this.fontSize,
-              letterSpacing: letterSpacing ?? this.letterSpacing,
-              fontWeight: fontWeight ?? this.fontWeight,
-              fontStyle: fontStyle ?? this.fontStyle,
-              decoration: decoration,
-              height: lineHeight,
-              shadows: shadows,
-            )
-          : copyWith(
-              fontFamily: fontFamily,
-              color: color,
-              fontSize: fontSize,
-              letterSpacing: letterSpacing,
-              fontWeight: fontWeight,
-              fontStyle: fontStyle,
-              decoration: decoration,
-              height: lineHeight,
-              shadows: shadows,
-            );
+  }) {
+    // Only use Google Fonts if fontFamily is provided and useGoogleFonts is true
+    if (useGoogleFonts && fontFamily != null) {
+      return GoogleFonts.getFont(
+        fontFamily,
+        color: color ?? this.color,
+        fontSize: fontSize ?? this.fontSize,
+        letterSpacing: letterSpacing ?? this.letterSpacing,
+        fontWeight: fontWeight ?? this.fontWeight,
+        fontStyle: fontStyle ?? this.fontStyle,
+        decoration: decoration,
+        height: lineHeight,
+        shadows: shadows,
+      );
+    } else {
+      // Use copyWith for system fonts or when fontFamily is null
+      return copyWith(
+        fontFamily: fontFamily,
+        color: color,
+        fontSize: fontSize,
+        letterSpacing: letterSpacing,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        decoration: decoration,
+        height: lineHeight,
+        shadows: shadows,
+      );
+    }
+  }
 }

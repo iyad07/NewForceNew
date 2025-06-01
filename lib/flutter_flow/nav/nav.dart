@@ -468,6 +468,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             newsbody: '',
           ),
         ),
+        FFRoute(
+          name: 'newsFeed',
+          path: '/newsFeed',
+          builder: (context, params) => params.isEmpty
+              ? const NavBarPage(page: NewsFeedWidget())
+              : const NewsFeedWidget(),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

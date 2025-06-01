@@ -42,3 +42,4 @@ export '/home_page/new_force_article_details/new_force_article_details_widget.da
 export '/websearch/websearch_widget.dart' show WebsearchWidget;
 export '/new_force_page1/new_force_page1_widget.dart' show NewForcePage1Widget;
 export '/searchpage/searchpage_widget.dart' show SearchpageWidget;
+export '/home_page/news_feed/news_feed_widget.dart' show NewsFeedWidget;

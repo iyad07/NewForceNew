@@ -67,12 +67,10 @@ class _WebViewPageWidgetState extends State<WebViewPageWidget> {
               widget.text,
               '0',
             ),
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  fontFamily: 'SFPro',
+            style: FlutterFlowTheme.of(context).headlineMedium.copyWith(
                   color: FlutterFlowTheme.of(context).primaryText,
                   fontSize: 22.0,
                   letterSpacing: 0.0,
-                  useGoogleFonts: false,
                 ),
           ),
           actions: const [],

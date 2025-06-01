@@ -72,6 +72,9 @@ dependencies:
   http: ^1.4.0
   internet_file: ^1.2.0
   flutter_native_splash: ^2.4.4
+  html: ^0.15.4
+  http_parser: ^4.0.2
+  beautiful_soup_dart: ^0.3.0
 
 dependency_overrides:
   http: ^1.4.0
@@ -121,41 +124,6 @@ flutter:
     - assets/rive_animations/
     - assets/pdfs/
   fonts:
-    - family: 'SFPro'
-      fonts:
-        - asset: assets/fonts/SF-Pro-Display-Thin.otf
-          weight: 100
-        - asset: assets/fonts/SF-Pro-Display-ThinItalic.otf
-          weight: 100
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Light.otf
-          weight: 300
-        - asset: assets/fonts/SF-Pro-Display-LightItalic.otf
-          weight: 300
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Regular.otf
-        - asset: assets/fonts/SF-Pro-Display-RegularItalic.otf
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Medium.otf
-          weight: 500
-        - asset: assets/fonts/SF-Pro-Display-MediumItalic.otf
-          weight: 500
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Semibold.otf
-          weight: 600
-        - asset: assets/fonts/SF-Pro-Display-SemiboldItalic.otf
-          weight: 600
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Bold.otf
-          weight: 700
-        - asset: assets/fonts/SF-Pro-Display-BoldItalic.otf
-          weight: 700
-          style: italic
-        - asset: assets/fonts/SF-Pro-Display-Black.otf
-          weight: 900
-        - asset: assets/fonts/SF-Pro-Display-BlackItalic.otf
-          weight: 900
-          style: italic
 
     - family: Iconsax
       fonts:

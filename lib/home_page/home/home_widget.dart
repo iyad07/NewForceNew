@@ -36,13 +36,13 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomeModel());
-    
+
     // Check if user is in guest mode from query parameters
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Get the current URI from the GoRouter state
       final uri = GoRouterState.of(context).uri;
       final isGuest = uri.queryParameters['isGuest'] == 'true';
-      
+
       setState(() {
         _model.isGuest = isGuest;
       });
@@ -212,7 +212,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   // User welcome section with authentication status
                   Container(
                     width: MediaQuery.sizeOf(context).width * 0.96,
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
                     decoration: BoxDecoration(
                       color: FlutterFlowTheme.of(context).secondaryBackground,
                       borderRadius: BorderRadius.circular(12),
@@ -231,13 +232,15 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _model.isGuest ? 'Welcome, Guest' : 'Welcome, ${currentUserDisplayName.isEmpty ? 'User' : currentUserDisplayName}',
+                              _model.isGuest
+                                  ? 'Welcome, Guest'
+                                  : 'Welcome, ${currentUserDisplayName.isEmpty ? 'User' : currentUserDisplayName}',
                               style: FlutterFlowTheme.of(context).titleMedium,
                             ),
                             Text(
-                              _model.isGuest 
-                                ? 'You are browsing in guest mode'
-                                : 'You are signed in as ${currentUserEmail}',
+                              _model.isGuest
+                                  ? 'You are browsing in guest mode'
+                                  : 'You are signed in as ${currentUserEmail}',
                               style: FlutterFlowTheme.of(context).bodySmall,
                             ),
                           ],
@@ -250,24 +253,30 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                             text: 'Sign In',
                             options: FFButtonOptions(
                               height: 36,
-                              padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0),
-                              iconPadding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  12, 0, 12, 0),
+                              iconPadding: const EdgeInsetsDirectional.fromSTEB(
+                                  0, 0, 0, 0),
                               color: FlutterFlowTheme.of(context).primary,
-                              textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                fontFamily: 'Lato',
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
+                              textStyle: FlutterFlowTheme.of(context)
+                                  .titleSmall
+                                  .override(
+                                    fontFamily: 'Lato',
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                               elevation: 2,
-                              borderSide: const BorderSide(color: Colors.transparent),
+                              borderSide:
+                                  const BorderSide(color: Colors.transparent),
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                       ],
                     ),
-                  ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation1']!),
+                  ).animateOnPageLoad(
+                      animationsMap['containerOnPageLoadAnimation1']!),
                   const SizedBox(height: 16),
-                  
+
                   Container(
                     width: MediaQuery.sizeOf(context).width * 0.96,
                     height: 100.0,
@@ -1876,5 +1885,3 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 }
-
-

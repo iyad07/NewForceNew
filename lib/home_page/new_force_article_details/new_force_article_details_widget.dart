@@ -183,12 +183,25 @@ class _NewForceArticleDetailsWidgetState
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(0.0),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.articleImage!,
-                          width: double.infinity,
-                          height: 200.0,
-                          fit: BoxFit.cover,
-                        ),
+                        child: widget.articleImage != null && widget.articleImage!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: widget.articleImage!,
+                              width: double.infinity,
+                              height: 200.0,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => Image.asset(
+                                'assets/images/app_launcher_icon.png',
+                                width: double.infinity,
+                                height: 200.0,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/app_launcher_icon.png',
+                              width: double.infinity,
+                              height: 200.0,
+                              fit: BoxFit.cover,
+                            ),
                       ),
                     ],
                   ),

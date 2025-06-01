@@ -1,10 +1,10 @@
 import 'package:new_force_new_hope/other_pages/ar_world/camera_kit/camera_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'backend/scrapers/news_provider.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-
 
 import 'auth/supabase_auth/supabase_user_provider.dart';
 import 'auth/supabase_auth/auth_util.dart';
@@ -46,10 +46,13 @@ void main() async {
   await appState.initializePersistedState();
 
   print('App initialization completed, launching app...');
-  
-  // Run the app with a ChangeNotifierProvider for state management
-  runApp(ChangeNotifierProvider(
-    create: (context) => appState,
+
+  // Run the app with ChangeNotifierProvider for state management
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (context) => appState),
+      ChangeNotifierProvider(create: (context) => NewsProvider()),
+    ],
     child: const MyApp(),
   ));
 }
@@ -111,18 +114,20 @@ class _MyAppState extends State<MyApp> {
     try {
       // Initialize Supabase if not already initialized
       await initializeSupabase();
-      
+
       // Initialize other services if needed
       // Add other initialization here if required
-      
-      print('All services initialized successfully in ${stopwatch.elapsedMilliseconds}ms');
-      
+
+      print(
+          'All services initialized successfully in ${stopwatch.elapsedMilliseconds}ms');
+
       // Set up authentication stream - only after services are initialized
       userStream = tnfmSupabaseUserStream()
         ..listen((user) {
-          print('Auth state changed: user=${user?.loggedIn}, email=${user?.email}');
+          print(
+              'Auth state changed: user=${user?.loggedIn}, email=${user?.email}');
           _appStateNotifier.update(user);
-          
+
           // Explicitly navigate to onboarding for new users
           if (user == null || !user.loggedIn) {
             print('User not logged in, setting redirect to onboarding');
@@ -130,21 +135,23 @@ class _MyAppState extends State<MyApp> {
           }
         });
       jwtTokenStream.listen((_) {});
-      
+
       // Calculate remaining time for splash screen
       final int remainingTime = 2000 - stopwatch.elapsedMilliseconds;
       final int splashDelay = remainingTime > 0 ? remainingTime : 0;
-      
+
       // Hide splash screen after initialization or minimum time
       Future.delayed(
         Duration(milliseconds: splashDelay),
         () {
           if (mounted) {
-            print('Normal timeout: Stopping splash image after ${stopwatch.elapsedMilliseconds}ms');
+            print(
+                'Normal timeout: Stopping splash image after ${stopwatch.elapsedMilliseconds}ms');
             _appStateNotifier.stopShowingSplashImage();
             // Force navigation to onboarding if not logged in
             if (_appStateNotifier.user == null || !_appStateNotifier.loggedIn) {
-              print('User not logged in after splash, navigating to onboarding');
+              print(
+                  'User not logged in after splash, navigating to onboarding');
               // Set auth page flag before navigation
               _appStateNotifier.setOnAuthPage(true);
               _router.go('/onboardingPage');
@@ -163,12 +170,12 @@ class _MyAppState extends State<MyApp> {
         if (mounted) {
           print('Fallback timeout: Ensuring app exits loading state');
           _appStateNotifier.stopShowingSplashImage();
-          
+
           // Force update user if it's null
           if (_appStateNotifier.user == null) {
             print('User still null at fallback timeout, forcing empty user');
             _appStateNotifier.update(tnfmSupabaseUserFromSupabaseAuth(null));
-            
+
             // Force navigation to onboarding
             print('Forcing navigation to onboarding page');
             // Set auth page flag before navigation
@@ -268,6 +275,7 @@ class _NavBarPageState extends State<NavBarPage> {
       'arWorld': const MyTest(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
+      'newsFeed': const NewsFeedWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
 
@@ -315,6 +323,12 @@ class _NavBarPageState extends State<NavBarPage> {
             icon: Icon(Icons.gamepad_outlined),
             activeIcon: Icon(Icons.gamepad),
             label: 'Game',
+            tooltip: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.newspaper_outlined),
+            activeIcon: Icon(Icons.newspaper),
+            label: 'News',
             tooltip: '',
           ),
         ],
