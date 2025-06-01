@@ -43,12 +43,12 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
     super.dispose();
   }
 
-  // Fetch news from both sources
-  Future<void> _fetchNews() async {
+  // Fetch news from all sources
+  Future<void> _fetchNews({bool forceRefresh = false}) async {
     try {
       if (!mounted) return;
       final newsProvider = Provider.of<NewsProvider>(context, listen: false);
-      await newsProvider.fetchAllNews();
+      await newsProvider.fetchAllNews(force: forceRefresh);
     } catch (e) {
       print('Error fetching news: $e');
       // If we're still mounted, show a snackbar
@@ -84,7 +84,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                 color: Colors.white,
                 size: 24.0,
               ),
-              onPressed: _fetchNews,
+              onPressed: () => _fetchNews(forceRefresh: true),
             ),
           ],
           centerTitle: true,
@@ -117,7 +117,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                       ),
                       SizedBox(height: 16.0),
                       FFButtonWidget(
-                        onPressed: _fetchNews,
+                        onPressed: () => _fetchNews(forceRefresh: true),
                         text: 'Retry',
                         options: FFButtonOptions(
                           width: 130.0,
@@ -165,7 +165,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                       ),
                       SizedBox(height: 16.0),
                       FFButtonWidget(
-                        onPressed: _fetchNews,
+                        onPressed: () => _fetchNews(forceRefresh: true),
                         text: 'Refresh',
                         options: FFButtonOptions(
                           width: 130.0,
@@ -194,7 +194,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
               }
 
               return RefreshIndicator(
-                onRefresh: _fetchNews,
+                onRefresh: () => _fetchNews(forceRefresh: true),
                 child: SingleChildScrollView(
                   physics: AlwaysScrollableScrollPhysics(),
                   child: Column(

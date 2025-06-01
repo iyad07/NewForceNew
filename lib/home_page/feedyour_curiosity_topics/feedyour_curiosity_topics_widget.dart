@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '/backend/supabase/supabase.dart';
+import '/backend/scrapers/news_provider.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'feedyour_curiosity_topics_model.dart';
 export 'feedyour_curiosity_topics_model.dart';
@@ -33,6 +35,11 @@ class _FeedyourCuriosityTopicsWidgetState
   void initState() {
     super.initState();
     _model = createModel(context, () => FeedyourCuriosityTopicsModel());
+    // Fetch Feed Your Curiosity articles when the widget initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+      newsProvider.fetchFeedYourCuriosity();
+    });
   }
 
   @override
@@ -88,25 +95,25 @@ class _FeedyourCuriosityTopicsWidgetState
         ),
         body: SafeArea(
           top: true,
-          child: SingleChildScrollView(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+              await newsProvider.fetchFeedYourCuriosity(forceRefresh: true);
+            },
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FutureBuilder<List<FeedYourCuriosityTopicsRow>>(
-                  future: _model.page8(
-                    requestFn: () => FeedYourCuriosityTopicsTable().queryRows(
-                      queryFn: (q) => q
-                          .eq(
-                            'tag',
-                            widget.tag as Object,
-                          )
-                          .order('created_at'),
-                    ),
-                  ),
-                  builder: (context, snapshot) {
-                    // Customize what your widget looks like when it's loading.
-                    if (!snapshot.hasData) {
+                Consumer<NewsProvider>(
+                  builder: (context, newsProvider, _) {
+                    // Filter articles by tag
+                    final filteredArticles = newsProvider.feedYourCuriosityNews
+                        .where((article) => article.tag == widget.tag)
+                        .toList();
+                    
+                    // Show loading indicator if still loading
+                    if (newsProvider.isLoadingFeedYourCuriosity) {
                       return Center(
                         child: SizedBox(
                           width: 40.0,
@@ -118,8 +125,23 @@ class _FeedyourCuriosityTopicsWidgetState
                         ),
                       );
                     }
+                    
+                    // If no articles found for this tag, show a message
+                    if (filteredArticles.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text(
+                            'No articles found for ${widget.tag}. Pull down to refresh.',
+                            style: FlutterFlowTheme.of(context).bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+                    
                     List<FeedYourCuriosityTopicsRow>
-                        listViewFeedYourCuriosityTopicsRowList = snapshot.data!;
+                        listViewFeedYourCuriosityTopicsRowList = filteredArticles;
 
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(
@@ -412,7 +434,7 @@ class _FeedyourCuriosityTopicsWidgetState
               ],
             ),
           ),
-        ),
+        )),
       ),
     );
   }

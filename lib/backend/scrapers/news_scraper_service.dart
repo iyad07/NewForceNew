@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import '../supabase/database/tables/new_force_articles.dart';
+import '../supabase/database/tables/feed_your_curiosity_topics.dart';
 
 /// A service for scraping news from various sources
 class NewsScraperService {
@@ -450,33 +451,93 @@ class NewsScraperService {
   /// Convert scraped news to NewForceArticlesRow objects
   static List<NewForceArticlesRow> convertToNewForceArticles(
       List<Map<String, dynamic>> scrapedNews) {
-    final articles = <NewForceArticlesRow>[];
-    final now =
-        DateTime.now().toIso8601String(); // Use the same timestamp for all articles in this batch
-
-    for (final news in scrapedNews) {
-      try {
-        // Create a complete data map with all required fields and ensure created_at is valid
-        final Map<String, dynamic> articleData = {
-          'title': news['title'] ?? 'No Title',
-          'description': news['description'] ?? 'No description available',
-          'publishers': news['publishers'] ?? 'Unknown Publisher',
-          'articleUrl': news['articleUrl'] ?? '',
-          'articeImage': news['articeImage'] ?? '',
-          'articleBody': news['articleBody'] ?? 'No content available',
-          'urlLink': news['urlLink'] ?? '',
-          'created_at': now, // Always use a valid DateTime
-        };
-
-        final article = NewForceArticlesRow(articleData);
-        articles.add(article);
-      } catch (e) {
-        print('Error creating article: $e');
-        // Continue with the next article if there's an error
-        continue;
+    return scrapedNews.map((article) {
+      return NewForceArticlesRow({
+        'title': article['title'],
+        'description': article['description'],
+        'article_body': article['content'] ?? article['articleBody'],
+        'article_image': article['image'] ?? article['articeImage'],
+        'publishers': article['publisher'] ?? article['publishers'],
+        'created_at': DateTime.now().toIso8601String(),
+        'article_url': article['url'] ?? article['articleUrl'],
+      });
+    }).toList();
+  }
+  
+  /// Scrape news from Feed Your Curiosity sources (reusing Pan African News logic)
+  static Future<List<Map<String, dynamic>>> scrapeFeedYourCuriosity() async {
+    try {
+      print('Starting to scrape Feed Your Curiosity news...');
+      // Reuse the Pan African News scraper logic but tag articles differently
+      final articles = await scrapePanAfricanNews();
+      
+      // Tag articles as Feed Your Curiosity
+      for (var article in articles) {
+        article['tag'] = 'Feed Your Curiosity';
       }
+      
+      return articles;
+    } catch (e) {
+      print('Error scraping Feed Your Curiosity news: $e');
+      return _getFallbackFeedYourCuriosity();
     }
-
-    return articles;
+  }
+  
+  /// Public method to get fallback GhanaWeb news
+  static List<Map<String, dynamic>> getFallbackGhanaWebNews() {
+    return _getFallbackGhanaWebNews();
+  }
+  
+  /// Public method to get fallback Pan African news
+  static List<Map<String, dynamic>> getFallbackPanAfricanNews() {
+    return _getFallbackPanAfricanNews();
+  }
+  
+  /// Public method to get fallback Feed Your Curiosity news
+  static List<Map<String, dynamic>> getFallbackFeedYourCuriosityNews() {
+    return _getFallbackFeedYourCuriosity();
+  }
+  
+  /// Provides fallback data for Feed Your Curiosity when scraping fails
+  static List<Map<String, dynamic>> _getFallbackFeedYourCuriosity() {
+    return [
+      {
+        'title': 'The Future of AI in African Tech Ecosystems',
+        'description': 'How artificial intelligence is transforming technology landscapes across Africa.',
+        'content': 'Artificial intelligence is rapidly transforming technology ecosystems across Africa. From healthcare to agriculture, AI applications are solving unique challenges and creating new opportunities for innovation. Several tech hubs in countries like Nigeria, Kenya, and South Africa are leading the charge, developing AI solutions tailored to local needs. These innovations include predictive analytics for crop yields, AI-powered diagnostic tools for rural healthcare, and natural language processing systems for local languages. As infrastructure improves and more investment flows into the continent, Africa is positioned to leverage AI technologies in ways that address its unique challenges while creating sustainable growth opportunities.',
+        'image': 'https://images.unsplash.com/photo-1526378800651-c32d170fe6f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1769&q=80',
+        'publisher': 'Feed Your Curiosity',
+        'url': 'https://example.com/ai-in-africa',
+        'tag': 'Technology',
+        'publisherImageUrl': 'https://via.placeholder.com/150?text=FYC',
+      },
+      {
+        'title': 'Renewable Energy Solutions for Rural Communities',
+        'description': 'Innovative approaches to bringing sustainable power to underserved areas.',
+        'content': 'Across Africa, innovative renewable energy solutions are bringing power to rural communities that have long lived without reliable electricity. Solar mini-grids, wind power installations, and micro-hydro systems are being deployed in remote areas, transforming daily life and creating economic opportunities. These technologies are not only environmentally friendly but also economically viable in regions where traditional grid extension would be prohibitively expensive. Local entrepreneurs are developing business models that make these solutions affordable through pay-as-you-go systems and community ownership structures. The impact extends beyond just providing light—it enables education, healthcare improvements, and new business opportunities.',
+        'image': 'https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1772&q=80',
+        'publisher': 'Feed Your Curiosity',
+        'url': 'https://example.com/renewable-energy-africa',
+        'tag': 'Energy',
+        'publisherImageUrl': 'https://via.placeholder.com/150?text=FYC',
+      },
+    ];
+  }
+  
+  /// Convert scraped news to FeedYourCuriosityTopicsRow objects
+  static List<FeedYourCuriosityTopicsRow> convertToFeedYourCuriosityTopics(
+      List<Map<String, dynamic>> scrapedNews) {
+    return scrapedNews.map((article) {
+      return FeedYourCuriosityTopicsRow({
+        'title': article['title'],
+        'newsDescription': article['description'],
+        'newsBody': article['content'] ?? article['articleBody'],
+        'image': article['image'] ?? article['articeImage'],
+        'publisher': article['publisher'] ?? article['publishers'],
+        'created_at': DateTime.now(),
+        'tag': article['tag'] ?? 'Technology', // Default tag if not provided
+        'publisherImageUrl': article['publisherImageUrl'] ?? '', // Optional publisher image
+      });
+    }).toList();
   }
 }
