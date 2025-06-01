@@ -206,87 +206,69 @@ class _NewForceArticleDetailsWidgetState
                     ],
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(
+                      widget.description,
+                      '0',
+                    ),
+                    style:
+                        FlutterFlowTheme.of(context).headlineMedium.override(
+                              fontFamily: 'SFPro',
+                              fontSize: 18.0,
+                              letterSpacing: 0.0,
+                              useGoogleFonts: false,
+                            ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      16.0, 0.0, 16.0, 0.0),
+                  child: InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      // Check if we can safely go back instead of pushing to webViewPage
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else if (widget.newsUrl != null && widget.newsUrl!.isNotEmpty) {
+                        // Launch URL in browser instead of using webViewPage
+                        await launchURL(widget.newsUrl!);
+                      }
+                    },
                     child: Text(
                       valueOrDefault<String>(
-                        widget.description,
+                        widget.newsUrl,
                         '0',
                       ),
                       style:
-                          FlutterFlowTheme.of(context).headlineMedium.override(
+                          FlutterFlowTheme.of(context).labelMedium.override(
                                 fontFamily: 'SFPro',
-                                fontSize: 18.0,
+                                fontSize: 11.0,
                                 letterSpacing: 0.0,
                                 useGoogleFonts: false,
                               ),
                     ),
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: InkWell(
-                      splashColor: Colors.transparent,
-                      focusColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onTap: () async {
-                        context.pushNamed(
-                          'webViewPage',
-                          queryParameters: {
-                            'urlLink': serializeParam(
-                              widget.newsUrl,
-                              ParamType.String,
-                            ),
-                            'text': serializeParam(
-                              widget.title,
-                              ParamType.String,
-                            ),
-                          }.withoutNulls,
-                          extra: <String, dynamic>{
-                            kTransitionInfoKey: const TransitionInfo(
-                              hasTransition: true,
-                              transitionType: PageTransitionType.fade,
-                            ),
-                          },
-                        );
-                      },
-                      child: Text(
-                        valueOrDefault<String>(
-                          widget.newsUrl,
-                          '0',
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(
+                      widget.newsbody,
+                      '0',
+                    ),
+                    style: FlutterFlowTheme.of(context).labelMedium.override(
+                          fontFamily: 'SFPro',
+                          fontSize: 13.0,
+                          letterSpacing: 0.0,
+                          useGoogleFonts: false,
                         ),
-                        style:
-                            FlutterFlowTheme.of(context).labelMedium.override(
-                                  fontFamily: 'SFPro',
-                                  fontSize: 11.0,
-                                  letterSpacing: 0.0,
-                                  useGoogleFonts: false,
-                                ),
-                      ),
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.newsbody,
-                        '0',
-                      ),
-                      style: FlutterFlowTheme.of(context).labelMedium.override(
-                            fontFamily: 'SFPro',
-                            fontSize: 13.0,
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
-                          ),
-                    ),
                   ),
                 ),
               ].divide(const SizedBox(height: 12.0)),

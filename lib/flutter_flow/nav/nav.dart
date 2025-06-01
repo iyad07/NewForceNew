@@ -475,6 +475,40 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               ? const NavBarPage(page: NewsFeedWidget())
               : const NewsFeedWidget(),
         ),
+        FFRoute(
+          name: 'newForceArticleDetails',
+          path: '/newForceArticleDetails',
+          builder: (context, params) => NewForceArticleDetailsWidget(
+            publisher: params.getParam(
+              'publisher',
+              ParamType.String,
+            ),
+            articleImage: params.getParam(
+              'articleImage',
+              ParamType.String,
+            ),
+            description: params.getParam(
+              'description',
+              ParamType.String,
+            ),
+            newsbody: params.getParam(
+              'newsbody',
+              ParamType.String,
+            ),
+            title: params.getParam(
+              'title',
+              ParamType.String,
+            ),
+            datecreated: params.getParam(
+              'datecreated',
+              ParamType.DateTime,
+            ),
+            newsUrl: params.getParam(
+              'newsUrl',
+              ParamType.String,
+            ),
+          ),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 
