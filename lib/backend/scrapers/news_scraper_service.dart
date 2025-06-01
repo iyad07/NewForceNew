@@ -231,9 +231,9 @@ class NewsScraperService {
         'https://panafricanvisions.com/news/',
         'https://panafricanvisions.com/category/news/'
       ];
-      
+
       List<Map<String, dynamic>> articles = [];
-      
+
       // Try each URL until we get articles
       for (final url in urls) {
         print('Trying URL: $url');
@@ -242,21 +242,23 @@ class NewsScraperService {
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }).timeout(Duration(seconds: 30));
 
-        print('Pan African News response status code: ${response.statusCode} for URL: $url');
+        print(
+            'Pan African News response status code: ${response.statusCode} for URL: $url');
 
         if (response.statusCode != 200) {
-          print('Failed to load Pan African News from $url: ${response.statusCode}');
+          print(
+              'Failed to load Pan African News from $url: ${response.statusCode}');
           continue; // Try next URL
         }
 
         final document = html_parser.parse(response.body);
-        
+
         // Try different selectors that might contain news articles
         final selectors = [
-          'article', 
-          '.post', 
-          '.entry', 
-          '.article', 
+          'article',
+          '.post',
+          '.entry',
+          '.article',
           '.news-item',
           '.blog-post',
           '.item',
@@ -269,7 +271,8 @@ class NewsScraperService {
 
         for (final selector in selectors) {
           articleElements = document.querySelectorAll(selector);
-          print('Found ${articleElements.length} elements with selector: $selector on $url');
+          print(
+              'Found ${articleElements.length} elements with selector: $selector on $url');
           if (articleElements.isNotEmpty) {
             usedSelector = selector;
             break;
@@ -281,7 +284,8 @@ class NewsScraperService {
           continue; // Try next URL
         }
 
-        print('Using selector: $usedSelector for ${articleElements.length} articles');
+        print(
+            'Using selector: $usedSelector for ${articleElements.length} articles');
 
         // Print the HTML structure of the first article element for debugging
         if (articleElements.isNotEmpty) {
@@ -292,10 +296,30 @@ class NewsScraperService {
         }
 
         // Define multiple possible selectors for each element
-        final titleSelectors = ['.entry-title a', 'h2 a', 'h3 a', '.title a', 'a.title', 'header h2 a', 'a'];
-        final imageSelectors = ['.post-thumbnail img', 'img', '.featured-image img', '.entry-image img'];
-        final descriptionSelectors = ['.entry-content p', '.excerpt', '.entry-excerpt', '.summary', 'p', '.content p'];
-        
+        final titleSelectors = [
+          '.entry-title a',
+          'h2 a',
+          'h3 a',
+          '.title a',
+          'a.title',
+          'header h2 a',
+          'a'
+        ];
+        final imageSelectors = [
+          '.post-thumbnail img',
+          'img',
+          '.featured-image img',
+          '.entry-image img'
+        ];
+        final descriptionSelectors = [
+          '.entry-content p',
+          '.excerpt',
+          '.entry-excerpt',
+          '.summary',
+          'p',
+          '.content p'
+        ];
+
         for (final element in articleElements) {
           try {
             // Try to find title using multiple selectors
@@ -307,19 +331,21 @@ class NewsScraperService {
                 break;
               }
             }
-            
+
             if (titleElement != null) {
               final title = titleElement.text.trim();
               print('Found title: $title');
-              
+
               var articleUrl = '';
               // Handle relative URLs
               if (titleElement.attributes.containsKey('href')) {
                 final href = titleElement.attributes['href'] ?? '';
-                articleUrl = href.startsWith('http') ? href : 'https://panafricanvisions.com$href';
+                articleUrl = href.startsWith('http')
+                    ? href
+                    : 'https://panafricanvisions.com$href';
               }
               print('Article URL: $articleUrl');
-              
+
               // Try to find image using multiple selectors
               var imageElement;
               var imageUrl = '';
@@ -334,7 +360,7 @@ class NewsScraperService {
                 }
               }
               print('Image URL: $imageUrl');
-              
+
               // Try to find description using multiple selectors
               var descriptionElement;
               var description = '';
@@ -348,29 +374,34 @@ class NewsScraperService {
                   }
                 }
               }
-              
+
               if (description.isNotEmpty) {
-                final maxPreviewLength = description.length > 50 ? 50 : description.length;
-                print('Description: ${description.substring(0, maxPreviewLength)}...');
+                final maxPreviewLength =
+                    description.length > 50 ? 50 : description.length;
+                print(
+                    'Description: ${description.substring(0, maxPreviewLength)}...');
               }
-              
+
               // Only add if we have at least a title and URL
               if (title.isNotEmpty && articleUrl.isNotEmpty) {
                 // Get full article content
                 final articleContent = await _getArticleContent(articleUrl);
                 final now = DateTime.now().toIso8601String();
-                
+
                 articles.add({
                   'title': title,
-                  'description': description.isNotEmpty ? description : 'Read more...',
+                  'description':
+                      description.isNotEmpty ? description : 'Read more...',
                   'publishers': 'Pan African Visions',
                   'articleUrl': articleUrl,
                   'articeImage': imageUrl,
-                  'articleBody': articleContent.isNotEmpty ? articleContent : 'Click to read the full article.',
+                  'articleBody': articleContent.isNotEmpty
+                      ? articleContent
+                      : 'Click to read the full article.',
                   'urlLink': articleUrl,
                   'created_at': now,
                 });
-                
+
                 print('Successfully added article: $title');
 
                 // Limit to 10 articles to avoid overloading
@@ -386,7 +417,7 @@ class NewsScraperService {
             continue;
           }
         }
-        
+
         // If we found articles from this URL, stop trying other URLs
         if (articles.isNotEmpty) {
           break;
@@ -394,11 +425,13 @@ class NewsScraperService {
       }
 
       if (articles.isEmpty) {
-        print('No articles found from Pan African News on any URL, using fallback data');
+        print(
+            'No articles found from Pan African News on any URL, using fallback data');
         return _getFallbackPanAfricanNews();
       }
 
-      print('Successfully scraped ${articles.length} articles from Pan African News');
+      print(
+          'Successfully scraped ${articles.length} articles from Pan African News');
       return articles;
     } catch (e) {
       print('Error scraping Pan African News: $e');
@@ -463,49 +496,52 @@ class NewsScraperService {
       });
     }).toList();
   }
-  
+
   /// Scrape news from Feed Your Curiosity sources (reusing Pan African News logic)
   static Future<List<Map<String, dynamic>>> scrapeFeedYourCuriosity() async {
     try {
       print('Starting to scrape Feed Your Curiosity news...');
       // Reuse the Pan African News scraper logic but tag articles differently
       final articles = await scrapePanAfricanNews();
-      
+
       // Tag articles as Feed Your Curiosity
       for (var article in articles) {
         article['tag'] = 'Feed Your Curiosity';
       }
-      
+
       return articles;
     } catch (e) {
       print('Error scraping Feed Your Curiosity news: $e');
       return _getFallbackFeedYourCuriosity();
     }
   }
-  
+
   /// Public method to get fallback GhanaWeb news
   static List<Map<String, dynamic>> getFallbackGhanaWebNews() {
     return _getFallbackGhanaWebNews();
   }
-  
+
   /// Public method to get fallback Pan African news
   static List<Map<String, dynamic>> getFallbackPanAfricanNews() {
     return _getFallbackPanAfricanNews();
   }
-  
+
   /// Public method to get fallback Feed Your Curiosity news
   static List<Map<String, dynamic>> getFallbackFeedYourCuriosityNews() {
     return _getFallbackFeedYourCuriosity();
   }
-  
+
   /// Provides fallback data for Feed Your Curiosity when scraping fails
   static List<Map<String, dynamic>> _getFallbackFeedYourCuriosity() {
     return [
       {
         'title': 'The Future of AI in African Tech Ecosystems',
-        'description': 'How artificial intelligence is transforming technology landscapes across Africa.',
-        'content': 'Artificial intelligence is rapidly transforming technology ecosystems across Africa. From healthcare to agriculture, AI applications are solving unique challenges and creating new opportunities for innovation. Several tech hubs in countries like Nigeria, Kenya, and South Africa are leading the charge, developing AI solutions tailored to local needs. These innovations include predictive analytics for crop yields, AI-powered diagnostic tools for rural healthcare, and natural language processing systems for local languages. As infrastructure improves and more investment flows into the continent, Africa is positioned to leverage AI technologies in ways that address its unique challenges while creating sustainable growth opportunities.',
-        'image': 'https://images.unsplash.com/photo-1526378800651-c32d170fe6f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1769&q=80',
+        'description':
+            'How artificial intelligence is transforming technology landscapes across Africa.',
+        'content':
+            'Artificial intelligence is rapidly transforming technology ecosystems across Africa. From healthcare to agriculture, AI applications are solving unique challenges and creating new opportunities for innovation. Several tech hubs in countries like Nigeria, Kenya, and South Africa are leading the charge, developing AI solutions tailored to local needs. These innovations include predictive analytics for crop yields, AI-powered diagnostic tools for rural healthcare, and natural language processing systems for local languages. As infrastructure improves and more investment flows into the continent, Africa is positioned to leverage AI technologies in ways that address its unique challenges while creating sustainable growth opportunities.',
+        'image':
+            'https://images.unsplash.com/photo-1526378800651-c32d170fe6f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1769&q=80',
         'publisher': 'Feed Your Curiosity',
         'url': 'https://example.com/ai-in-africa',
         'tag': 'Technology',
@@ -513,9 +549,12 @@ class NewsScraperService {
       },
       {
         'title': 'Renewable Energy Solutions for Rural Communities',
-        'description': 'Innovative approaches to bringing sustainable power to underserved areas.',
-        'content': 'Across Africa, innovative renewable energy solutions are bringing power to rural communities that have long lived without reliable electricity. Solar mini-grids, wind power installations, and micro-hydro systems are being deployed in remote areas, transforming daily life and creating economic opportunities. These technologies are not only environmentally friendly but also economically viable in regions where traditional grid extension would be prohibitively expensive. Local entrepreneurs are developing business models that make these solutions affordable through pay-as-you-go systems and community ownership structures. The impact extends beyond just providing light—it enables education, healthcare improvements, and new business opportunities.',
-        'image': 'https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1772&q=80',
+        'description':
+            'Innovative approaches to bringing sustainable power to underserved areas.',
+        'content':
+            'Across Africa, innovative renewable energy solutions are bringing power to rural communities that have long lived without reliable electricity. Solar mini-grids, wind power installations, and micro-hydro systems are being deployed in remote areas, transforming daily life and creating economic opportunities. These technologies are not only environmentally friendly but also economically viable in regions where traditional grid extension would be prohibitively expensive. Local entrepreneurs are developing business models that make these solutions affordable through pay-as-you-go systems and community ownership structures. The impact extends beyond just providing light—it enables education, healthcare improvements, and new business opportunities.',
+        'image':
+            'https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1772&q=80',
         'publisher': 'Feed Your Curiosity',
         'url': 'https://example.com/renewable-energy-africa',
         'tag': 'Energy',
@@ -523,7 +562,7 @@ class NewsScraperService {
       },
     ];
   }
-  
+
   /// Convert scraped news to FeedYourCuriosityTopicsRow objects
   static List<FeedYourCuriosityTopicsRow> convertToFeedYourCuriosityTopics(
       List<Map<String, dynamic>> scrapedNews) {
@@ -534,9 +573,10 @@ class NewsScraperService {
         'newsBody': article['content'] ?? article['articleBody'],
         'image': article['image'] ?? article['articeImage'],
         'publisher': article['publisher'] ?? article['publishers'],
-        'created_at': DateTime.now(),
+        'created_at': DateTime.now().toIso8601String(),
         'tag': article['tag'] ?? 'Technology', // Default tag if not provided
-        'publisherImageUrl': article['publisherImageUrl'] ?? '', // Optional publisher image
+        'publisherImageUrl':
+            article['publisherImageUrl'] ?? '', // Optional publisher image
       });
     }).toList();
   }
