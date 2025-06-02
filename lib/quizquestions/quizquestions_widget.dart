@@ -106,15 +106,16 @@ class _QuizquestionsWidgetState extends State<QuizquestionsWidget> {
                       Padding(
                         padding: const EdgeInsetsDirectional.fromSTEB(
                             0.0, 20.0, 0.0, 10.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  8.0, 0.0, 8.0, 0.0),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              width: constraints.maxWidth,
                               child: LinearPercentIndicator(
                                 percent: 0.1,
-                                width: MediaQuery.sizeOf(context).width * 0.96,
+                                width: constraints.maxWidth -
+                                    16.0, // Subtract horizontal padding
                                 lineHeight: 17.0,
                                 animation: true,
                                 animateFromLastPercent: true,
@@ -124,13 +125,13 @@ class _QuizquestionsWidgetState extends State<QuizquestionsWidget> {
                                 barRadius: const Radius.circular(24.0),
                                 padding: EdgeInsets.zero,
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            10.0, 5.0, 10.0, 10.0),
+                        padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: 8.0),
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.start,

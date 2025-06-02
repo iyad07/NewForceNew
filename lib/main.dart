@@ -271,11 +271,12 @@ class _NavBarPageState extends State<NavBarPage> {
     // Define the pages for each tab
     final tabs = {
       'Home': const HomeWidget(),
-      'aiScreen': const AiScreenWidget(),
+      // AI screen removed from tabs but code kept
+      // 'aiScreen': const AiScreenWidget(),
+      'newsFeed': const NewsFeedWidget(),
       'arWorld': const MyTest(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
-      'newsFeed': const NewsFeedWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
 
@@ -302,11 +303,18 @@ class _NavBarPageState extends State<NavBarPage> {
             tooltip: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'AI',
+            icon: Icon(Icons.newspaper_outlined),
+            activeIcon: Icon(Icons.newspaper),
+            label: 'News',
             tooltip: '',
           ),
+          // AI page removed from navigation but code kept
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.chat_bubble_outline),
+          //   activeIcon: Icon(Icons.chat_bubble),
+          //   label: 'AI',
+          //   tooltip: '',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.view_in_ar_outlined),
             activeIcon: Icon(Icons.view_in_ar),
@@ -323,12 +331,6 @@ class _NavBarPageState extends State<NavBarPage> {
             icon: Icon(Icons.gamepad_outlined),
             activeIcon: Icon(Icons.gamepad),
             label: 'Game',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper_outlined),
-            activeIcon: Icon(Icons.newspaper),
-            label: 'News',
             tooltip: '',
           ),
         ],

@@ -8,6 +8,7 @@ import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/flutter_flow/utils/loading_indicator.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -209,11 +210,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // User welcome section with authentication status
                   Container(
                     width: MediaQuery.sizeOf(context).width * 0.96,
                     padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
+                        vertical: 15, horizontal: 20),
                     decoration: BoxDecoration(
                       color: FlutterFlowTheme.of(context).secondaryBackground,
                       borderRadius: BorderRadius.circular(12),
@@ -228,22 +228,69 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _model.isGuest
-                                  ? 'Welcome, Guest'
-                                  : 'Welcome, ${currentUserDisplayName.isEmpty ? 'User' : currentUserDisplayName}',
-                              style: FlutterFlowTheme.of(context).titleMedium,
+                        // Menu icon
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            scaffoldKey.currentState!.openDrawer();
+                          },
+                          child: Icon(
+                            FFIcons.kmenu,
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            size: 24.0,
+                          ),
+                        ),
+                        // Welcome text
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                20.0, 0.0, 15.0, 0.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _model.isGuest
+                                      ? 'Welcome, Guest'
+                                      : 'Welcome, ${currentUserDisplayName.isEmpty ? 'User' : currentUserDisplayName}',
+                                  style:
+                                      FlutterFlowTheme.of(context).titleMedium,
+                                ),
+                                Text(
+                                  _model.isGuest
+                                      ? 'You are browsing in guest mode'
+                                      : 'You are signed in as ${currentUserEmail}',
+                                  style: FlutterFlowTheme.of(context).bodySmall,
+                                ),
+                              ],
                             ),
-                            Text(
-                              _model.isGuest
-                                  ? 'You are browsing in guest mode'
-                                  : 'You are signed in as ${currentUserEmail}',
-                              style: FlutterFlowTheme.of(context).bodySmall,
-                            ),
-                          ],
+                          ),
+                        ),
+                        // Profile icon
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            context.pushNamed(
+                              'Settings',
+                              extra: <String, dynamic>{
+                                kTransitionInfoKey: const TransitionInfo(
+                                  hasTransition: true,
+                                  transitionType: PageTransitionType.fade,
+                                  duration: Duration(milliseconds: 0),
+                                ),
+                              },
+                            );
+                          },
+                          child: Icon(
+                            FFIcons.kprofileCircle,
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            size: 24.0,
+                          ),
                         ),
                         if (_model.isGuest)
                           FFButtonWidget(
@@ -275,63 +322,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     ),
                   ).animateOnPageLoad(
                       animationsMap['containerOnPageLoadAnimation1']!),
-                  const SizedBox(height: 16),
-
-                  Container(
-                    width: MediaQuery.sizeOf(context).width * 0.96,
-                    height: 100.0,
-                    decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).primaryBackground,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            scaffoldKey.currentState!.openDrawer();
-                          },
-                          child: Icon(
-                            FFIcons.kmenu,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            size: 24.0,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              1.0, 0.0, 0.0, 0.0),
-                          child: InkWell(
-                            splashColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            onTap: () async {
-                              context.pushNamed(
-                                'Settings',
-                                extra: <String, dynamic>{
-                                  kTransitionInfoKey: const TransitionInfo(
-                                    hasTransition: true,
-                                    transitionType: PageTransitionType.fade,
-                                    duration: Duration(milliseconds: 0),
-                                  ),
-                                },
-                              );
-                            },
-                            child: Icon(
-                              FFIcons.kprofileCircle,
-                              color: FlutterFlowTheme.of(context).primaryText,
-                              size: 24.0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animateOnPageLoad(
-                      animationsMap['containerOnPageLoadAnimation1']!),
+                  //const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         0.0, 0.0, 0.0, 16.0),
@@ -414,7 +405,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
-                        0.0, 0.0, 0.0, 8.0),
+                        8.0, 0.0, 0.0, 8.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
@@ -426,6 +417,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                 .override(
                                   fontFamily: 'SFPro',
                                   color: FlutterFlowTheme.of(context).primary,
+                                  fontSize: 22.0,
                                   letterSpacing: 0.0,
                                   useGoogleFonts: false,
                                 ),
@@ -820,10 +812,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  Divider(
+                  /*Divider(
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
-                  ),
+                  ),*/
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -835,7 +827,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               FlutterFlowTheme.of(context).titleLarge.override(
                                     fontFamily: 'SFPro',
                                     color: FlutterFlowTheme.of(context).primary,
-                                    fontSize: 20.0,
+                                    fontSize: 22.0,
                                     letterSpacing: 0.0,
                                     useGoogleFonts: false,
                                   ),
@@ -856,8 +848,14 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                           builder: (context, snapshot) {
                             // Customize what your widget looks like when it's loading.
                             if (!snapshot.hasData) {
-                              return Image.asset(
-                                '',
+                              return Center(
+                                child: SizedBox(
+                                  width: 50,
+                                  height: 50,
+                                  child: CircularProgressIndicator(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                  ),
+                                ),
                               );
                             }
                             List<NewForceArticlesRow>
@@ -1062,6 +1060,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               FlutterFlowTheme.of(context).titleLarge.override(
                                     fontFamily: 'SFPro',
                                     color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 22.0,
                                     letterSpacing: 0.0,
                                     useGoogleFonts: false,
                                   ),
@@ -1076,9 +1075,13 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     builder: (context, snapshot) {
                       // Customize what your widget looks like when it's loading.
                       if (!snapshot.hasData) {
-                        return Image.asset(
-                          '',
-                        );
+                        return Center(
+                            child: SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: CircularProgressIndicator(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                )));
                       }
                       List<TopReadArticlesRow> rowTopReadArticlesRowList =
                           snapshot.data!;
@@ -1258,10 +1261,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       );
                     },
                   ),
-                  Divider(
-                    thickness: 1.0,
-                    color: FlutterFlowTheme.of(context).primaryText,
-                  ),
+                  const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         0.0, 8.0, 0.0, 8.0),
@@ -1276,6 +1276,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                     fontFamily: 'SFPro',
                                     color: FlutterFlowTheme.of(context).primary,
                                     letterSpacing: 0.0,
+                                    fontSize: 22.0,
                                     useGoogleFonts: false,
                                   ),
                         ).animateOnPageLoad(
@@ -1290,9 +1291,13 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     builder: (context, snapshot) {
                       // Customize what your widget looks like when it's loading.
                       if (!snapshot.hasData) {
-                        return Image.asset(
-                          '',
-                        );
+                        return Center(
+                            child: SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: CircularProgressIndicator(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                )));
                       }
                       List<FeedyourcuriosityRow> rowFeedyourcuriosityRowList =
                           snapshot.data!;
@@ -1437,10 +1442,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       );
                     },
                   ),
-                  Divider(
+                  /*Divider(
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
-                  ),
+                  ),*/
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         0.0, 8.0, 0.0, 16.0),
@@ -1486,7 +1491,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-                  Divider(
+                  /*Divider(
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
                   ),
@@ -1618,7 +1623,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   Divider(
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
-                  ),
+                  ),*/
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         5.0, 20.0, 5.0, 20.0),
@@ -1666,7 +1671,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               // Customize what your widget looks like when it's loading.
                               if (!snapshot.hasData) {
                                 return Image.asset(
-                                  '',
+                                  'assets/images/app_launcher_icon.png',
                                 );
                               }
                               List<InvestmentNewsRow> rowInvestmentNewsRowList =
@@ -1780,7 +1785,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               // Customize what your widget looks like when it's loading.
                               if (!snapshot.hasData) {
                                 return Image.asset(
-                                  '',
+                                  'assets/images/app_launcher_icon.png',
                                 );
                               }
                               List<CountryProfilesRow>

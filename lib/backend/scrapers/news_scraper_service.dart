@@ -80,7 +80,16 @@ class NewsScraperService {
                   : 'https://www.ghanaweb.com$href';
             }
 
-            final imageUrl = imageElement?.attributes['src'] ?? '';
+            var imageUrl = imageElement?.attributes['src'] ?? '';
+            // Make sure image URL is absolute
+            if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+              imageUrl = imageUrl.startsWith('//')
+                  ? 'https:$imageUrl'
+                  : imageUrl.startsWith('/')
+                      ? 'https://www.ghanaweb.com$imageUrl'
+                      : 'https://www.ghanaweb.com/$imageUrl';
+            }
+            print('Found image URL: $imageUrl');
             final description = descriptionElement?.text.trim() ?? '';
 
             // Only add if we have at least a title
@@ -352,7 +361,16 @@ class NewsScraperService {
               for (final selector in imageSelectors) {
                 imageElement = element.querySelector(selector);
                 if (imageElement != null) {
-                  imageUrl = imageElement.attributes['src'] ?? '';
+                  imageUrl = imageElement?.attributes['src'] ?? '';
+                  // Make sure image URL is absolute
+                  if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+                    imageUrl = imageUrl.startsWith('//')
+                        ? 'https:$imageUrl'
+                        : imageUrl.startsWith('/')
+                            ? 'https://panafricanvisions.com$imageUrl'
+                            : 'https://panafricanvisions.com/$imageUrl';
+                  }
+                  print('Image URL: $imageUrl');
                   if (imageUrl.isNotEmpty) {
                     print('Found image with selector: $selector');
                     break;
@@ -488,11 +506,11 @@ class NewsScraperService {
       return NewForceArticlesRow({
         'title': article['title'],
         'description': article['description'],
-        'article_body': article['content'] ?? article['articleBody'],
-        'article_image': article['image'] ?? article['articeImage'],
+        'articleBody': article['content'] ?? article['articleBody'],
+        'articeImage': article['image'] ?? article['articeImage'],
         'publishers': article['publisher'] ?? article['publishers'],
         'created_at': DateTime.now().toIso8601String(),
-        'article_url': article['url'] ?? article['articleUrl'],
+        'articleUrl': article['url'] ?? article['articleUrl'],
       });
     }).toList();
   }

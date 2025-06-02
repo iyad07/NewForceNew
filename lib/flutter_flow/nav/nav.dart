@@ -167,7 +167,8 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         final bool isShowingSplash = appStateNotifier.showSplashImage;
 
         // Check if this is a guest access request
-        final bool isGuestAccess = state.uri.queryParameters['isGuest'] == 'true';
+        final bool isGuestAccess =
+            state.uri.queryParameters['isGuest'] == 'true';
 
         // Define auth pages for quick checking
         final bool isAuthPage = currentPath == '/onboardingPage' ||
@@ -231,13 +232,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           path: '/home',
           builder: (context, params) {
             // Check if this is guest access
-            final isGuest = params.getParam<String>('isGuest', ParamType.String) == 'true';
-            
+            final isGuest =
+                params.getParam<String>('isGuest', ParamType.String) == 'true';
+
             // If it's guest access or the user is authenticated, allow access
             if (isGuest || appStateNotifier.loggedIn) {
               return params.isEmpty
-                ? const NavBarPage(page: HomeWidget())
-                : const HomeWidget();
+                  ? const NavBarPage(page: HomeWidget())
+                  : const HomeWidget();
             } else {
               // Otherwise redirect to onboarding
               return const OnboardingPageWidget();
@@ -508,6 +510,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               ParamType.String,
             ),
           ),
+        ),
+        FFRoute(
+          name: 'quizquestions',
+          path: '/quizquestions',
+          builder: (context, params) => const QuizquestionsWidget(),
         ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

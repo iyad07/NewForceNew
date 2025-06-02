@@ -91,10 +91,15 @@ class _ParallaxCardsState extends State<ParallaxCards> {
                       right: accelerometerXAxis != null
                           ? (-350 + accelerometerXAxis! * 30)
                           : -350,
-                      child: Image.network(
-                        backgroundImages[index],
-                        fit: BoxFit.fitHeight,
-                      ),
+                      child: backgroundImages[index].startsWith('http')
+                        ? Image.network(
+                            backgroundImages[index],
+                            fit: BoxFit.fitHeight,
+                          )
+                        : Image.asset(
+                            backgroundImages[index],
+                            fit: BoxFit.fitHeight,
+                          ),
                     ),
                     // Foreground Image
                     AnimatedPositioned(
@@ -104,10 +109,15 @@ class _ParallaxCardsState extends State<ParallaxCards> {
                       right: accelerometerXAxis != null
                           ? (-13 + accelerometerXAxis! * 1.5)
                           : -13,
-                      child: Image.network(
-                        foregroundImage,
-                        fit: BoxFit.fill,
-                      ),
+                      child: foregroundImage.startsWith('http')
+                        ? Image.network(
+                            foregroundImage,
+                            fit: BoxFit.fill,
+                          )
+                        : Image.asset(
+                            foregroundImage,
+                            fit: BoxFit.fill,
+                          ),
                     ),
                     // Text (Country name)
                     Column(

@@ -31,9 +31,9 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
     super.initState();
     _model = createModel(context, () => NewsFeedModel());
 
-    // Initialize the news provider and fetch news
+    // Load cached news from database on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchNews();
+      _loadCachedNews();
     });
   }
 
@@ -43,18 +43,48 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
     super.dispose();
   }
 
-  // Fetch news from all sources
-  Future<void> _fetchNews({bool forceRefresh = false}) async {
+  // Load news from database only (no scraping)
+  Future<void> _loadCachedNews() async {
     try {
       if (!mounted) return;
       final newsProvider = Provider.of<NewsProvider>(context, listen: false);
-      await newsProvider.fetchAllNews(force: forceRefresh);
+      await newsProvider.loadCachedNewsOnly();
     } catch (e) {
-      print('Error fetching news: $e');
-      // If we're still mounted, show a snackbar
+      print('Error loading cached news: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load news. Please try again.')),
+          SnackBar(content: Text('Failed to load news from database. Please try again.')),
+        );
+      }
+    }
+  }
+
+
+
+  // Fetch fresh news by scraping websites and update database
+  Future<void> _fetchFreshNews() async {
+    try {
+      if (!mounted) return;
+      final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+      
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Refreshing news data...')),
+      );
+      
+      // Force refresh to scrape new data
+      await newsProvider.fetchAllNews(force: true);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('News updated successfully!')),
+        );
+      }
+    } catch (e) {
+      print('Error fetching fresh news: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update news. Please try again.')),
         );
       }
     }
@@ -84,7 +114,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                 color: Colors.white,
                 size: 24.0,
               ),
-              onPressed: () => _fetchNews(forceRefresh: true),
+              onPressed: () => _fetchFreshNews(),
             ),
           ],
           centerTitle: true,
@@ -117,7 +147,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                       ),
                       SizedBox(height: 16.0),
                       FFButtonWidget(
-                        onPressed: () => _fetchNews(forceRefresh: true),
+                        onPressed: () => _fetchFreshNews(),
                         text: 'Retry',
                         options: FFButtonOptions(
                           width: 130.0,
@@ -145,11 +175,17 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                 );
               }
 
-              // Get references to the news lists with null safety
-              final ghanaWebNews = newsProvider.ghanaWebNews ?? [];
-              final panAfricanNews = newsProvider.panAfricanNews ?? [];
+              // Get references to the news lists
+              final ghanaWebNews = newsProvider.ghanaWebNews;
+              final panAfricanNews = newsProvider.panAfricanNews;
 
+              // Combine all news and sort by date (newest first)
               final allNews = [...ghanaWebNews, ...panAfricanNews];
+              allNews.sort((a, b) {
+                final aDate = a.createdAt ?? DateTime(1970);
+                final bDate = b.createdAt ?? DateTime(1970);
+                return bDate.compareTo(aDate); // Descending order (newest first)
+              });
 
               if (allNews.isEmpty) {
                 return Center(
@@ -165,7 +201,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                       ),
                       SizedBox(height: 16.0),
                       FFButtonWidget(
-                        onPressed: () => _fetchNews(forceRefresh: true),
+                        onPressed: () => _fetchFreshNews(),
                         text: 'Refresh',
                         options: FFButtonOptions(
                           width: 130.0,
@@ -193,43 +229,40 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                 );
               }
 
-              return RefreshIndicator(
-                onRefresh: () => _fetchNews(forceRefresh: true),
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            16.0, 16.0, 16.0, 8.0),
-                        child: Text(
-                          'GhanaWeb News',
-                          style:
-                              FlutterFlowTheme.of(context).titleMedium.override(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
+              return SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(
+                          16.0, 16.0, 16.0, 8.0),
+                      child: Text(
+                        'GhanaWeb News',
+                        style:
+                            FlutterFlowTheme.of(context).titleMedium.override(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
-                      _buildNewsList(ghanaWebNews),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            16.0, 24.0, 16.0, 8.0),
-                        child: Text(
-                          'Pan African News',
-                          style:
-                              FlutterFlowTheme.of(context).titleMedium.override(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
+                    ),
+                    _buildNewsList(ghanaWebNews),
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(
+                          16.0, 24.0, 16.0, 8.0),
+                      child: Text(
+                        'Pan African News',
+                        style:
+                            FlutterFlowTheme.of(context).titleMedium.override(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
-                      _buildNewsList(panAfricanNews),
-                      SizedBox(height: 20.0),
-                    ],
-                  ),
+                    ),
+                    _buildNewsList(panAfricanNews),
+                    SizedBox(height: 20.0),
+                  ],
                 ),
               );
             },
@@ -278,6 +311,9 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
         // Extra validation for image URL to prevent empty string errors
         final String imageUrl = article.articeImage ?? '';
         final bool hasValidImage = imageUrl.isNotEmpty && !imageUrl.contains('null');
+        
+        // Debug logging for image URLs
+        print('Article: ${article.title}, Image URL: $imageUrl, Valid: $hasValidImage');
 
         return Padding(
           padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
