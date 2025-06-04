@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:new_force_new_hope/other_pages/ar_world/camera_kit/camera_model.dart';
 
-
 /// A widget for displaying a list of lenses.
 
 class LensListView extends StatefulWidget {

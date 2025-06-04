@@ -15,56 +15,45 @@ class MyTest extends StatefulWidget {
 }
 
 class _MyTestState extends State<MyTest> implements CameraKitFlutterEvents {
+  /// There will be interface that we will implement on [_MyAppState] class in the future,
+  /// right now we have no method to show override any function
   late String _filePath = '';
   late String _fileType = '';
   late List<Lens> lensList = [];
-  late final _cameraKitFlutterImpl = CameraKitFlutterImpl(cameraKitFlutterEvents: this);
+  late final _cameraKitFlutterImpl =
+      CameraKitFlutterImpl(cameraKitFlutterEvents: this);
   bool isLensListPressed = false;
-  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _initCameraKit();
+    _cameraKitFlutterImpl.setCredentials(apiToken: Constants.cameraKitApiToken);
+    initCameraKit();
   }
 
-  Future<void> _initCameraKit() async {
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initCameraKit() async {
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    // We also handle the message potentially returning null.
     try {
-      // Check credentials setup (optional, as it's handled in platform configs)
-      final result = await _cameraKitFlutterImpl.setCredentials(apiToken: Constants.cameraKitApiToken);
-      if (result != null && result.contains('Error')) {
-        setState(() {
-          _errorMessage = result;
-        });
-        return;
-      }
       await _cameraKitFlutterImpl.openCameraKit(
-        groupIds: Constants.groupIdList,
-        isHideCloseButton: false,
-      );
-    } on PlatformException catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to open CameraKit: ${e.message}';
-      });
+          groupIds: Constants.groupIdList, isHideCloseButton: false);
+    } on PlatformException {
       if (kDebugMode) {
-        print(_errorMessage);
+        print("Failed to open camera kit");
       }
     }
   }
 
-  Future<void> _getGroupLenses() async {
-    setState(() {
-      isLensListPressed = true;
-    });
+  // Platform messages are asynchronous, so we initialize in an async method.
+  getGroupLenses() async {
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    // We also handle the message potentially returning null.
     try {
-      await _cameraKitFlutterImpl.getGroupLenses(groupIds: Constants.groupIdList);
-    } on PlatformException catch (e) {
-      setState(() {
-        isLensListPressed = false;
-        _errorMessage = 'Failed to get lenses: ${e.message}';
-      });
+      _cameraKitFlutterImpl.getGroupLenses(groupIds: Constants.groupIdList);
+    } on PlatformException {
       if (kDebugMode) {
-        print(_errorMessage);
+        print("Failed to open camera kit");
       }
     }
   }
@@ -72,57 +61,37 @@ class _MyTestState extends State<MyTest> implements CameraKitFlutterEvents {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar: AppBar(
+      //   title: const Text('Camera Kit'),
+      // ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            if (isLensListPressed)
-              CircularProgressIndicator(
-                color: FlutterFlowTheme.of(context).primary,
-              )
-            else
-              const CircularProgressIndicator(),
-            const SizedBox(height: 10),
+            CircularProgressIndicator(
+              color: FlutterFlowTheme.of(context).primary,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             const Text(
-              'Click the button below if loading takes too long',
+              'Click the btton below if loading takes too long',
               style: TextStyle(color: Colors.black),
             ),
             SizedBox(
               width: 300,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: FlutterFlowTheme.of(context).primary,
-                ),
-                onPressed: _initCameraKit,
-                child: const Text(
-                  'New Force AR World',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
+                    backgroundColor: FlutterFlowTheme.of(context).primary),
+                onPressed: () {
+                  initCameraKit();
+                },
+                child: const Text(" New Force AR world",
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: 300,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: FlutterFlowTheme.of(context).secondary,
-                ),
-                onPressed: _getGroupLenses,
-                child: const Text(
-                  'View Lenses',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
-            ),
+            )
+            // isLensListPressed ? const CircularProgressIndicator() : Container()
           ],
         ),
       ),
@@ -132,38 +101,30 @@ class _MyTestState extends State<MyTest> implements CameraKitFlutterEvents {
   @override
   void onCameraKitResult(Map<dynamic, dynamic> result) {
     setState(() {
-      _filePath = result['path'] as String;
-      _fileType = result['type'] as String;
+      _filePath = result["path"] as String;
+      _fileType = result["type"] as String;
 
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => MediaResultWidget(
-          filePath: _filePath,
-          fileType: _fileType,
-        ),
-      ));
+          builder: (context) => MediaResultWidget(
+                filePath: _filePath,
+                fileType: _fileType,
+              )));
     });
   }
 
   @override
   void receivedLenses(List<Lens> lensList) async {
-    setState(() {
-      isLensListPressed = false;
-      this.lensList = lensList;
-    });
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => LensListView(lensList: lensList),
-      ),
-    ) as Map<String, dynamic>?;
+    isLensListPressed = false;
+    setState(() {});
+    final result = await Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => LensListView(lensList: lensList)))
+        as Map<String, dynamic>?;
     final lensId = result?['lensId'] as String?;
     final groupId = result?['groupId'] as String?;
 
     if ((lensId?.isNotEmpty ?? false) && (groupId?.isNotEmpty ?? false)) {
       _cameraKitFlutterImpl.openCameraKitWithSingleLens(
-        lensId: lensId!,
-        groupId: groupId!,
-        isHideCloseButton: false,
-      );
+          lensId: lensId!, groupId: groupId!, isHideCloseButton: false);
     }
   }
 }

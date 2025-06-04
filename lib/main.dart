@@ -1,3 +1,4 @@
+import 'package:new_force_new_hope/google_search/google_search_widget.dart';
 import 'package:new_force_new_hope/other_pages/ar_world/camera_kit/camera_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -226,7 +227,7 @@ class _NavBarPageState extends State<NavBarPage> {
   Widget build(BuildContext context) {
     final tabs = {
       'Home': const HomeWidget(),
-      'newsFeed': const NewsFeedWidget(),
+      'googleSearch': const GoogleSearchWidget(), // Replace newsFeed with googleSearch
       'arWorld': const MyTest(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
@@ -255,9 +256,9 @@ class _NavBarPageState extends State<NavBarPage> {
             tooltip: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper_outlined),
-            activeIcon: Icon(Icons.newspaper),
-            label: 'News',
+            icon: Icon(Icons.search_outlined), // Changed from newspaper to search
+            activeIcon: Icon(Icons.search),
+            label: 'Search', // Changed from News to Search
             tooltip: '',
           ),
           BottomNavigationBarItem(
