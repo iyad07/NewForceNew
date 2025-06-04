@@ -4,111 +4,55 @@ import '../supabase/database/tables/new_force_articles.dart';
 import '../supabase/database/tables/feed_your_curiosity_topics.dart';
 import 'news_scraper_service.dart';
 
-/// A provider class for managing news data from various sources
 class NewsProvider extends ChangeNotifier {
-  List<NewForceArticlesRow> _ghanaWebNews = [];
-  List<NewForceArticlesRow> _panAfricanNews = [];
+  List<NewForceArticlesRow> _africanNews = [];
   List<FeedYourCuriosityTopicsRow> _feedYourCuriosityNews = [];
-  bool _isLoadingGhanaWeb = false;
-  bool _isLoadingPanAfrican = false;
+
+  Map<String, List<NewForceArticlesRow>> _newsByCountry = {
+    'Nigeria': [],
+    'Kenya': [],
+    'South Africa': [],
+    'Ethiopia': [],
+    'Ghana': [],
+    'General Africa': [],
+  };
+
+  bool _isLoadingAfrican = false;
   bool _isLoadingFeedYourCuriosity = false;
   String _errorMessage = '';
 
-  // Cache expiration time in hours
-  static const int _cacheExpirationHours = 24;
+  static const int _cacheExpirationHours = 2; // Reduced from 24 to 2 hours
 
-  // Last fetch timestamps
-  DateTime? _lastGhanaWebFetch;
-  DateTime? _lastPanAfricanFetch;
+  DateTime? _lastAfricanNewsFetch;
   DateTime? _lastFeedYourCuriosityFetch;
 
-  /// Get the list of GhanaWeb news articles
-  List<NewForceArticlesRow> get ghanaWebNews => _ghanaWebNews;
-
-  /// Get the list of Pan African news articles
-  List<NewForceArticlesRow> get panAfricanNews => _panAfricanNews;
-
-  /// Get the list of Feed Your Curiosity articles
+  List<NewForceArticlesRow> get africanNews => _africanNews;
   List<FeedYourCuriosityTopicsRow> get feedYourCuriosityNews =>
       _feedYourCuriosityNews;
+  Map<String, List<NewForceArticlesRow>> get newsByCountry => _newsByCountry;
 
-  /// Check if any news source is currently loading
-  bool get isLoading =>
-      _isLoadingGhanaWeb || _isLoadingPanAfrican || _isLoadingFeedYourCuriosity;
-
-  /// Check if GhanaWeb news is loading
-  bool get isLoadingGhanaWeb => _isLoadingGhanaWeb;
-
-  /// Check if Pan African news is loading
-  bool get isLoadingPanAfrican => _isLoadingPanAfrican;
-
-  /// Check if Feed Your Curiosity news is loading
+  bool get isLoading => _isLoadingAfrican || _isLoadingFeedYourCuriosity;
+  bool get isLoadingAfrican => _isLoadingAfrican;
   bool get isLoadingFeedYourCuriosity => _isLoadingFeedYourCuriosity;
 
-  /// Get any error message
   String get errorMessage => _errorMessage;
 
-  /// Load news from database only without scraping websites
-  Future<void> loadCachedNewsOnly() async {
-    _isLoadingGhanaWeb = true;
-    _isLoadingPanAfrican = true;
-    _isLoadingFeedYourCuriosity = true;
-    _errorMessage = '';
-    notifyListeners();
-
-    try {
-      // Load GhanaWeb news from database
-      final ghanaWebArticles = await _loadCachedNews('GhanaWeb');
-      _ghanaWebNews = ghanaWebArticles;
-
-      // Load Pan African news from database
-      final panAfricanArticles = await _loadCachedNews('Pan African Visions');
-      _panAfricanNews = panAfricanArticles;
-
-      // Load Feed Your Curiosity news from database
-      final feedYourCuriosityTopics =
-          await _loadCachedFeedYourCuriosityTopics();
-      _feedYourCuriosityNews = feedYourCuriosityTopics;
-
-      // Update last fetch times to now
-      _lastGhanaWebFetch = DateTime.now();
-      _lastPanAfricanFetch = DateTime.now();
-      _lastFeedYourCuriosityFetch = DateTime.now();
-    } catch (e) {
-      _errorMessage = 'Failed to load news from database: $e';
-      print(_errorMessage);
-    } finally {
-      _isLoadingGhanaWeb = false;
-      _isLoadingPanAfrican = false;
-      _isLoadingFeedYourCuriosity = false;
-      notifyListeners();
-    }
+  List<NewForceArticlesRow> getNewsByCountry(String country) {
+    return _newsByCountry[country] ?? [];
   }
 
-  /// Fetch news from all sources
-  /// If force is true, it will fetch fresh data regardless of cache status
   Future<void> fetchAllNews({bool force = false}) async {
-    // Determine which sources need fetching
-    // If force is true, fetch all sources regardless of cache status
-    final needsGhanaWeb = force ||
-        _ghanaWebNews.isEmpty ||
-        _shouldRefreshCache(_lastGhanaWebFetch);
-    final needsPanAfrican = force ||
-        _panAfricanNews.isEmpty ||
-        _shouldRefreshCache(_lastPanAfricanFetch);
+    final needsAfrican = force ||
+        _africanNews.isEmpty ||
+        _shouldRefreshCache(_lastAfricanNewsFetch);
     final needsFeedYourCuriosity = force ||
         _feedYourCuriosityNews.isEmpty ||
         _shouldRefreshCache(_lastFeedYourCuriosityFetch);
 
-    // Create a list of futures to run in parallel
     final futures = <Future>[];
 
-    if (needsGhanaWeb) {
-      futures.add(fetchGhanaWebNews(forceRefresh: force));
-    }
-
-    if (needsPanAfrican) {
-      futures.add(fetchPanAfricanNews(forceRefresh: force));
+    if (needsAfrican) {
+      futures.add(fetchAfricanNews(forceRefresh: force));
     }
 
     if (needsFeedYourCuriosity) {
@@ -122,7 +66,6 @@ class NewsProvider extends ChangeNotifier {
     }
   }
 
-  /// Check if we need to refresh the cache
   bool _shouldRefreshCache(DateTime? lastFetch) {
     if (lastFetch == null) return true;
 
@@ -131,215 +74,162 @@ class NewsProvider extends ChangeNotifier {
     return difference >= _cacheExpirationHours;
   }
 
-  /// Load cached news from database
-  Future<List<NewForceArticlesRow>> _loadCachedNews(String publisher) async {
+  Future<List<NewForceArticlesRow>> _loadCachedNews(String? country) async {
     try {
       final table = NewForceArticlesTable();
       final yesterday =
           DateTime.now().subtract(Duration(hours: _cacheExpirationHours));
 
-      // Query for recent articles from this publisher
-      final cachedArticles = await table.queryRows(
+      var query = table.queryRows(
         queryFn: (q) => q
-            .eq('publishers', publisher)
             .gt('created_at', yesterday.toIso8601String())
             .order('created_at', ascending: false),
       );
 
-      print('Found ${cachedArticles.length} cached $publisher articles');
+      if (country != null && country != 'General Africa') {
+        query = table.queryRows(
+          queryFn: (q) => q
+              .eq('country', country)
+              .gt('created_at', yesterday.toIso8601String())
+              .order('created_at', ascending: false),
+        );
+      }
+
+      final cachedArticles = await query;
+
+      print('Found ${cachedArticles.length} cached African news articles');
       return cachedArticles;
     } catch (e) {
-      print('Error loading cached $publisher news: $e');
+      print('Error loading cached African news: $e');
       return [];
     }
   }
 
-  /// Fetch news from GhanaWeb
-  /// If forceRefresh is true, it will fetch fresh data regardless of cache status
-  Future<void> fetchGhanaWebNews({bool forceRefresh = false}) async {
-    // If forcing refresh, reset last fetch time
+  Future<void> fetchAfricanNews({bool forceRefresh = false}) async {
     if (forceRefresh) {
-      _lastGhanaWebFetch = null;
+      _lastAfricanNewsFetch = null;
     }
 
-    // If we already have data and it's not expired, don't fetch again
     if (!forceRefresh &&
-        _ghanaWebNews.isNotEmpty &&
-        !_shouldRefreshCache(_lastGhanaWebFetch)) {
-      print('Using in-memory GhanaWeb articles');
+        _africanNews.isNotEmpty &&
+        !_shouldRefreshCache(_lastAfricanNewsFetch)) {
+      print('Using in-memory African articles');
       return;
     }
 
-    _isLoadingGhanaWeb = true;
+    _isLoadingAfrican = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      // If forceRefresh is true, always scrape fresh data
-      if (forceRefresh) {
-        print('Force refreshing: Fetching fresh GhanaWeb articles');
-        final scrapedNews = await NewsScraperService.scrapeGhanaWeb();
-        _ghanaWebNews =
+      final cachedArticles = await _loadCachedNews(null);
+
+      if (cachedArticles.isNotEmpty) {
+        print('Using cached African articles from database');
+        _africanNews = cachedArticles;
+        _categorizeNews();
+        _lastAfricanNewsFetch = DateTime.now();
+      } else {
+        print('Fetching fresh African articles');
+
+        // Test categorization before scraping
+        NewsScraperService.testCategorization();
+
+        final scrapedNews = await NewsScraperService.scrapeAfricaNews();
+        _africanNews =
             NewsScraperService.convertToNewForceArticles(scrapedNews);
 
-        // Save to database
-        await _saveNewsToDatabase(_ghanaWebNews);
-
-        // Update last fetch time
-        _lastGhanaWebFetch = DateTime.now();
-      } else {
-        // Check if we have recent cached articles in the database
-        final cachedArticles = await _loadCachedNews('GhanaWeb');
-
-        if (cachedArticles.isNotEmpty) {
-          print('Using cached GhanaWeb articles from database');
-          _ghanaWebNews = cachedArticles;
-          // Update last fetch time to reflect when we loaded from cache
-          _lastGhanaWebFetch = DateTime.now();
-        } else {
-          print('Fetching fresh GhanaWeb articles');
-          final scrapedNews = await NewsScraperService.scrapeGhanaWeb();
-          _ghanaWebNews =
-              NewsScraperService.convertToNewForceArticles(scrapedNews);
-
-          // Save to database
-          await _saveNewsToDatabase(_ghanaWebNews);
-
-          // Update last fetch time
-          _lastGhanaWebFetch = DateTime.now();
-        }
+        await _saveNewsToDatabase(_africanNews);
+        _categorizeNews();
+        _lastAfricanNewsFetch = DateTime.now();
       }
     } catch (e) {
-      _errorMessage = 'Failed to load GhanaWeb news: $e';
+      _errorMessage = 'Failed to load African news: $e';
       print(_errorMessage);
-      // If we have existing data, keep using it even if refresh failed
-      if (_ghanaWebNews.isEmpty) {
-        // Try to get fallback data if we have nothing
+
+      if (_africanNews.isEmpty) {
         try {
-          final fallbackNews = NewsScraperService.getFallbackGhanaWebNews();
-          _ghanaWebNews =
+          final fallbackNews = NewsScraperService.getFallbackAfricanNews();
+          _africanNews =
               NewsScraperService.convertToNewForceArticles(fallbackNews);
+          _categorizeNews();
         } catch (fallbackError) {
-          print('Failed to load fallback GhanaWeb news: $fallbackError');
+          print('Failed to load fallback African news: $fallbackError');
         }
       }
     } finally {
-      _isLoadingGhanaWeb = false;
+      _isLoadingAfrican = false;
       notifyListeners();
     }
   }
 
-  /// Fetch news from Pan African News
-  /// If forceRefresh is true, it will fetch fresh data regardless of cache status
-  Future<void> fetchPanAfricanNews({bool forceRefresh = false}) async {
-    // If forcing refresh, reset last fetch time
-    if (forceRefresh) {
-      _lastPanAfricanFetch = null;
-    }
+  void _categorizeNews() {
+    _newsByCountry = {
+      'Nigeria': [],
+      'Kenya': [],
+      'South Africa': [],
+      'Ethiopia': [],
+      'Ghana': [],
+      'General Africa': [],
+    };
 
-    // If we already have data and it's not expired, don't fetch again
-    if (!forceRefresh &&
-        _panAfricanNews.isNotEmpty &&
-        !_shouldRefreshCache(_lastPanAfricanFetch)) {
-      print('Using in-memory Pan African Visions articles');
-      return;
-    }
+    print('🏁 Starting news categorization...');
 
-    _isLoadingPanAfrican = true;
-    _errorMessage = '';
-    notifyListeners();
+    for (final article in _africanNews) {
+      final title = article.getField<String>('title') ?? 'No Title';
+      final description = article.getField<String>('description') ?? '';
 
-    try {
-      // If forceRefresh is true, always scrape fresh data
-      if (forceRefresh) {
-        print('Force refreshing: Fetching fresh Pan African Visions articles');
-        final scrapedNews = await NewsScraperService.scrapePanAfricanNews();
-        _panAfricanNews =
-            NewsScraperService.convertToNewForceArticles(scrapedNews);
+      // Re-categorize using current algorithm instead of stored country
+      final country =
+          NewsScraperService.categorizeByCountry(title, description);
 
-        // Save to database
-        await _saveNewsToDatabase(_panAfricanNews);
+      // Update the article's country field
+      article.setField('country', country);
 
-        // Update last fetch time
-        _lastPanAfricanFetch = DateTime.now();
+      if (_newsByCountry.containsKey(country)) {
+        _newsByCountry[country]!.add(article);
       } else {
-        // Check if we have recent cached articles in the database
-        final cachedArticles = await _loadCachedNews('Pan African Visions');
-
-        if (cachedArticles.isNotEmpty) {
-          print('Using cached Pan African Visions articles from database');
-          _panAfricanNews = cachedArticles;
-          // Update last fetch time to reflect when we loaded from cache
-          _lastPanAfricanFetch = DateTime.now();
-        } else {
-          print('Fetching fresh Pan African Visions articles');
-          final scrapedNews = await NewsScraperService.scrapePanAfricanNews();
-          _panAfricanNews =
-              NewsScraperService.convertToNewForceArticles(scrapedNews);
-
-          // Save to database
-          await _saveNewsToDatabase(_panAfricanNews);
-
-          // Update last fetch time
-          _lastPanAfricanFetch = DateTime.now();
-        }
+        print('❌ Unknown country: $country, adding to General Africa');
+        _newsByCountry['General Africa']!.add(article);
       }
-    } catch (e) {
-      _errorMessage = 'Failed to load Pan African news: $e';
-      print(_errorMessage);
-      // If we have existing data, keep using it even if refresh failed
-      if (_panAfricanNews.isEmpty) {
-        // Try to get fallback data if we have nothing
-        try {
-          final fallbackNews = NewsScraperService.getFallbackPanAfricanNews();
-          _panAfricanNews =
-              NewsScraperService.convertToNewForceArticles(fallbackNews);
-        } catch (fallbackError) {
-          print('Failed to load fallback Pan African news: $fallbackError');
-        }
-      }
-    } finally {
-      _isLoadingPanAfrican = false;
-      notifyListeners();
     }
+
+    final categoryCounts = _newsByCountry.map((k, v) => MapEntry(k, v.length));
+    print('📊 Final categorization: $categoryCounts');
+
+    // Print some examples
+    _newsByCountry.forEach((country, articles) {
+      if (articles.isNotEmpty) {
+        print('🏷️ $country examples:');
+        for (int i = 0; i < (articles.length > 2 ? 2 : articles.length); i++) {
+          final title = articles[i].getField<String>('title') ?? 'No Title';
+          print('   • $title');
+        }
+      }
+    });
+
+    print('✅ Categorization complete\n');
   }
 
-  /// Save news articles to the database
   Future<void> _saveNewsToDatabase(List<NewForceArticlesRow> articles) async {
     try {
       final table = NewForceArticlesTable();
 
       for (final article in articles) {
-        // Check if article with same title already exists
         final existingArticles = await table.queryRows(
           queryFn: (q) => q.eq('title', article.title ?? ''),
         );
 
-        // Convert the row to a map for database operations
-        final Map<String, dynamic> articleData = article.data;
-
         if (existingArticles.isEmpty) {
-          // Insert new article if it doesn't exist
-          print('Inserting new article: ${article.title}');
+          final Map<String, dynamic> articleData = article.data;
           await table.insert(articleData);
-        } else {
-          // Update existing article with fresh data
-          print('Updating existing article: ${article.title}');
-          final existingId = existingArticles.first.id;
-          // Update the existing article with the new data
-          await table.update(
-            data: articleData,
-            matchingRows: (q) => q.eq('id', existingId),
-          );
         }
       }
-      print('Database update completed: ${articles.length} articles processed');
     } catch (e) {
       print('Error saving articles to database: $e');
     }
   }
 
-  /// Load cached Feed Your Curiosity topics from database
   Future<List<FeedYourCuriosityTopicsRow>>
       _loadCachedFeedYourCuriosityTopics() async {
     try {
@@ -347,7 +237,6 @@ class NewsProvider extends ChangeNotifier {
       final yesterday =
           DateTime.now().subtract(Duration(hours: _cacheExpirationHours));
 
-      // Query for recent articles
       final cachedTopics = await table.queryRows(
         queryFn: (q) => q
             .gt('created_at', yesterday.toIso8601String())
@@ -362,20 +251,17 @@ class NewsProvider extends ChangeNotifier {
     }
   }
 
-  /// Save Feed Your Curiosity topics to the database
   Future<void> _saveFeedYourCuriosityTopicsToDatabase(
       List<FeedYourCuriosityTopicsRow> topics) async {
     try {
       final table = FeedYourCuriosityTopicsTable();
 
       for (final topic in topics) {
-        // Check if topic with same title already exists
         final existingTopics = await table.queryRows(
           queryFn: (q) => q.eq('title', topic.title ?? ''),
         );
 
         if (existingTopics.isEmpty) {
-          // Convert the row to a map for insertion
           final Map<String, dynamic> topicData = topic.data;
           await table.insert(topicData);
         }
@@ -385,15 +271,11 @@ class NewsProvider extends ChangeNotifier {
     }
   }
 
-  /// Fetch news for Feed Your Curiosity section
-  /// If forceRefresh is true, it will fetch fresh data regardless of cache status
   Future<void> fetchFeedYourCuriosity({bool forceRefresh = false}) async {
-    // If forcing refresh, reset last fetch time
     if (forceRefresh) {
       _lastFeedYourCuriosityFetch = null;
     }
 
-    // If we already have data and it's not expired, don't fetch again
     if (!forceRefresh &&
         _feedYourCuriosityNews.isNotEmpty &&
         !_shouldRefreshCache(_lastFeedYourCuriosityFetch)) {
@@ -406,47 +288,26 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // If forceRefresh is true, always scrape fresh data
-      if (forceRefresh) {
-        print('Force refreshing: Fetching fresh Feed Your Curiosity topics');
+      final cachedTopics = await _loadCachedFeedYourCuriosityTopics();
+
+      if (cachedTopics.isNotEmpty) {
+        print('Using cached Feed Your Curiosity topics from database');
+        _feedYourCuriosityNews = cachedTopics;
+        _lastFeedYourCuriosityFetch = DateTime.now();
+      } else {
+        print('Fetching fresh Feed Your Curiosity topics');
         final scrapedNews = await NewsScraperService.scrapeFeedYourCuriosity();
         _feedYourCuriosityNews =
             NewsScraperService.convertToFeedYourCuriosityTopics(scrapedNews);
 
-        // Save to database
         await _saveFeedYourCuriosityTopicsToDatabase(_feedYourCuriosityNews);
-
-        // Update last fetch time
         _lastFeedYourCuriosityFetch = DateTime.now();
-      } else {
-        // Check if we have recent cached topics in the database
-        final cachedTopics = await _loadCachedFeedYourCuriosityTopics();
-
-        if (cachedTopics.isNotEmpty) {
-          print('Using cached Feed Your Curiosity topics from database');
-          _feedYourCuriosityNews = cachedTopics;
-          // Update last fetch time to reflect when we loaded from cache
-          _lastFeedYourCuriosityFetch = DateTime.now();
-        } else {
-          print('Fetching fresh Feed Your Curiosity topics');
-          final scrapedNews =
-              await NewsScraperService.scrapeFeedYourCuriosity();
-          _feedYourCuriosityNews =
-              NewsScraperService.convertToFeedYourCuriosityTopics(scrapedNews);
-
-          // Save to database
-          await _saveFeedYourCuriosityTopicsToDatabase(_feedYourCuriosityNews);
-
-          // Update last fetch time
-          _lastFeedYourCuriosityFetch = DateTime.now();
-        }
       }
     } catch (e) {
       _errorMessage = 'Failed to load Feed Your Curiosity topics: $e';
       print(_errorMessage);
-      // If we have existing data, keep using it even if refresh failed
+
       if (_feedYourCuriosityNews.isEmpty) {
-        // Try to get fallback data if we have nothing
         try {
           final fallbackNews =
               NewsScraperService.getFallbackFeedYourCuriosityNews();
@@ -461,5 +322,68 @@ class NewsProvider extends ChangeNotifier {
       _isLoadingFeedYourCuriosity = false;
       notifyListeners();
     }
+  }
+
+  // Legacy getters for backward compatibility
+  List<NewForceArticlesRow> get ghanaWebNews => getNewsByCountry('Ghana');
+  List<NewForceArticlesRow> get panAfricanNews => _africanNews;
+  bool get isLoadingGhanaWeb => _isLoadingAfrican;
+  bool get isLoadingPanAfrican => _isLoadingAfrican;
+
+  // Force re-categorization of existing articles
+  Future<void> reCategorizeExistingArticles() async {
+    print('🔄 Starting re-categorization of existing articles...');
+
+    if (_africanNews.isNotEmpty) {
+      print('📰 Re-categorizing ${_africanNews.length} cached articles...');
+      _categorizeNews();
+
+      // Update the database with new categorizations
+      try {
+        final table = NewForceArticlesTable();
+        for (final article in _africanNews) {
+          final id = article.getField<int>('id');
+          final newCountry = article.getField<String>('country');
+
+          if (id != null && newCountry != null) {
+            await table.update(
+              data: {'country': newCountry},
+              matchingRows: (q) => q.eq('id', id),
+            );
+          }
+        }
+        print('✅ Database updated with new categorizations');
+      } catch (e) {
+        print('❌ Error updating database: $e');
+      }
+
+      notifyListeners();
+    } else {
+      print('❌ No articles to re-categorize');
+    }
+  }
+
+  // Debug method to manually test categorization
+  void testCategorizationNow() {
+    print('\n🔍 TESTING CATEGORIZATION...');
+    NewsScraperService.testCategorization();
+
+    // Test with fallback data
+    final fallbackNews = NewsScraperService.getFallbackAfricanNews();
+    print('\n📰 TESTING WITH FALLBACK DATA:');
+
+    for (final article in fallbackNews) {
+      final title = article['title'] ?? '';
+      final description = article['description'] ?? '';
+      final expectedCountry = article['country'] ?? '';
+      final actualCountry =
+          NewsScraperService.categorizeByCountry(title, description);
+
+      print('Title: $title');
+      print('Expected: $expectedCountry | Actual: $actualCountry');
+      print('✓ Match: ${expectedCountry == actualCountry}');
+      print('---');
+    }
+    print('🔍 CATEGORIZATION TEST COMPLETE\n');
   }
 }

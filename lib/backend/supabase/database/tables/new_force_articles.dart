@@ -41,4 +41,7 @@ class NewForceArticlesRow extends SupabaseDataRow {
 
   String? get urlLink => getField<String>('urlLink');
   set urlLink(String? value) => setField<String>('urlLink', value);
+
+  String? get country => getField<String>('country');
+  set country(String? value) => setField<String>('country', value);
 }
