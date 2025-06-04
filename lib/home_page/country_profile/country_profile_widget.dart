@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 
 import '/backend/supabase/supabase.dart';
+import '/backend/scrapers/news_provider.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -8,6 +10,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'country_profile_model.dart';
 export 'country_profile_model.dart';
 
@@ -63,12 +66,20 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
           !anim.applyInitialState),
       this,
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchCountryNews();
+    });
+  }
+
+  void _fetchCountryNews() {
+    final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+    newsProvider.fetchAfricanNews();
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -257,7 +268,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                               mainAxisSize: MainAxisSize.max,
                               children: [
                                 Text(
-                                  'Poplation:',
+                                  'Population:',
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -354,266 +365,339 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                       width: double.infinity,
                       height: MediaQuery.sizeOf(context).height * 0.55,
                       decoration: const BoxDecoration(),
-                      child: FutureBuilder<List<CountryProfileNewsRow>>(
-                        future: CountryProfileNewsTable().queryRows(
-                          queryFn: (q) => q.eq(
-                            'country',
-                            valueOrDefault<String>(
-                              widget.countrydetails?.country,
-                              '0',
-                            ),
-                          ),
-                        ),
-                        builder: (context, snapshot) {
-                          // Customize what your widget looks like when it's loading.
-                          if (!snapshot.hasData) {
-                            return Image.asset(
-                              '',
+                      child: Consumer<NewsProvider>(
+                        builder: (context, newsProvider, child) {
+                          if (newsProvider.isLoadingAfrican) {
+                            return Center(
+                              child: SizedBox(
+                                width: 50.0,
+                                height: 50.0,
+                                child: SpinKitRipple(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  size: 50.0,
+                                ),
+                              ),
                             );
                           }
-                          List<CountryProfileNewsRow>
-                              listViewCountryProfileNewsRowList =
-                              snapshot.data!;
 
-                          return ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(
-                              0,
-                              12.0,
-                              0,
-                              12.0,
-                            ),
-                            primary: false,
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemCount: listViewCountryProfileNewsRowList.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 1.0),
-                            itemBuilder: (context, listViewIndex) {
-                              final listViewCountryProfileNewsRow =
-                                  listViewCountryProfileNewsRowList[
-                                      listViewIndex];
-                              return Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 0.0, 16.0, 8.0),
-                                child: InkWell(
-                                  splashColor: Colors.transparent,
-                                  focusColor: Colors.transparent,
-                                  hoverColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  onTap: () async {
-                                    context.pushNamed(
-                                      'countryNewsDetails',
-                                      queryParameters: {
-                                        'title': serializeParam(
-                                          listViewCountryProfileNewsRow.title,
-                                          ParamType.String,
+                          if (newsProvider.errorMessage.isNotEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Unable to load news',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontSize: 16.0,
                                         ),
-                                        'articleImage': serializeParam(
-                                          listViewCountryProfileNewsRow.image,
-                                          ParamType.String,
+                                  ),
+                                  const SizedBox(height: 16.0),
+                                  ElevatedButton(
+                                    onPressed: () => _fetchCountryNews(),
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          final countryName =
+                              widget.countrydetails?.country ?? '';
+                          final countryNews =
+                              newsProvider.getNewsByCountry(countryName);
+
+                          if (countryNews.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'No news available for $countryName',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontSize: 16.0,
                                         ),
-                                        'description': serializeParam(
-                                          listViewCountryProfileNewsRow
-                                              .description,
-                                          ParamType.String,
-                                        ),
-                                        'country': serializeParam(
-                                          listViewCountryProfileNewsRow.country,
-                                          ParamType.String,
-                                        ),
-                                        'newsbody': serializeParam(
-                                          listViewCountryProfileNewsRow
-                                              .newsBody,
-                                          ParamType.String,
-                                        ),
-                                      }.withoutNulls,
-                                      extra: <String, dynamic>{
-                                        kTransitionInfoKey:
-                                            const TransitionInfo(
-                                          hasTransition: true,
-                                          transitionType:
-                                              PageTransitionType.fade,
-                                        ),
-                                      },
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 340.0,
-                                    height: 216.0,
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryBackground,
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          blurRadius: 4.0,
-                                          color: Color(0x2B202529),
-                                          offset: Offset(
-                                            0.0,
-                                            2.0,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 16.0),
+                                  ElevatedButton(
+                                    onPressed: () => _fetchCountryNews(),
+                                    child: const Text('Refresh'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              await newsProvider.fetchAfricanNews(
+                                  forceRefresh: true);
+                            },
+                            child: ListView.separated(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0, 12.0, 0, 12.0),
+                              primary: false,
+                              shrinkWrap: true,
+                              scrollDirection: Axis.vertical,
+                              itemCount: countryNews.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 1.0),
+                              itemBuilder: (context, listViewIndex) {
+                                final article = countryNews[listViewIndex];
+                                return Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(
+                                      16.0, 0.0, 16.0, 8.0),
+                                  child: InkWell(
+                                    splashColor: Colors.transparent,
+                                    focusColor: Colors.transparent,
+                                    hoverColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () async {
+                                      context.pushNamed(
+                                        'newForceArticleDetails',
+                                        queryParameters: {
+                                          'publisher': serializeParam(
+                                            article.publishers,
+                                            ParamType.String,
                                           ),
-                                        )
-                                      ],
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional
-                                              .fromSTEB(8.0, 8.0, 8.0, 8.0),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10.0),
-                                                  child: CachedNetworkImage(
-                                                    imageUrl:
-                                                        listViewCountryProfileNewsRow
-                                                            .image!,
-                                                    width: 160.0,
-                                                    height: 136.0,
-                                                    fit: BoxFit.cover,
+                                          'articleImage': serializeParam(
+                                            article.articeImage,
+                                            ParamType.String,
+                                          ),
+                                          'description': serializeParam(
+                                            article.description,
+                                            ParamType.String,
+                                          ),
+                                          'newsbody': serializeParam(
+                                            article.articleBody,
+                                            ParamType.String,
+                                          ),
+                                          'title': serializeParam(
+                                            article.title,
+                                            ParamType.String,
+                                          ),
+                                          'datecreated': serializeParam(
+                                            article.createdAt,
+                                            ParamType.DateTime,
+                                          ),
+                                          'newsUrl': serializeParam(
+                                            article.articleUrl,
+                                            ParamType.String,
+                                          ),
+                                        }.withoutNulls,
+                                        extra: <String, dynamic>{
+                                          kTransitionInfoKey:
+                                              const TransitionInfo(
+                                            hasTransition: true,
+                                            transitionType:
+                                                PageTransitionType.fade,
+                                          ),
+                                        },
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 340.0,
+                                      height: 216.0,
+                                      decoration: BoxDecoration(
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryBackground,
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            blurRadius: 4.0,
+                                            color: Color(0x2B202529),
+                                            offset: Offset(
+                                              0.0,
+                                              2.0,
+                                            ),
+                                          )
+                                        ],
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsetsDirectional
+                                                .fromSTEB(8.0, 8.0, 8.0, 8.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.max,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(4.0),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10.0),
+                                                    child: article.articeImage !=
+                                                                null &&
+                                                            article.articeImage!
+                                                                .isNotEmpty
+                                                        ? CachedNetworkImage(
+                                                            imageUrl: article
+                                                                .articeImage!,
+                                                            width: 160.0,
+                                                            height: 136.0,
+                                                            fit: BoxFit.cover,
+                                                            errorWidget:
+                                                                (context, url,
+                                                                        error) =>
+                                                                    Image.asset(
+                                                              'assets/images/app_launcher_icon.png',
+                                                              width: 160.0,
+                                                              height: 136.0,
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                          )
+                                                        : Image.asset(
+                                                            'assets/images/app_launcher_icon.png',
+                                                            width: 160.0,
+                                                            height: 136.0,
+                                                            fit: BoxFit.cover,
+                                                          ),
                                                   ),
                                                 ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          8.0, 4.0, 0.0, 4.0),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        valueOrDefault<String>(
-                                                          listViewCountryProfileNewsRow
-                                                              .title,
-                                                          '0',
-                                                        ),
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .headlineSmall
-                                                            .override(
-                                                              fontFamily:
-                                                                  'SFPro',
-                                                              fontSize: 20.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              useGoogleFonts:
-                                                                  false,
-                                                            ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsetsDirectional
-                                                                .fromSTEB(0.0,
-                                                                4.0, 0.0, 0.0),
-                                                        child: AutoSizeText(
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                            8.0, 4.0, 0.0, 4.0),
+                                                    child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
                                                           valueOrDefault<
                                                               String>(
-                                                            listViewCountryProfileNewsRow
-                                                                .description,
-                                                            '0',
+                                                            article.title,
+                                                            'No Title',
                                                           ),
-                                                          maxLines: 3,
                                                           style: FlutterFlowTheme
                                                                   .of(context)
-                                                              .labelSmall
+                                                              .headlineSmall
                                                               .override(
                                                                 fontFamily:
                                                                     'SFPro',
-                                                                fontSize: 12.0,
+                                                                fontSize: 20.0,
                                                                 letterSpacing:
                                                                     0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w300,
                                                                 useGoogleFonts:
                                                                     false,
                                                               ),
                                                         ),
-                                                      ),
-                                                    ].divide(const SizedBox(
-                                                        height: 5.0)),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional
-                                              .fromSTEB(8.0, 5.0, 8.0, 8.0),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Icon(
-                                                  Icons.access_time_rounded,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .secondaryText,
-                                                  size: 20.0,
-                                                ),
-                                              ),
-                                              Flexible(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          12.0, 0.0, 0.0, 0.0),
-                                                  child: Text(
-                                                    valueOrDefault<String>(
-                                                      dateTimeFormat(
-                                                          "yMMMd",
-                                                          listViewCountryProfileNewsRow
-                                                              .createdAt),
-                                                      '0',
-                                                    ),
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .bodySmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Tiro Bangla',
-                                                          letterSpacing: 0.0,
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsetsDirectional
+                                                                  .fromSTEB(
+                                                                  0.0,
+                                                                  4.0,
+                                                                  0.0,
+                                                                  0.0),
+                                                          child: AutoSizeText(
+                                                            valueOrDefault<
+                                                                String>(
+                                                              article
+                                                                  .description,
+                                                              'No description available',
+                                                            ),
+                                                            maxLines: 3,
+                                                            style: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .labelSmall
+                                                                .override(
+                                                                  fontFamily:
+                                                                      'SFPro',
+                                                                  fontSize:
+                                                                      12.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w300,
+                                                                  useGoogleFonts:
+                                                                      false,
+                                                                ),
+                                                          ),
                                                         ),
+                                                      ].divide(const SizedBox(
+                                                          height: 5.0)),
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          Padding(
+                                            padding: const EdgeInsetsDirectional
+                                                .fromSTEB(8.0, 5.0, 8.0, 8.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.max,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Icon(
+                                                    Icons.access_time_rounded,
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .secondaryText,
+                                                    size: 20.0,
+                                                  ),
+                                                ),
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsetsDirectional
+                                                            .fromSTEB(12.0, 0.0,
+                                                            0.0, 0.0),
+                                                    child: Text(
+                                                      valueOrDefault<String>(
+                                                        dateTimeFormat("yMMMd",
+                                                            article.createdAt),
+                                                        'Recently',
+                                                      ),
+                                                      style: FlutterFlowTheme
+                                                              .of(context)
+                                                          .bodySmall
+                                                          .override(
+                                                            fontFamily:
+                                                                'Tiro Bangla',
+                                                            letterSpacing: 0.0,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ).animateOnPageLoad(animationsMap[
-                                    'containerOnPageLoadAnimation']!),
-                              );
-                            },
+                                  ).animateOnPageLoad(animationsMap[
+                                      'containerOnPageLoadAnimation']!),
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
