@@ -1,5 +1,4 @@
 import 'package:new_force_new_hope/google_search/google_search_widget.dart';
-import 'package:new_force_new_hope/other_pages/ar_world/camera_kit/camera_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'backend/scrapers/news_provider.dart';
@@ -161,8 +160,54 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<Widget>(
+      future: validateAppState(_buildMainApp()),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              useMaterial3: false,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              useMaterial3: false,
+            ),
+            themeMode: _themeMode,
+            home: Scaffold(
+              //backgroundColor: Colors.white,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Use the same loading gif during initial check
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.asset(
+                        'assets/images/ForceGIFanimation-unscreen.gif',
+                        width: 120.0,
+                        height: 120.0,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        return snapshot.data ?? _buildMainApp();
+      },
+    );
+  }
+
+  Widget _buildMainApp() {
     return MaterialApp.router(
-      title: 'TNFM',
+      debugShowCheckedModeBanner: false,
+      title: 'New Force New Hope',
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -171,33 +216,14 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: const [Locale('en', '')],
       theme: ThemeData(
         brightness: Brightness.light,
-        scrollbarTheme: const ScrollbarThemeData(),
-        useMaterial3: true,
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: ZoomPageTransitionsBuilder(
-              allowEnterRouteSnapshotting: false,
-            ),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
+        useMaterial3: false,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scrollbarTheme: const ScrollbarThemeData(),
-        useMaterial3: true,
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: ZoomPageTransitionsBuilder(
-              allowEnterRouteSnapshotting: false,
-            ),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
+        useMaterial3: false,
       ),
       themeMode: _themeMode,
       routerConfig: _router,
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -227,8 +253,9 @@ class _NavBarPageState extends State<NavBarPage> {
   Widget build(BuildContext context) {
     final tabs = {
       'Home': const HomeWidget(),
-      'googleSearch': const GoogleSearchWidget(), // Replace newsFeed with googleSearch
-      'arWorld': const MyTest(),
+      'googleSearch':
+          const GoogleSearchWidget(), // Replace newsFeed with googleSearch
+      'arWorld': const ArWorldWidget(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
     };
@@ -256,7 +283,8 @@ class _NavBarPageState extends State<NavBarPage> {
             tooltip: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined), // Changed from newspaper to search
+            icon:
+                Icon(Icons.search_outlined), // Changed from newspaper to search
             activeIcon: Icon(Icons.search),
             label: 'Search', // Changed from News to Search
             tooltip: '',

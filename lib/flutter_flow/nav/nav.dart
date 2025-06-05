@@ -516,6 +516,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           path: '/quizquestions',
           builder: (context, params) => const QuizquestionsWidget(),
         ),
+        FFRoute(
+          name: 'newForcePage1',
+          path: '/newForcePage1',
+          builder: (context, params) => const NewForcePage1Widget(),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

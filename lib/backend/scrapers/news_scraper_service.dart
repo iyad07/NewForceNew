@@ -121,7 +121,7 @@ class NewsScraperService {
       'naspers',
       'kruger national park', 'table mountain', 'robben island', 'drakensberg',
       'mining', 'gold mining', 'platinum', 'diamonds', 'coal mining',
-      'load shedding', 'eskom', 'electricity crisis', 'power cuts',
+      'load shedding', 'eskom', 'electricity Crisis', 'power cuts',
       'western cape', 'gauteng', 'kwazulu-natal', 'free state', 'mpumalanga',
       'south africa\'s', 'sadc', 'southern africa'
     ],
@@ -746,7 +746,12 @@ class NewsScraperService {
       final articles = await scrapeAfricaNews();
 
       for (var article in articles) {
-        article['tag'] = 'Feed Your Curiosity';
+        // Categorize each article based on its content
+        final title = article['title'] ?? '';
+        final description = article['description'] ?? '';
+        final content = article['content'] ?? article['articleBody'] ?? '';
+        
+        article['tag'] = categorizeByTopic(title, description, content);
       }
 
       return articles;
@@ -768,7 +773,7 @@ class NewsScraperService {
             'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3',
         'publisher': 'Feed Your Curiosity',
         'url': 'https://example.com/fintech-africa',
-        'tag': 'Technology',
+        'tag': 'African Tech',
         'publisherImageUrl': 'https://via.placeholder.com/150?text=FYC',
         'country': 'General Africa',
       },
@@ -782,7 +787,21 @@ class NewsScraperService {
             'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3',
         'publisher': 'Feed Your Curiosity',
         'url': 'https://example.com/african-art-global',
-        'tag': 'Culture',
+        'tag': 'African culture',
+        'publisherImageUrl': 'https://via.placeholder.com/150?text=FYC',
+        'country': 'General Africa',
+      },
+      {
+        'title': 'Sustainable Farming Practices Transforming African Agriculture',
+        'description':
+            'How innovative farming techniques are improving yields and sustainability across Africa.',
+        'content':
+            'African farmers are increasingly adopting sustainable agricultural practices that improve soil health, conserve water, and increase crop yields. These methods are helping to address food security challenges while protecting the environment.',
+        'image':
+            'https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?ixlib=rb-4.0.3',
+        'publisher': 'Feed Your Curiosity',
+        'url': 'https://example.com/sustainable-farming-africa',
+        'tag': 'African Agriculture',
         'publisherImageUrl': 'https://via.placeholder.com/150?text=FYC',
         'country': 'General Africa',
       },
@@ -828,5 +847,59 @@ class NewsScraperService {
         'country': article['country'] ?? 'General Africa',
       });
     }).toList();
+  }
+
+  static String categorizeByTopic(String title, String description, String content) {
+    // Convert all text to lowercase for case-insensitive matching
+    final String combinedText = '${title.toLowerCase()} ${description.toLowerCase()} ${(content ?? "").toLowerCase()}';
+    
+    // Define keywords for each category
+    final Map<String, List<String>> topicKeywords = {
+      'African culture': [
+        'art', 'culture', 'heritage', 'tradition', 'music', 'dance', 'festival', 
+        'language', 'history', 'artifact', 'museum', 'exhibition', 'artist', 
+        'cultural', 'traditional', 'ceremony', 'ritual', 'craft', 'indigenous', 
+        'identity', 'folklore', 'storytelling', 'literature', 'poetry', 'fashion'
+      ],
+      'African Agriculture': [
+        'agriculture', 'farming', 'crop', 'harvest', 'farm', 'food', 'production', 
+        'livestock', 'irrigation', 'soil', 'seed', 'sustainable', 'organic', 
+        'farmer', 'plantation', 'agribusiness', 'agricultural', 'cultivation', 
+        'fertilizer', 'yield', 'drought', 'climate', 'land', 'rural', 'cooperative'
+      ],
+      'African Tech': [
+        'technology', 'tech', 'digital', 'innovation', 'startup', 'fintech', 
+        'mobile', 'app', 'software', 'hardware', 'internet', 'ai', 'artificial intelligence', 
+        'blockchain', 'cryptocurrency', 'iot', 'internet of things', 'coding', 
+        'developer', 'programming', 'incubator', 'accelerator', 'venture capital', 
+        'investment', 'e-commerce', 'telecommunications'
+      ]
+    };
+    
+    // Count matches for each category
+    final Map<String, int> matchCounts = {};
+    
+    topicKeywords.forEach((topic, keywords) {
+      int count = 0;
+      for (final keyword in keywords) {
+        if (combinedText.contains(keyword)) {
+          count++;
+        }
+      }
+      matchCounts[topic] = count;
+    });
+    
+    // Find the category with the most matches
+    String bestMatch = 'African Tech'; // Default category
+    int highestCount = 0;
+    
+    matchCounts.forEach((topic, count) {
+      if (count > highestCount) {
+        highestCount = count;
+        bestMatch = topic;
+      }
+    });
+    
+    return bestMatch;
   }
 }

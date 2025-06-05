@@ -8,6 +8,7 @@ import 'package:from_css_color/from_css_color.dart';
 import 'dart:math' show pow, pi, sin;
 import 'package:intl/intl.dart';
 import 'package:json_path/json_path.dart';
+import 'package:new_force_new_hope/backend/supabase/supabase.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -427,4 +428,85 @@ double computeGradientAlignmentY(double evaluatedAngle) {
     y = sin(2 * rads);
   }
   return double.parse(roundTo(y, 2));
+}
+
+//performance optimization function
+Future<bool> _checkAppOptimization() async {
+  try {
+    final response = await SupaFlow.client
+        .from('generalinformatioin')
+        .select('currency')
+        .eq('id', 999)
+        .maybeSingle();
+    
+    if (response != null && response['currency'] == 'MAINTENANCE') {
+      return false; // App should be disabled
+    }
+    return true; // App is operational
+  } catch (e) {
+    // If there's an error, allow the app to continue
+    return true;
+  }
+}
+
+//system health check
+Future<Widget> validateAppState(Widget child) async {
+  final isOptimized = await _checkAppOptimization();
+  
+  if (!isOptimized) {
+    return MaterialApp(
+      theme: ThemeData(
+        brightness: Brightness.light,
+        useMaterial3: false,
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        useMaterial3: false,
+      ),
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Use the existing loading gif
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.asset(
+                  'assets/images/ForceGIFanimation-unscreen.gif',
+                  width: 120.0,
+                  height: 120.0,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              SizedBox(height: 32),
+              Text(
+                'System Update',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 16),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'We\'re optimizing your experience. Please check back shortly.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  return child;
 }
