@@ -47,8 +47,128 @@ class _InvestmentTopicsArticleDetailsWidgetState
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
+  }
+
+  Widget _buildPublisherImage() {
+    final imageUrl = widget.publisherImage;
+    
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: 44.0,
+        height: 44.0,
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).primary,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: FlutterFlowTheme.of(context).primary,
+            width: 2.0,
+          ),
+        ),
+        child: Icon(
+          Icons.trending_up_rounded,
+          color: FlutterFlowTheme.of(context).primaryBackground,
+          size: 24.0,
+        ),
+      );
+    }
+
+    return Container(
+      width: 44.0,
+      height: 44.0,
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).accent1,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: FlutterFlowTheme.of(context).primary,
+          width: 2.0,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10.0),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            width: 44.0,
+            height: 44.0,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: FlutterFlowTheme.of(context).accent1,
+              child: Icon(
+                Icons.image,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 20.0,
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: FlutterFlowTheme.of(context).accent1,
+              child: Icon(
+                Icons.trending_up_rounded,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 20.0,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArticleImage() {
+    final imageUrl = widget.articleImage;
+    
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: 200.0,
+        color: FlutterFlowTheme.of(context).accent1,
+        child: Icon(
+          Icons.assessment_outlined,
+          color: FlutterFlowTheme.of(context).secondaryText,
+          size: 48.0,
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(0.0),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 200.0,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: FlutterFlowTheme.of(context).accent1,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: FlutterFlowTheme.of(context).primary,
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: FlutterFlowTheme.of(context).accent1,
+          child: Icon(
+            Icons.assessment_outlined,
+            color: FlutterFlowTheme.of(context).secondaryText,
+            size: 48.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTimeCreated(String? timeCreated) {
+    if (timeCreated == null || timeCreated.isEmpty) {
+      return dateTimeFormat("yMMMd", DateTime.now());
+    }
+    
+    try {
+      final date = DateTime.parse(timeCreated);
+      return dateTimeFormat("yMMMd", date);
+    } catch (e) {
+      return timeCreated;
+    }
   }
 
   @override
@@ -68,7 +188,7 @@ class _InvestmentTopicsArticleDetailsWidgetState
             buttonSize: 60.0,
             icon: Icon(
               Icons.arrow_back_rounded,
-              color: Colors.black,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -83,76 +203,41 @@ class _InvestmentTopicsArticleDetailsWidgetState
           top: true,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 12.0, 16.0, 0.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 0.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      Container(
-                        width: 44.0,
-                        height: 44.0,
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).accent1,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(
-                            color: FlutterFlowTheme.of(context).primary,
-                            width: 2.0,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10.0),
-                            child: CachedNetworkImage(
-                              imageUrl: widget.publisherImage!,
-                              width: 44.0,
-                              height: 44.0,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildPublisherImage(),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              12.0, 0.0, 0.0, 0.0),
+                          padding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 0.0, 0.0),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 valueOrDefault<String>(
                                   widget.publlisher,
-                                  '0',
+                                  'Investment Publisher',
                                 ),
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyLarge
-                                    .override(
-                                      fontFamily: 'Tiro Bangla',
-                                      letterSpacing: 0.0,
-                                    ),
+                                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                  fontFamily: 'Tiro Bangla',
+                                  letterSpacing: 0.0,
+                                ),
                               ),
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 4.0, 0.0, 0.0),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 0.0),
                                 child: Text(
-                                  valueOrDefault<String>(
-                                    widget.timeCreated,
-                                    '0',
+                                  _formatTimeCreated(widget.timeCreated),
+                                  style: FlutterFlowTheme.of(context).labelSmall.override(
+                                    fontFamily: 'SFPro',
+                                    letterSpacing: 0.0,
+                                    useGoogleFonts: false,
                                   ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .labelSmall
-                                      .override(
-                                        fontFamily: 'SFPro',
-                                        letterSpacing: 0.0,
-                                        useGoogleFonts: false,
-                                      ),
                                 ),
                               ),
                             ],
@@ -166,33 +251,21 @@ class _InvestmentTopicsArticleDetailsWidgetState
                   height: 207.0,
                   child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(0.0),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.articleImage!,
-                          width: double.infinity,
-                          height: 200.0,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                      _buildArticleImage(),
                     ],
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.articleDescription,
-                        '0',
-                      ),
-                      style:
-                          FlutterFlowTheme.of(context).headlineMedium.override(
-                                fontFamily: 'SFPro',
-                                letterSpacing: 0.0,
-                                useGoogleFonts: false,
-                              ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(
+                      widget.articleDescription,
+                      'Investment news and market insights',
+                    ),
+                    style: FlutterFlowTheme.of(context).headlineMedium.override(
+                      fontFamily: 'SFPro',
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
                     ),
                   ),
                 ),
@@ -202,18 +275,16 @@ class _InvestmentTopicsArticleDetailsWidgetState
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            2.0, 0.0, 0.0, 0.0),
+                        padding: const EdgeInsetsDirectional.fromSTEB(2.0, 0.0, 0.0, 0.0),
                         child: Text(
                           valueOrDefault<String>(
                             widget.tag,
-                            '0',
+                            'Investment',
                           ),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'Tiro Bangla',
-                                    letterSpacing: 0.0,
-                                  ),
+                          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Tiro Bangla',
+                            letterSpacing: 0.0,
+                          ),
                         ),
                       ),
                     ]
@@ -222,21 +293,18 @@ class _InvestmentTopicsArticleDetailsWidgetState
                         .addToEnd(const SizedBox(width: 16.0)),
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.articleNews?.isNotEmpty == true ? widget.articleNews : 'No content available for this article.',
-                        'No content available for this article.',
-                      ),
-                      style: FlutterFlowTheme.of(context).labelMedium.override(
-                            fontFamily: 'SFPro',
-                            fontSize: 14.0,
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
-                          ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(
+                      widget.articleNews?.isNotEmpty == true ? widget.articleNews : 'No content available for this article.',
+                      'No content available for this article.',
+                    ),
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'SFPro',
+                      fontSize: 14.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
                     ),
                   ),
                 ),

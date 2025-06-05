@@ -50,6 +50,114 @@ class _FeedYourCuriosityArticleDetailsWidgetState
     super.dispose();
   }
 
+  Widget _buildPublisherImage() {
+    final imageUrl = widget.publisherImage;
+    
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: 44.0,
+        height: 44.0,
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).primary,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: FlutterFlowTheme.of(context).primary,
+            width: 2.0,
+          ),
+        ),
+        child: Icon(
+          Icons.article_outlined,
+          color: FlutterFlowTheme.of(context).primaryBackground,
+          size: 24.0,
+        ),
+      );
+    }
+
+    return Container(
+      width: 44.0,
+      height: 44.0,
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).accent1,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: FlutterFlowTheme.of(context).primary,
+          width: 2.0,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10.0),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            width: 44.0,
+            height: 44.0,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: FlutterFlowTheme.of(context).accent1,
+              child: Icon(
+                Icons.image,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 20.0,
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: FlutterFlowTheme.of(context).accent1,
+              child: Icon(
+                Icons.article_outlined,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 20.0,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArticleImage() {
+    final imageUrl = widget.articleImage;
+    
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: 200.0,
+        color: FlutterFlowTheme.of(context).accent1,
+        child: Icon(
+          Icons.image_outlined,
+          color: FlutterFlowTheme.of(context).secondaryText,
+          size: 48.0,
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(0.0),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 200.0,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: FlutterFlowTheme.of(context).accent1,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: FlutterFlowTheme.of(context).primary,
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: FlutterFlowTheme.of(context).accent1,
+          child: Icon(
+            Icons.image_outlined,
+            color: FlutterFlowTheme.of(context).secondaryText,
+            size: 48.0,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -75,7 +183,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
             },
           ),
           title: Text(
-            valueOrDefault<String>(widget.tag, '0'),
+            valueOrDefault<String>(widget.tag, 'Article'),
             style: FlutterFlowTheme.of(context).headlineMedium.override(
                   fontFamily: 'SFPro',
                   color: FlutterFlowTheme.of(context).primaryText,
@@ -101,30 +209,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      Container(
-                        width: 44.0,
-                        height: 44.0,
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).accent1,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(
-                            color: FlutterFlowTheme.of(context).primary,
-                            width: 2.0,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10.0),
-                            child: CachedNetworkImage(
-                              imageUrl: widget.publisherImage!,
-                              width: 44.0,
-                              height: 44.0,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildPublisherImage(),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 0.0, 0.0),
@@ -134,7 +219,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                valueOrDefault<String>(widget.publisher, '0'),
+                                valueOrDefault<String>(widget.publisher, 'Unknown Publisher'),
                                 style: FlutterFlowTheme.of(context).bodyLarge.override(
                                       fontFamily: 'Tiro Bangla',
                                       fontSize: 15.0,
@@ -146,7 +231,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                                 child: Text(
                                   valueOrDefault<String>(
                                     dateTimeFormat("yMMMd", widget.dateCreated),
-                                    '0',
+                                    dateTimeFormat("yMMMd", DateTime.now()),
                                   ),
                                   style: FlutterFlowTheme.of(context).labelSmall.override(
                                         fontFamily: 'SFPro',
@@ -167,22 +252,14 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                   height: 207.0,
                   child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(0.0),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.articleImage!,
-                          width: double.infinity,
-                          height: 200.0,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                      _buildArticleImage(),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
                   child: Text(
-                    valueOrDefault<String>(widget.description, '0'),
+                    valueOrDefault<String>(widget.description, 'No description available'),
                     style: FlutterFlowTheme.of(context).headlineMedium.override(
                           fontFamily: 'SFPro',
                           fontSize: 18.0,
@@ -199,7 +276,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                       Padding(
                         padding: const EdgeInsetsDirectional.fromSTEB(2.0, 0.0, 0.0, 0.0),
                         child: Text(
-                          valueOrDefault<String>(widget.tag, '0'),
+                          valueOrDefault<String>(widget.tag, 'General'),
                           style: FlutterFlowTheme.of(context).bodyMedium.override(
                                 fontFamily: 'Tiro Bangla',
                                 fontSize: 14.0,
@@ -216,7 +293,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
                   child: Text(
-                    valueOrDefault<String>(widget.newsbody, '0'),
+                    valueOrDefault<String>(widget.newsbody, 'No content available'),
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           fontFamily: 'SFPro',
                           fontSize: 14.0,

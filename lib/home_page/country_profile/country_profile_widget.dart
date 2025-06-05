@@ -490,42 +490,123 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildArticleImage(dynamic article) {
-    final imageUrl = article.getField<String>('article_image') ?? '';
+    String imageUrl = '';
+    
+    try {
+      debugPrint('=== ARTICLE DEBUG ===');
+      debugPrint('Article type: ${article.runtimeType}');
+      debugPrint('Article data: ${article.data}');
+      debugPrint('Available fields: ${article.data?.keys?.toList()}');
+      
+      if (article is Map<String, dynamic>) {
+        imageUrl = article['articleImage'] ?? 
+                   article['article_image'] ?? 
+                   article['image'] ?? 
+                   article['imageUrl'] ?? '';
+      } else {
+        imageUrl = article.getField<String>('articleImage') ?? '';
+        debugPrint('Tried articleImage: "$imageUrl"');
+        
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('article_image') ?? '';
+          debugPrint('Tried article_image: "$imageUrl"');
+        }
+        
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('image') ?? '';
+          debugPrint('Tried image: "$imageUrl"');
+        }
+        
+        if (imageUrl.isEmpty) {
+          try {
+            imageUrl = article.articleImage ?? '';
+            debugPrint('Tried direct articleImage: "$imageUrl"');
+          } catch (e) {
+            debugPrint('No articleImage property: $e');
+          }
+        }
+      }
+      
+      if (imageUrl.isEmpty || imageUrl == 'null' || imageUrl == 'NULL') {
+        imageUrl = '';
+      }
+      
+      debugPrint('Final image URL for article "${article.title}": "$imageUrl"');
+      debugPrint('=== END ARTICLE DEBUG ===');
+      
+    } catch (e) {
+      debugPrint('Error accessing image URL: $e');
+      imageUrl = '';
+    }
     
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10.0),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          width: 160.0,
-          height: 136.0,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            width: 160.0,
-            height: 136.0,
-            color: Colors.grey[300],
-            child: Icon(Icons.image, color: Colors.grey[600], size: 50),
-          ),
-          errorWidget: (context, url, error) => Container(
-            width: 160.0,
-            height: 136.0,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.broken_image, color: Colors.grey[600], size: 40),
-                Text(
-                  'No Image',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+        child: imageUrl.isNotEmpty && imageUrl != "" && !imageUrl.toLowerCase().contains('null')
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                width: 160.0,
+                height: 136.0,
+                fit: BoxFit.cover,
+                httpHeaders: const {
+                  'User-Agent': 'Mozilla/5.0 (compatible; NewsApp/1.0)',
+                },
+                placeholder: (context, url) => Container(
+                  width: 160.0,
+                  height: 136.0,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: FlutterFlowTheme.of(context).primary,
+                      ),
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ),
-        ),
+                errorWidget: (context, url, error) {
+                  debugPrint('Image load error for $url: $error');
+                  return Container(
+                    width: 160.0,
+                    height: 136.0,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image, color: Colors.grey[600], size: 40),
+                        Text(
+                          'No Image',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              )
+            : Container(
+                width: 160.0,
+                height: 136.0,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                    Text(
+                      'No Image',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -670,14 +751,48 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   void _navigateToArticleDetails(dynamic article) {
+    String imageUrl = '';
+    
+    try {
+      if (article is Map<String, dynamic>) {
+        imageUrl = article['articleImage'] ?? 
+                   article['article_image'] ?? 
+                   article['image'] ?? 
+                   article['imageUrl'] ?? '';
+      } else {
+        imageUrl = article.getField<String>('articleImage') ?? '';
+        
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('article_image') ?? '';
+        }
+        
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('image') ?? '';
+        }
+        
+        if (imageUrl.isEmpty) {
+          try {
+            imageUrl = article.articleImage ?? '';
+          } catch (e) {
+            debugPrint('No articleImage property for navigation: $e');
+          }
+        }
+      }
+      
+      if (imageUrl.isEmpty || imageUrl == 'null' || imageUrl == 'NULL') {
+        imageUrl = '';
+      }
+      
+    } catch (e) {
+      debugPrint('Error accessing image URL for navigation: $e');
+      imageUrl = '';
+    }
+    
     context.pushNamed(
       'newForceArticleDetails',
       queryParameters: {
         'publisher': serializeParam(article.publishers, ParamType.String),
-        'articleImage': serializeParam(
-          article.getField<String>('article_image') ?? '',
-          ParamType.String,
-        ),
+        'articleImage': serializeParam(imageUrl, ParamType.String),
         'description': serializeParam(article.description, ParamType.String),
         'newsbody': serializeParam(
           article.getField<String>('article_body') ??
