@@ -75,6 +75,9 @@ dependencies:
   html: ^0.15.4
   http_parser: ^4.0.2
   beautiful_soup_dart: ^0.3.0
+  flutter_launcher_icons: ^0.14.3
+  path_provider: ^2.1.5
+  permission_handler: ^12.0.0+1
 
 dependency_overrides:
   http: ^1.4.0
@@ -133,12 +136,12 @@ flutter:
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#000000"
-  image: "assets/images/splash image.png"
+  image: "assets/images/splash_image.png"
   
   android_12:
     color: "#FFFFFF"
     color_dark: "#000000"
-    image: "assets/images/splash image.png"
+    image: "assets/images/splash_image.png"
 
   android: true
   ios: true

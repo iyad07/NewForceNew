@@ -44,9 +44,9 @@ class FFAppState extends ChangeNotifier {
   }
 
   List<String> _foregroundImages = [
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/Frame_2.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS9GcmFtZV8yLnBuZyIsImlhdCI6MTcxOTU2NzA2NSwiZXhwIjoxNzIwMTcxODY1fQ.L2Zc2GSmIggnBqbNRhroAWMwNuYvkSmr4REatOe5NOo&t=2024-06-28T09%3A31%3A04.854Z',
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/Frame_2.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS9GcmFtZV8yLnBuZyIsImlhdCI6MTcxOTU2NzA2NSwiZXhwIjoxNzIwMTcxODY1fQ.L2Zc2GSmIggnBqbNRhroAWMwNuYvkSmr4REatOe5NOo&t=2024-06-28T09%3A31%3A04.854Z',
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/Frame_2.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS9GcmFtZV8yLnBuZyIsImlhdCI6MTcxOTU2NzA2NSwiZXhwIjoxNzIwMTcxODY1fQ.L2Zc2GSmIggnBqbNRhroAWMwNuYvkSmr4REatOe5NOo&t=2024-06-28T09%3A31%3A04.854Z'
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//Frame_2.png',
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//Frame_2.png',
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//Frame_2.png'
   ];
   List<String> get foregroundImages => _foregroundImages;
   set foregroundImages(List<String> value) {
@@ -77,9 +77,9 @@ class FFAppState extends ChangeNotifier {
   }
 
   List<String> _backgroundImages = [
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/178620791.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS8xNzg2MjA3OTEuanBnIiwiaWF0IjoxNzIwNzAxMDM3LCJleHAiOjE3NTIyMzcwMzd9.5iHtU1I6cyBTBNZJif83QBGY8Q6Xkt5fIo-B70IkgQ8&t=2024-07-11T12%3A30%3A36.180Z',
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/178620791.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS8xNzg2MjA3OTEuanBnIiwiaWF0IjoxNzIwNzAxMDM3LCJleHAiOjE3NTIyMzcwMzd9.5iHtU1I6cyBTBNZJif83QBGY8Q6Xkt5fIo-B70IkgQ8&t=2024-07-11T12%3A30%3A36.180Z',
-    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/sign/Force/178620791.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb3JjZS8xNzg2MjA3OTEuanBnIiwiaWF0IjoxNzIwNzAxMDM3LCJleHAiOjE3NTIyMzcwMzd9.5iHtU1I6cyBTBNZJif83QBGY8Q6Xkt5fIo-B70IkgQ8&t=2024-07-11T12%3A30%3A36.180Z'
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//178620791.jpg',
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//178620791.jpg',
+    'https://etrgasxxhvyskoekhalf.supabase.co/storage/v1/object/public/Force//178620791.jpg'
   ];
   List<String> get backgroundImages => _backgroundImages;
   set backgroundImages(List<String> value) {

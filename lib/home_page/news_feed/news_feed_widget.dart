@@ -446,7 +446,10 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                       child: Text(
                         article.description ?? 'No description available',
                         maxLines: 3,
-                        style: FlutterFlowTheme.of(context).bodyMedium,
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontSize: 13.0,
+                    
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

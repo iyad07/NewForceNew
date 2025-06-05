@@ -35,17 +35,15 @@ class _FeedyourCuriosityTopicsWidgetState
   void initState() {
     super.initState();
     _model = createModel(context, () => FeedyourCuriosityTopicsModel());
-    // Fetch Feed Your Curiosity articles when the widget initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final newsProvider = Provider.of<NewsProvider>(context, listen: false);
-      newsProvider.fetchFeedYourCuriosity();
+      newsProvider.fetchFeedYourCuriosity(forceRefresh: false);
     });
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -68,7 +66,7 @@ class _FeedyourCuriosityTopicsWidgetState
               buttonSize: 60.0,
               icon: const Icon(
                 Icons.arrow_back_rounded,
-                color: Colors.white,
+                color: Colors.black45,
                 size: 30.0,
               ),
               onPressed: () async {
@@ -107,12 +105,22 @@ class _FeedyourCuriosityTopicsWidgetState
               children: [
                 Consumer<NewsProvider>(
                   builder: (context, newsProvider, _) {
-                    // Filter articles by tag
-                    final filteredArticles = newsProvider.feedYourCuriosityNews
+                    final allArticles = newsProvider.feedYourCuriosityNews;
+                    final filteredArticles = allArticles
                         .where((article) => article.tag == widget.tag)
                         .toList();
                     
-                    // Show loading indicator if still loading
+                    print('DEBUG: Total articles: ${allArticles.length}');
+                    print('DEBUG: Looking for tag: ${widget.tag}');
+                    print('DEBUG: Filtered articles: ${filteredArticles.length}');
+                    
+                    if (allArticles.isNotEmpty) {
+                      print('DEBUG: Available tags: ${allArticles.map((a) => a.tag).toSet().toList()}');
+                      for (int i = 0; i < allArticles.length && i < 5; i++) {
+                        print('DEBUG: Article $i tag: ${allArticles[i].tag}');
+                      }
+                    }
+                    
                     if (newsProvider.isLoadingFeedYourCuriosity) {
                       return Center(
                         child: SizedBox(
@@ -126,15 +134,34 @@ class _FeedyourCuriosityTopicsWidgetState
                       );
                     }
                     
-                    // If no articles found for this tag, show a message
                     if (filteredArticles.isEmpty) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: Text(
-                            'No articles found for ${widget.tag}. Pull down to refresh.',
-                            style: FlutterFlowTheme.of(context).bodyMedium,
-                            textAlign: TextAlign.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                'No articles found for ${widget.tag}.',
+                                style: FlutterFlowTheme.of(context).bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Total articles: ${allArticles.length}',
+                                style: FlutterFlowTheme.of(context).bodySmall,
+                              ),
+                              Text(
+                                'Available tags: ${allArticles.map((a) => a.tag).toSet().join(", ")}',
+                                style: FlutterFlowTheme.of(context).bodySmall,
+                              ),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await newsProvider.fetchFeedYourCuriosity(forceRefresh: true);
+                                },
+                                child: const Text('Force Refresh'),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -215,7 +242,6 @@ class _FeedyourCuriosityTopicsWidgetState
                             },
                             child: Container(
                               width: 350.0,
-                              height: 206.0,
                               decoration: BoxDecoration(
                                 color: FlutterFlowTheme.of(context)
                                     .secondaryBackground,
@@ -259,6 +285,27 @@ class _FeedyourCuriosityTopicsWidgetState
                                               width: 151.0,
                                               height: 143.0,
                                               fit: BoxFit.cover,
+                                              errorWidget: (context, url, error) => Image.asset(
+                                                'assets/images/app_launcher_icon.png',
+                                                width: 151.0,
+                                                height: 143.0,
+                                                fit: BoxFit.cover,
+                                              ),
+                                              placeholder: (context, url) => Container(
+                                                width: 151.0,
+                                                height: 143.0,
+                                                color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                child: Center(
+                                                  child: SizedBox(
+                                                    width: 40.0,
+                                                    height: 40.0,
+                                                    child: SpinKitRipple(
+                                                      color: FlutterFlowTheme.of(context).primary,
+                                                      size: 40.0,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                           Flexible(

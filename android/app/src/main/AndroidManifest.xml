@@ -18,7 +18,8 @@
         android:label="new_force_new_hope"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:enableOnBackInvokedCallback="true">
         
         <!-- CameraKit metadata -->
         <meta-data 

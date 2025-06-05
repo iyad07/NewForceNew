@@ -68,7 +68,7 @@ class _InvestmentTopicsArticleDetailsWidgetState
             buttonSize: 60.0,
             icon: Icon(
               Icons.arrow_back_rounded,
-              color: FlutterFlowTheme.of(context).primaryText,
+              color: Colors.black,
               size: 30.0,
             ),
             onPressed: () async {
@@ -228,8 +228,8 @@ class _InvestmentTopicsArticleDetailsWidgetState
                         16.0, 0.0, 16.0, 0.0),
                     child: Text(
                       valueOrDefault<String>(
-                        widget.articleNews,
-                        '0',
+                        widget.articleNews?.isNotEmpty == true ? widget.articleNews : 'No content available for this article.',
+                        'No content available for this article.',
                       ),
                       style: FlutterFlowTheme.of(context).labelMedium.override(
                             fontFamily: 'SFPro',

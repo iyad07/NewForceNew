@@ -47,7 +47,6 @@ class _FeedYourCuriosityArticleDetailsWidgetState
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -76,10 +75,7 @@ class _FeedYourCuriosityArticleDetailsWidgetState
             },
           ),
           title: Text(
-            valueOrDefault<String>(
-              widget.tag,
-              '0',
-            ),
+            valueOrDefault<String>(widget.tag, '0'),
             style: FlutterFlowTheme.of(context).headlineMedium.override(
                   fontFamily: 'SFPro',
                   color: FlutterFlowTheme.of(context).primaryText,
@@ -96,13 +92,12 @@ class _FeedYourCuriosityArticleDetailsWidgetState
           top: true,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.max,
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 12.0, 16.0, 0.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 0.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
@@ -132,37 +127,28 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                       ),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              12.0, 0.0, 0.0, 0.0),
+                          padding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 0.0, 0.0),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
+                            mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                valueOrDefault<String>(
-                                  widget.publisher,
-                                  '0',
-                                ),
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyLarge
-                                    .override(
+                                valueOrDefault<String>(widget.publisher, '0'),
+                                style: FlutterFlowTheme.of(context).bodyLarge.override(
                                       fontFamily: 'Tiro Bangla',
                                       fontSize: 15.0,
                                       letterSpacing: 0.0,
                                     ),
                               ),
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 4.0, 0.0, 0.0),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 0.0),
                                 child: Text(
                                   valueOrDefault<String>(
                                     dateTimeFormat("yMMMd", widget.dateCreated),
                                     '0',
                                   ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .labelSmall
-                                      .override(
+                                  style: FlutterFlowTheme.of(context).labelSmall.override(
                                         fontFamily: 'SFPro',
                                         fontSize: 10.0,
                                         letterSpacing: 0.0,
@@ -193,23 +179,16 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                     ],
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.description,
-                        '0',
-                      ),
-                      style:
-                          FlutterFlowTheme.of(context).headlineMedium.override(
-                                fontFamily: 'SFPro',
-                                fontSize: 18.0,
-                                letterSpacing: 0.0,
-                                useGoogleFonts: false,
-                              ),
-                    ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(widget.description, '0'),
+                    style: FlutterFlowTheme.of(context).headlineMedium.override(
+                          fontFamily: 'SFPro',
+                          fontSize: 18.0,
+                          letterSpacing: 0.0,
+                          useGoogleFonts: false,
+                        ),
                   ),
                 ),
                 SingleChildScrollView(
@@ -218,19 +197,14 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            2.0, 0.0, 0.0, 0.0),
+                        padding: const EdgeInsetsDirectional.fromSTEB(2.0, 0.0, 0.0, 0.0),
                         child: Text(
-                          valueOrDefault<String>(
-                            widget.tag,
-                            '0',
-                          ),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'Tiro Bangla',
-                                    fontSize: 14.0,
-                                    letterSpacing: 0.0,
-                                  ),
+                          valueOrDefault<String>(widget.tag, '0'),
+                          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                fontFamily: 'Tiro Bangla',
+                                fontSize: 14.0,
+                                letterSpacing: 0.0,
+                              ),
                         ),
                       ),
                     ]
@@ -239,22 +213,16 @@ class _FeedYourCuriosityArticleDetailsWidgetState
                         .addToEnd(const SizedBox(width: 16.0)),
                   ),
                 ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.newsbody,
-                        '0',
-                      ),
-                      style: FlutterFlowTheme.of(context).labelMedium.override(
-                            fontFamily: 'SFPro',
-                            fontSize: 13.0,
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
-                          ),
-                    ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                  child: Text(
+                    valueOrDefault<String>(widget.newsbody, '0'),
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: 'SFPro',
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                          useGoogleFonts: false,
+                        ),
                   ),
                 ),
               ].divide(const SizedBox(height: 12.0)),

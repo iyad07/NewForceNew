@@ -47,7 +47,6 @@ class _NewForceArticleDetailsWidgetState
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -76,10 +75,7 @@ class _NewForceArticleDetailsWidgetState
             },
           ),
           title: Text(
-            valueOrDefault<String>(
-              widget.title,
-              '0',
-            ),
+            valueOrDefault<String>(widget.title, 'Article'),
             style: FlutterFlowTheme.of(context).headlineMedium.override(
                   fontFamily: 'SFPro',
                   color: FlutterFlowTheme.of(context).primaryText,
@@ -96,13 +92,11 @@ class _NewForceArticleDetailsWidgetState
           top: true,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 12.0, 16.0, 0.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 0.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
@@ -132,37 +126,27 @@ class _NewForceArticleDetailsWidgetState
                       ),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              12.0, 0.0, 0.0, 0.0),
+                          padding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 0.0, 0.0),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                valueOrDefault<String>(
-                                  widget.publisher,
-                                  '0',
-                                ),
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyLarge
-                                    .override(
+                                valueOrDefault<String>(widget.publisher, 'Unknown Publisher'),
+                                style: FlutterFlowTheme.of(context).bodyLarge.override(
                                       fontFamily: 'Tiro Bangla',
                                       fontSize: 15.0,
                                       letterSpacing: 0.0,
                                     ),
                               ),
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 4.0, 0.0, 0.0),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 0.0),
                                 child: Text(
                                   valueOrDefault<String>(
-                                    widget.datecreated?.toString(),
-                                    '0',
+                                    dateTimeFormat("yMMMd", widget.datecreated),
+                                    'Recently',
                                   ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .labelSmall
-                                      .override(
+                                  style: FlutterFlowTheme.of(context).labelSmall.override(
                                         fontFamily: 'SFPro',
                                         fontSize: 10.0,
                                         letterSpacing: 0.0,
@@ -177,101 +161,133 @@ class _NewForceArticleDetailsWidgetState
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: 207.0,
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(0.0),
-                        child: widget.articleImage != null && widget.articleImage!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: widget.articleImage!,
+                if (widget.articleImage != null && widget.articleImage!.isNotEmpty)
+                  SizedBox(
+                    height: 207.0,
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(0.0),
+                          child: CachedNetworkImage(
+                            imageUrl: widget.articleImage!,
+                            width: double.infinity,
+                            height: 200.0,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
                               width: double.infinity,
                               height: 200.0,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Image.asset(
-                                'assets/images/app_launcher_icon.png',
-                                width: double.infinity,
-                                height: 200.0,
-                                fit: BoxFit.cover,
+                              color: FlutterFlowTheme.of(context).secondaryBackground,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
                               ),
-                            )
-                          : Image.asset(
-                              'assets/images/app_launcher_icon.png',
+                            ),
+                            errorWidget: (context, url, error) => Container(
                               width: double.infinity,
                               height: 200.0,
-                              fit: BoxFit.cover,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 0.0, 16.0, 0.0),
-                  child: Text(
-                    valueOrDefault<String>(
-                      widget.description,
-                      '0',
-                    ),
-                    style:
-                        FlutterFlowTheme.of(context).headlineMedium.override(
-                              fontFamily: 'SFPro',
-                              fontSize: 18.0,
-                              letterSpacing: 0.0,
-                              useGoogleFonts: false,
-                            ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 0.0, 16.0, 0.0),
-                  child: InkWell(
-                    splashColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    onTap: () async {
-                      // Check if we can safely go back instead of pushing to webViewPage
-                      if (Navigator.of(context).canPop()) {
-                        Navigator.of(context).pop();
-                      } else if (widget.newsUrl != null && widget.newsUrl!.isNotEmpty) {
-                        // Launch URL in browser instead of using webViewPage
-                        await launchURL(widget.newsUrl!);
-                      }
-                    },
-                    child: Text(
-                      valueOrDefault<String>(
-                        widget.newsUrl,
-                        '0',
-                      ),
-                      style:
-                          FlutterFlowTheme.of(context).labelMedium.override(
-                                fontFamily: 'SFPro',
-                                fontSize: 11.0,
-                                letterSpacing: 0.0,
-                                useGoogleFonts: false,
+                              color: FlutterFlowTheme.of(context).secondaryBackground,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: FlutterFlowTheme.of(context).secondaryText,
+                                size: 50.0,
                               ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 0.0, 16.0, 0.0),
-                  child: Text(
-                    valueOrDefault<String>(
-                      widget.newsbody,
-                      '0',
-                    ),
-                    style: FlutterFlowTheme.of(context).labelMedium.override(
-                          fontFamily: 'SFPro',
-                          fontSize: 13.0,
-                          letterSpacing: 0.0,
-                          useGoogleFonts: false,
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
                   ),
-                ),
-              ].divide(const SizedBox(height: 12.0)),
+                if (widget.title != null && widget.title!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    child: Text(
+                      widget.title!,
+                      style: FlutterFlowTheme.of(context).headlineMedium.override(
+                            fontFamily: 'SFPro',
+                            fontSize: 24.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w600,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                if (widget.description != null && widget.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    child: Text(
+                      widget.description!,
+                      style: FlutterFlowTheme.of(context).headlineSmall.override(
+                            fontFamily: 'SFPro',
+                            fontSize: 18.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w400,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                if (widget.newsbody != null && widget.newsbody!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    child: Text(
+                      widget.newsbody!,
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'SFPro',
+                            fontSize: 16.0,
+                            letterSpacing: 0.0,
+                            lineHeight: 1.5,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                if (widget.newsUrl != null && widget.newsUrl!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    child: InkWell(
+                      splashColor: Colors.transparent,
+                      focusColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onTap: () async {
+                        await launchURL(widget.newsUrl!);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: FlutterFlowTheme.of(context).primary,
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.link,
+                              color: FlutterFlowTheme.of(context).primary,
+                              size: 16.0,
+                            ),
+                            const SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                'Read full article',
+                                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                      fontFamily: 'SFPro',
+                                      color: FlutterFlowTheme.of(context).primary,
+                                      fontSize: 14.0,
+                                      letterSpacing: 0.0,
+                                      useGoogleFonts: false,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ].divide(const SizedBox(height: 16.0)),
             ),
           ),
         ),

@@ -467,7 +467,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'country',
               ParamType.String,
             ),
-            newsbody: '',
+            newsbody: params.getParam(
+              'newsbody',
+              ParamType.String,
+            ),
           ),
         ),
         FFRoute(
