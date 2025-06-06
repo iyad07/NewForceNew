@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'utils/media_utils.dart';
 
 class ArShareDialog extends StatelessWidget {
   final String filePath;
@@ -16,7 +17,7 @@ class ArShareDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isVideo = _isVideo(fileType);
+    final isVideo = MediaUtils.isVideo(fileType);
     
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -27,16 +28,14 @@ class ArShareDialog extends StatelessWidget {
             color: Theme.of(context).primaryColor,
           ),
           const SizedBox(width: 8),
-          Text(isVideo ? 'Video Created!' : 'Photo Captured!'),
+          Text(MediaUtils.getCreationMessage(fileType)),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            isVideo 
-              ? 'Your AR video is ready to share!'
-              : 'Your AR photo looks amazing!',
+            MediaUtils.getReadyMessage(fileType),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -70,14 +69,13 @@ class ArShareDialog extends StatelessWidget {
 
   Future<void> _shareMedia(BuildContext context) async {
     try {
-      final message = _isVideo(fileType)
-          ? 'Check out this awesome AR video I created! 🎬✨'
-          : 'Look at this cool AR photo I made! 📸✨';
+      final message = MediaUtils.getDefaultShareMessage(fileType);
+      final subject = MediaUtils.getShareSubject(fileType);
 
       await Share.shareXFiles(
         [XFile(filePath)],
         text: message,
-        subject: _isVideo(fileType) ? 'AR Video' : 'AR Photo',
+        subject: subject,
       );
       
       if (context.mounted) {
@@ -98,11 +96,5 @@ class ArShareDialog extends StatelessWidget {
         onDismiss();
       }
     }
-  }
-
-  bool _isVideo(String fileType) {
-    return fileType.toLowerCase().contains('video') ||
-           fileType.toLowerCase().contains('mp4') ||
-           fileType.toLowerCase().contains('mov');
   }
 }

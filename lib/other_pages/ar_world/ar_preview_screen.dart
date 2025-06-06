@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import 'utils/media_utils.dart';
+import 'ar_share_service.dart';
 
 class ArPreviewScreen extends StatefulWidget {
   final String filePath;
@@ -33,7 +34,7 @@ class _ArPreviewScreenState extends State<ArPreviewScreen> {
   }
 
   void _initializeMedia() {
-    _isVideo = _checkIfVideo(widget.fileType);
+    _isVideo = MediaUtils.isVideo(widget.fileType);
     
     if (_isVideo) {
       _initializeVideo();
@@ -54,27 +55,22 @@ class _ArPreviewScreenState extends State<ArPreviewScreen> {
     }
   }
 
-  bool _checkIfVideo(String fileType) {
-    return fileType.toLowerCase().contains('video') ||
-           fileType.toLowerCase().contains('mp4') ||
-           fileType.toLowerCase().contains('mov');
-  }
-
   Future<void> _shareMedia() async {
     if (_isSharing) return;
     
     setState(() => _isSharing = true);
 
     try {
-      final message = _isVideo
-          ? 'Check out this amazing AR video I created! 🎬✨ #ARCreation'
-          : 'Look at this cool AR photo I made! 📸✨ #ARCreation';
-
-      await Share.shareXFiles(
-        [XFile(widget.filePath)],
-        text: message,
-        subject: _isVideo ? 'My AR Video' : 'My AR Photo',
+      final success = await ArShareService.shareMedia(
+        filePath: widget.filePath,
+        fileType: widget.fileType,
       );
+      
+      if (success) {
+        _showSuccessSnackBar('Shared successfully!');
+      } else {
+        _showErrorSnackBar('Failed to share. Please try again.');
+      }
     } catch (e) {
       if (kDebugMode) print('Share error: $e');
       _showErrorSnackBar('Failed to share. Please try again.');
@@ -83,6 +79,16 @@ class _ArPreviewScreenState extends State<ArPreviewScreen> {
         setState(() => _isSharing = false);
       }
     }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -96,10 +102,15 @@ class _ArPreviewScreenState extends State<ArPreviewScreen> {
   }
 
   void _navigateToHome() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      'Home',
-      (route) => false,
-    );
+    try {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        'Home',
+        (route) => false,
+      );
+    } catch (e) {
+      if (kDebugMode) print('Navigation error: $e');
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -127,7 +138,7 @@ class _ArPreviewScreenState extends State<ArPreviewScreen> {
         onPressed: _navigateToHome,
       ),
       title: Text(
-        _isVideo ? 'AR Video' : 'AR Photo',
+        MediaUtils.getMediaTitle(widget.fileType),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 18,

@@ -1,6 +1,5 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:share_plus/share_plus.dart';
@@ -14,91 +13,92 @@ class ArWorldWidget extends StatefulWidget {
   State<ArWorldWidget> createState() => _ArWorldWidgetState();
 }
 
-class _ArWorldWidgetState extends State<ArWorldWidget> with WidgetsBindingObserver {
+class _ArWorldWidgetState extends State<ArWorldWidget> {
   late ArWorldModel _model;
-  bool _hasOpenedCamera = false;
-  bool _cameraIsOpen = false;
+  bool _hasInitialized = false;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _model = createModel(context, () => ArWorldModel());
-    _openCameraDirectly();
+    _initializeCamera();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    
-    if (state == AppLifecycleState.resumed && _cameraIsOpen) {
-      if (kDebugMode) {
-        print('App resumed after camera, navigating to Home');
-      }
-      _navigateToHome();
+  Future<void> _initializeCamera() async {
+    if (_hasInitialized) return;
+    _hasInitialized = true;
+
+    if (kDebugMode) {
+      print('🎥 Initializing camera...');
     }
-  }
 
-  Future<void> _openCameraDirectly() async {
-    if (_hasOpenedCamera) return;
-    _hasOpenedCamera = true;
-
+    // Add a small delay to ensure widget is fully built
     await Future.delayed(const Duration(milliseconds: 500));
     
     if (mounted) {
-      _cameraIsOpen = true;
-      await _model.openCameraKit();
-      
-      if (mounted && _model.errorMessage == null) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) _navigateToHome();
-        });
+      // The camera initialization happens in the model's initState
+      // We just need to wait and show loading
+      if (kDebugMode) {
+        print('📷 Camera initialization started in model');
       }
     }
   }
 
-  void _navigateToHome() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      'Home',
-      (route) => false,
-    );
-  }
-
   void _retryCamera() {
+    if (kDebugMode) {
+      print('🔄 Retrying camera initialization');
+    }
+    
     setState(() {
-      _hasOpenedCamera = false;
+      _hasInitialized = false;
     });
-    _openCameraDirectly();
+    _initializeCamera();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    if (kDebugMode) {
+      print('🗑️ ArWorldWidget disposing...');
+    }
     _model.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: scaffoldKey,
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildCameraIcon(),
-            const SizedBox(height: 24),
-            _buildStatusText(),
-            const SizedBox(height: 16),
-            _buildLoadingIndicator(),
-            if (_model.errorMessage != null) _buildErrorSection(),
-          ],
+ @override
+Widget build(BuildContext context) {
+  return PopScope(
+    canPop: false,
+    onPopInvoked: (didPop) {
+      if (!didPop) {
+        context.pushReplacementNamed('Home');
+      }
+    },
+    child: GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildCameraIcon(),
+              const SizedBox(height: 24),
+              _buildStatusText(),
+              const SizedBox(height: 16),
+              _buildLoadingIndicator(),
+              if (_model.errorMessage != null) _buildErrorSection(),
+              //_buildRetryButton(),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCameraIcon() {
     return Container(
@@ -118,8 +118,16 @@ class _ArWorldWidgetState extends State<ArWorldWidget> with WidgetsBindingObserv
   }
 
   Widget _buildStatusText() {
+    String statusText = 'Opening Camera...';
+    
+    if (_model.errorMessage != null) {
+      statusText = 'Camera Error';
+    } else if (_hasInitialized) {
+      statusText = 'Camera Ready';
+    }
+    
     return Text(
-      'Opening Camera...',
+      statusText,
       style: FlutterFlowTheme.of(context).headlineSmall.override(
         fontFamily: 'Inter',
         color: Colors.white,
@@ -128,13 +136,12 @@ class _ArWorldWidgetState extends State<ArWorldWidget> with WidgetsBindingObserv
   }
 
   Widget _buildLoadingIndicator() {
-    return const SizedBox(
-      width: 30,
-      height: 30,
-      child: CircularProgressIndicator(
-        strokeWidth: 3,
-        color: Colors.white,
-      ),
+    if (_model.errorMessage != null) {
+      return const SizedBox.shrink();
+    }
+    
+    return CircularProgressIndicator(
+      color: FlutterFlowTheme.of(context).primary,
     );
   }
 
@@ -149,50 +156,31 @@ class _ArWorldWidgetState extends State<ArWorldWidget> with WidgetsBindingObserv
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.red, width: 1),
         ),
-        child: Column(
-          children: [
-            Text(
-              _model.errorMessage!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            _buildErrorActions(),
-          ],
+        child: Text(
+          _model.errorMessage!,
+          style: const TextStyle(color: Colors.red),
+          textAlign: TextAlign.center,
         ),
       ),
     );
   }
 
-  Widget _buildErrorActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildActionButton(
-          'Retry',
-          FlutterFlowTheme.of(context).primary,
-          _retryCamera,
+  Widget _buildRetryButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: SizedBox(
+        width: 300,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: FlutterFlowTheme.of(context).primary,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          onPressed: _retryCamera,
+          child: const Text(
+            "New Force AR world",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
         ),
-        const SizedBox(width: 12),
-        _buildActionButton(
-          'Go to Homepage',
-          Colors.grey[700]!,
-          _navigateToHome,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(String text, Color color, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
       ),
     );
   }

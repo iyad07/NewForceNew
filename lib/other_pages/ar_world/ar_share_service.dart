@@ -26,11 +26,9 @@ class ArShareService {
 
       await _requestPermissions();
       
-      if (_isVideo(fileType)) {
-        return await _shareVideo(file, customMessage);
-      } else {
-        return await _shareImage(file, customMessage);
-      }
+      return _isVideo(fileType) 
+          ? await _shareVideo(file, customMessage)
+          : await _shareImage(file, customMessage);
     } catch (e) {
       if (kDebugMode) print('Share error: $e');
       return false;
@@ -110,16 +108,21 @@ class ArShareService {
 
   static Future<Directory> _getGalleryDirectory() async {
     if (Platform.isAndroid) {
-      return Directory('/storage/emulated/0/DCIM/NewForceAR');
+      final dir = Directory('/storage/emulated/0/DCIM/NewForceAR');
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return dir;
     } else {
       return await getApplicationDocumentsDirectory();
     }
   }
 
   static bool _isVideo(String fileType) {
-    return fileType.toLowerCase().contains('video') || 
-           fileType.toLowerCase().contains('mp4') ||
-           fileType.toLowerCase().contains('mov');
+    final lowerType = fileType.toLowerCase();
+    return lowerType.contains('video') || 
+           lowerType.contains('mp4') ||
+           lowerType.contains('mov');
   }
 
   static String _generateFileName(String fileType) {

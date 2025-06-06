@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:new_force_new_hope/other_pages/ar_world/ar_preview_screen.dart';
 import 'package:provider/provider.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -200,6 +201,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         return null;
       },
       routes: [
+        FFRoute(
+          name: 'ArPreviewScreen',
+          path: '/arPreviewScreen',
+          builder: (context, params) => ArPreviewScreen(
+            filePath: params.getParam('filePath', ParamType.String) ?? '',
+            fileType: params.getParam('fileType', ParamType.String) ?? '',
+          ),
+          requireAuth: false,
+        ),
         FFRoute(
           name: '_initialize',
           path: '/',
