@@ -16,6 +16,7 @@ class TnfmSupabaseUser extends BaseAuthUser {
         uid: user?.id,
         email: user?.email,
         phoneNumber: user?.phone,
+        photoUrl: user?.userMetadata?['avatar_url'] as String?,
       );
 
   @override

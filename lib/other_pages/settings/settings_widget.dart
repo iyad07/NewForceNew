@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:new_force_new_hope/auth/supabase_auth/supabase_user_provider.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
@@ -28,6 +29,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => SettingsModel());
+
+    // Initialize uploadedFileUrl with current user's photo URL
+    _model.uploadedFileUrl = currentUserPhoto;
   }
 
   @override
@@ -101,15 +105,24 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(2.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(50.0),
-                                  child: CachedNetworkImage(
-                                    imageUrl: _model.uploadedFileUrl,
-                                    width: 100.0,
-                                    height: 100.0,
-                                    fit: BoxFit.cover,
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(50.0),
+                                    child: _model.uploadedFileUrl.isNotEmpty
+                                        ? CachedNetworkImage(
+                                            imageUrl: _model.uploadedFileUrl,
+                                            width: 100.0,
+                                            height: 100.0,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Icon(
+                                            Icons.person,
+                                            size: 90.0, // Slightly smaller
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryText,
+                                          ),
                                   ),
                                 ),
                               ),
@@ -223,6 +236,33 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                               selectedUploadedFiles.first;
                           _model.uploadedFileUrl = downloadUrls.first;
                         });
+
+                        // Add this code to update the user's metadata with the profile picture URL
+                        try {
+                          await SupaFlow.client.auth.updateUser(
+                            UserAttributes(
+                              data: {
+                                'avatar_url': downloadUrls.first,
+                              },
+                            ),
+                          );
+                          // Refresh the current user to reflect the changes
+                          if (currentUser is TnfmSupabaseUser) {
+                            await (currentUser as TnfmSupabaseUser)
+                                .refreshUser();
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'Profile picture updated successfully')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text('Error updating profile picture: $e')),
+                          );
+                        }
                       } else {
                         safeSetState(() {});
                         return;
