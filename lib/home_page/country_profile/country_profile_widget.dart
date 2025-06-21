@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 
@@ -69,20 +71,16 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     WidgetsBinding.instance.addPostFrameCallback((_) => _initializeData());
   }
 
-  void _initializeData() {
+  void _initializeData() async {
     final newsProvider = Provider.of<NewsProvider>(context, listen: false);
-    
+
+    await newsProvider.initializeFromLocalStorage();
+
     if (newsProvider.africanNews.isNotEmpty) {
       newsProvider.reCategorizeExistingArticles();
     }
-    
-    Future.microtask(() async {
-      try {
-        await newsProvider.fetchAfricanNews(forceRefresh: false);
-      } catch (e) {
-        debugPrint('Background news fetch failed: $e');
-      }
-    });
+
+    unawaited(newsProvider.fetchAllNews());
   }
 
   @override
@@ -94,7 +92,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   @override
   Widget build(BuildContext context) {
     final countryName = widget.countrydetails?.country ?? '';
-    
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -105,21 +103,30 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
           top: true,
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(10.0, 0.0, 10.0, 0.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCountryHeader(),
-                  _buildNewsSection(countryName),
-                  _buildActionButtons(),
-                ].addToEnd(const SizedBox(height: 44.0)),
+            child: RefreshIndicator(
+              onRefresh: () => _refreshNews(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCountryHeader(),
+                    _buildNewsSection(countryName),
+                    _buildActionButtons(),
+                  ].addToEnd(const SizedBox(height: 44.0)),
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _refreshNews() async {
+    final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+    await newsProvider.fetchAllNews(force: true);
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -141,13 +148,28 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
       title: Text(
         'Country Profile',
         style: FlutterFlowTheme.of(context).headlineMedium.override(
-          fontFamily: 'SFPro',
-          color: FlutterFlowTheme.of(context).primaryText,
-          fontSize: 20.0,
-          letterSpacing: 0.0,
-          useGoogleFonts: false,
-        ),
+              fontFamily: 'SFPro',
+              color: FlutterFlowTheme.of(context).primaryText,
+              fontSize: 20.0,
+              letterSpacing: 0.0,
+              useGoogleFonts: false,
+            ),
       ),
+      actions: [
+        Consumer<NewsProvider>(
+          builder: (context, newsProvider, child) {
+            return IconButton(
+              icon: Icon(
+                Icons.refresh,
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+              onPressed: newsProvider.isLoading
+                  ? null
+                  : () => newsProvider.fetchAllNews(force: true),
+            );
+          },
+        ),
+      ],
       centerTitle: false,
       elevation: 2.0,
     );
@@ -177,11 +199,11 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         Text(
           valueOrDefault<String>(widget.countrydetails?.country, 'Unknown'),
           style: FlutterFlowTheme.of(context).labelMedium.override(
-            fontFamily: 'SFPro',
-            fontSize: 12.0,
-            letterSpacing: 0.0,
-            useGoogleFonts: false,
-          ),
+                fontFamily: 'SFPro',
+                fontSize: 12.0,
+                letterSpacing: 0.0,
+                useGoogleFonts: false,
+              ),
         ),
         Row(
           mainAxisSize: MainAxisSize.max,
@@ -189,21 +211,21 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             Text(
               '\$',
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                fontFamily: 'Tiro Bangla',
-                fontSize: 20.0,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w600,
-              ),
+                    fontFamily: 'Tiro Bangla',
+                    fontSize: 20.0,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(width: 6.0),
             Text(
               valueOrDefault<String>(widget.countrydetails?.countryGDP, '0'),
               style: FlutterFlowTheme.of(context).displaySmall.override(
-                fontFamily: 'SFPro',
-                fontSize: 20.0,
-                letterSpacing: 0.0,
-                useGoogleFonts: false,
-              ),
+                    fontFamily: 'SFPro',
+                    fontSize: 20.0,
+                    letterSpacing: 0.0,
+                    useGoogleFonts: false,
+                  ),
             ),
           ],
         ),
@@ -221,22 +243,23 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: valueOrDefault<String>(widget.countrydetails?.gdpRate, '0'),
+                    text: valueOrDefault<String>(
+                        widget.countrydetails?.gdpRate, '0'),
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      fontFamily: 'Tiro Bangla',
-                      color: FlutterFlowTheme.of(context).primary,
-                      letterSpacing: 0.0,
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontFamily: 'Tiro Bangla',
+                          color: FlutterFlowTheme.of(context).primary,
+                          letterSpacing: 0.0,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const TextSpan(text: ' from 2023'),
                 ],
                 style: FlutterFlowTheme.of(context).labelMedium.override(
-                  fontFamily: 'SFPro',
-                  fontSize: 14.0,
-                  letterSpacing: 0.0,
-                  useGoogleFonts: false,
-                ),
+                      fontFamily: 'SFPro',
+                      fontSize: 14.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
+                    ),
               ),
             ),
           ],
@@ -282,19 +305,19 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         Text(
           label,
           style: FlutterFlowTheme.of(context).bodyMedium.override(
-            fontFamily: 'Tiro Bangla',
-            fontSize: 12.0,
-            letterSpacing: 0.0,
-          ),
+                fontFamily: 'Tiro Bangla',
+                fontSize: 12.0,
+                letterSpacing: 0.0,
+              ),
         ),
         const SizedBox(width: 5.0),
         Text(
           value,
           style: FlutterFlowTheme.of(context).bodyMedium.override(
-            fontFamily: 'Tiro Bangla',
-            fontSize: 12.0,
-            letterSpacing: 0.0,
-          ),
+                fontFamily: 'Tiro Bangla',
+                fontSize: 12.0,
+                letterSpacing: 0.0,
+              ),
         ),
       ],
     );
@@ -312,12 +335,12 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
               Text(
                 'Top News',
                 style: FlutterFlowTheme.of(context).titleLarge.override(
-                  fontFamily: 'SFPro',
-                  fontSize: 20.0,
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.normal,
-                  useGoogleFonts: false,
-                ),
+                      fontFamily: 'SFPro',
+                      fontSize: 20.0,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.normal,
+                      useGoogleFonts: false,
+                    ),
               ),
               _buildUpdateIndicator(),
             ],
@@ -336,7 +359,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     return Consumer<NewsProvider>(
       builder: (context, newsProvider, child) {
         if (!newsProvider.isLoadingAfrican) return const SizedBox.shrink();
-        
+
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -405,9 +428,9 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
           Text(
             'No news available for $countryName',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
-              fontSize: 16.0,
-              color: Colors.grey[600],
-            ),
+                  fontSize: 16.0,
+                  color: Colors.grey[600],
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -416,7 +439,8 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             style: ElevatedButton.styleFrom(
               backgroundColor: FlutterFlowTheme.of(context).primary,
             ),
-            child: const Text('Refresh News', style: TextStyle(color: Colors.white)),
+            child: const Text('Refresh News',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -490,60 +514,15 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildArticleImage(dynamic article) {
-    String imageUrl = '';
-    
-    try {
-      debugPrint('=== ARTICLE DEBUG ===');
-      debugPrint('Article type: ${article.runtimeType}');
-      debugPrint('Article data: ${article.data}');
-      debugPrint('Available fields: ${article.data?.keys?.toList()}');
-      
-      if (article is Map<String, dynamic>) {
-        imageUrl = article['articleImage'] ?? 
-                   article['article_image'] ?? 
-                   article['image'] ?? 
-                   article['imageUrl'] ?? '';
-      } else {
-        imageUrl = article.getField<String>('articleImage') ?? '';
-        debugPrint('Tried articleImage: "$imageUrl"');
-        
-        if (imageUrl.isEmpty) {
-          imageUrl = article.getField<String>('article_image') ?? '';
-          debugPrint('Tried article_image: "$imageUrl"');
-        }
-        
-        if (imageUrl.isEmpty) {
-          imageUrl = article.getField<String>('image') ?? '';
-          debugPrint('Tried image: "$imageUrl"');
-        }
-        
-        if (imageUrl.isEmpty) {
-          try {
-            imageUrl = article.articleImage ?? '';
-            debugPrint('Tried direct articleImage: "$imageUrl"');
-          } catch (e) {
-            debugPrint('No articleImage property: $e');
-          }
-        }
-      }
-      
-      if (imageUrl.isEmpty || imageUrl == 'null' || imageUrl == 'NULL') {
-        imageUrl = '';
-      }
-      
-      debugPrint('Final image URL for article "${article.title}": "$imageUrl"');
-      debugPrint('=== END ARTICLE DEBUG ===');
-      
-    } catch (e) {
-      debugPrint('Error accessing image URL: $e');
-      imageUrl = '';
-    }
-    
+    String imageUrl = _extractImageUrl(article);
+
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10.0),
-        child: imageUrl.isNotEmpty && imageUrl != "" && !imageUrl.toLowerCase().contains('null')
+        child: imageUrl.isNotEmpty &&
+                imageUrl != "null" &&
+                !imageUrl.toLowerCase().contains('null')
             ? CachedNetworkImage(
                 imageUrl: imageUrl,
                 width: 160.0,
@@ -567,48 +546,73 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                     ),
                   ),
                 ),
-                errorWidget: (context, url, error) {
-                  debugPrint('Image load error for $url: $error');
-                  return Container(
-                    width: 160.0,
-                    height: 136.0,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.broken_image, color: Colors.grey[600], size: 40),
-                        Text(
-                          'No Image',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                errorWidget: (context, url, error) => _buildImagePlaceholder(),
               )
-            : Container(
-                width: 160.0,
-                height: 136.0,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
-                    Text(
-                      'No Image',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
+            : _buildImagePlaceholder(),
       ),
     );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: 160.0,
+      height: 136.0,
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+          Text(
+            'No Image',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _extractImageUrl(dynamic article) {
+    String imageUrl = '';
+
+    try {
+      if (article is Map<String, dynamic>) {
+        imageUrl = article['articleImage'] ??
+            article['article_image'] ??
+            article['image'] ??
+            article['imageUrl'] ??
+            '';
+      } else {
+        imageUrl = article.getField<String>('articleImage') ?? '';
+
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('article_image') ?? '';
+        }
+
+        if (imageUrl.isEmpty) {
+          imageUrl = article.getField<String>('image') ?? '';
+        }
+
+        if (imageUrl.isEmpty) {
+          try {
+            imageUrl = article.articleImage ?? '';
+          } catch (e) {
+            debugPrint('No articleImage property: $e');
+          }
+        }
+      }
+
+      if (imageUrl.isEmpty || imageUrl == 'null' || imageUrl == 'NULL') {
+        imageUrl = '';
+      }
+    } catch (e) {
+      debugPrint('Error accessing image URL: $e');
+      imageUrl = '';
+    }
+
+    return imageUrl;
   }
 
   Widget _buildArticleContent(dynamic article) {
@@ -622,11 +626,11 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             Text(
               article.title ?? 'No Title',
               style: FlutterFlowTheme.of(context).headlineSmall.override(
-                fontFamily: 'SFPro',
-                fontSize: 18.0,
-                letterSpacing: 0.0,
-                useGoogleFonts: false,
-              ),
+                    fontFamily: 'SFPro',
+                    fontSize: 18.0,
+                    letterSpacing: 0.0,
+                    useGoogleFonts: false,
+                  ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -635,12 +639,12 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
               article.description ?? 'No description available',
               maxLines: 3,
               style: FlutterFlowTheme.of(context).labelSmall.override(
-                fontFamily: 'SFPro',
-                fontSize: 12.0,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w300,
-                useGoogleFonts: false,
-              ),
+                    fontFamily: 'SFPro',
+                    fontSize: 12.0,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w300,
+                    useGoogleFonts: false,
+                  ),
             ),
           ],
         ),
@@ -663,9 +667,9 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             child: Text(
               dateTimeFormat("yMMMd", article.createdAt) ?? 'Recently',
               style: FlutterFlowTheme.of(context).bodySmall.override(
-                fontFamily: 'Tiro Bangla',
-                letterSpacing: 0.0,
-              ),
+                    fontFamily: 'Tiro Bangla',
+                    letterSpacing: 0.0,
+                  ),
             ),
           ),
         ],
@@ -684,7 +688,8 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             onTap: () => context.pushNamed(
               'topStocksPage',
               queryParameters: {
-                'country': serializeParam(widget.countrydetails?.country, ParamType.String),
+                'country': serializeParam(
+                    widget.countrydetails?.country, ParamType.String),
               }.withoutNulls,
             ),
           ),
@@ -694,7 +699,8 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             onTap: () => context.pushNamed(
               'countryInfluencialFigures',
               queryParameters: {
-                'country': serializeParam(widget.countrydetails?.country, ParamType.String),
+                'country': serializeParam(
+                    widget.countrydetails?.country, ParamType.String),
               }.withoutNulls,
             ),
           ),
@@ -733,16 +739,17 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                   width: 1.0,
                 ),
               ),
-              child: Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 32.0),
+              child: Icon(icon,
+                  color: FlutterFlowTheme.of(context).primary, size: 32.0),
             ),
             const SizedBox(height: 12.0),
             Text(
               label,
               textAlign: TextAlign.center,
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                fontFamily: 'Tiro Bangla',
-                letterSpacing: 0.0,
-              ),
+                    fontFamily: 'Tiro Bangla',
+                    letterSpacing: 0.0,
+                  ),
             ),
           ],
         ),
@@ -750,59 +757,42 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     );
   }
 
-  void _navigateToArticleDetails(dynamic article) {
-    String imageUrl = '';
+void _navigateToArticleDetails(dynamic article) {
+    final imageUrl = _extractImageUrl(article);
+    
+    // Get the article content - we know articleBody works from debug
+    String articleContent = '';
     
     try {
-      if (article is Map<String, dynamic>) {
-        imageUrl = article['articleImage'] ?? 
-                   article['article_image'] ?? 
-                   article['image'] ?? 
-                   article['imageUrl'] ?? '';
-      } else {
-        imageUrl = article.getField<String>('articleImage') ?? '';
-        
-        if (imageUrl.isEmpty) {
-          imageUrl = article.getField<String>('article_image') ?? '';
-        }
-        
-        if (imageUrl.isEmpty) {
-          imageUrl = article.getField<String>('image') ?? '';
-        }
-        
-        if (imageUrl.isEmpty) {
-          try {
-            imageUrl = article.articleImage ?? '';
-          } catch (e) {
-            debugPrint('No articleImage property for navigation: $e');
-          }
-        }
-      }
+      articleContent = article.getField<String>('articleBody') ?? '';
       
-      if (imageUrl.isEmpty || imageUrl == 'null' || imageUrl == 'NULL') {
-        imageUrl = '';
+      if (articleContent.isEmpty) {
+        articleContent = article.description ?? 'No content available';
       }
       
     } catch (e) {
-      debugPrint('Error accessing image URL for navigation: $e');
-      imageUrl = '';
+      debugPrint('Error getting article content: $e');
+      articleContent = article.description ?? 'No content available';
     }
     
+    debugPrint('Navigating with content length: ${articleContent.length}');
+    
+    // Use the original route name from your code
     context.pushNamed(
-      'newForceArticleDetails',
+      'newForceArticleDetails', // Changed back to original route name
       queryParameters: {
-        'publisher': serializeParam(article.publishers, ParamType.String),
+        'title': serializeParam(article.title, ParamType.String),
         'articleImage': serializeParam(imageUrl, ParamType.String),
         'description': serializeParam(article.description, ParamType.String),
-        'newsbody': serializeParam(
-          article.getField<String>('article_body') ??
-              article.description ??
-              'No content available',
+        'country': serializeParam(
+          article.getField<String>('country') ?? widget.countrydetails?.country ?? '',
           ParamType.String,
         ),
-        'title': serializeParam(article.title, ParamType.String),
-        'datecreated': serializeParam(article.createdAt, ParamType.DateTime),
-        'newsUrl': serializeParam(
+        'newsbody': serializeParam(articleContent, ParamType.String), // Keep original param name
+        'publisher': serializeParam(article.publishers, ParamType.String),
+        'datecreated': serializeParam(article.createdAt, ParamType.DateTime), // Keep original param name
+        'newsUrl': serializeParam( // Keep original param name
+          article.getField<String>('articleUrl') ?? 
           article.getField<String>('article_url') ?? '',
           ParamType.String,
         ),

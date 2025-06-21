@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:new_force_new_hope/backend/supabase/database/tables/investement_news_articles.dart';
 import '../supabase/database/tables/new_force_articles.dart';
 import '../supabase/database/tables/feed_your_curiosity_topics.dart';
@@ -8,6 +10,13 @@ import 'news_scraper_service.dart';
 class NewsProvider extends ChangeNotifier {
   static const int _cacheHours = 2;
   static const List<String> _targetCountries = ['Nigeria', 'Kenya', 'South Africa', 'Ethiopia', 'Ghana'];
+  
+  static const String _africanNewsKey = 'cached_african_news';
+  static const String _feedYourCuriosityKey = 'cached_feed_your_curiosity';
+  static const String _investmentNewsKey = 'cached_investment_news';
+  static const String _lastFetchAfricanKey = 'last_fetch_african';
+  static const String _lastFetchFeedKey = 'last_fetch_feed';
+  static const String _lastFetchInvestmentKey = 'last_fetch_investment';
 
   List<NewForceArticlesRow> _africanNews = [];
   List<FeedYourCuriosityTopicsRow> _feedYourCuriosityNews = [];
@@ -40,23 +49,203 @@ class NewsProvider extends ChangeNotifier {
   bool get isLoadingGhanaWeb => _isLoadingAfrican;
   bool get isLoadingPanAfrican => _isLoadingAfrican;
 
+  Future<void> initializeFromLocalStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      await _loadCachedAfricanNews(prefs);
+      await _loadCachedFeedYourCuriosityFromLocal(prefs);
+      await _loadCachedInvestmentNewsFromLocal(prefs);
+      
+      _categorizeNews();
+      _ensureTopicDistribution();
+      _ensureInvestmentTopicDistribution();
+      
+      notifyListeners();
+      
+      debugPrint('Loaded cached data: African=${_africanNews.length}, Feed=${_feedYourCuriosityNews.length}, Investment=${_investmentNews.length}');
+    } catch (e) {
+      debugPrint('Failed to load from local storage: $e');
+    }
+  }
+
+  Future<void> _loadCachedAfricanNews(SharedPreferences prefs) async {
+    final cachedData = prefs.getString(_africanNewsKey);
+    final lastFetchStr = prefs.getString(_lastFetchAfricanKey);
+    
+    if (cachedData != null) {
+      final List<dynamic> decodedList = json.decode(cachedData);
+      _africanNews = decodedList.map((item) => NewForceArticlesRow(Map<String, dynamic>.from(item))).toList();
+    }
+    
+    if (lastFetchStr != null) {
+      _lastAfricanNewsFetch = DateTime.parse(lastFetchStr);
+    }
+  }
+
+  Future<void> _loadCachedFeedYourCuriosityFromLocal(SharedPreferences prefs) async {
+    final cachedData = prefs.getString(_feedYourCuriosityKey);
+    final lastFetchStr = prefs.getString(_lastFetchFeedKey);
+    
+    if (cachedData != null) {
+      final List<dynamic> decodedList = json.decode(cachedData);
+      _feedYourCuriosityNews = decodedList.map((item) => FeedYourCuriosityTopicsRow(Map<String, dynamic>.from(item))).toList();
+    }
+    
+    if (lastFetchStr != null) {
+      _lastFeedYourCuriosityFetch = DateTime.parse(lastFetchStr);
+    }
+  }
+
+  Future<void> _loadCachedInvestmentNewsFromLocal(SharedPreferences prefs) async {
+    final cachedData = prefs.getString(_investmentNewsKey);
+    final lastFetchStr = prefs.getString(_lastFetchInvestmentKey);
+    
+    if (cachedData != null) {
+      final List<dynamic> decodedList = json.decode(cachedData);
+      _investmentNews = decodedList.map((item) => InvestementNewsArticlesRow(Map<String, dynamic>.from(item))).toList();
+    }
+    
+    if (lastFetchStr != null) {
+      _lastInvestmentNewsFetch = DateTime.parse(lastFetchStr);
+    }
+  }
+
+  Future<void> _saveAfricanNewsToLocal(List<NewForceArticlesRow> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataToSave = articles.map((article) => article.data).toList();
+      
+      await prefs.setString(_africanNewsKey, json.encode(dataToSave));
+      await prefs.setString(_lastFetchAfricanKey, DateTime.now().toIso8601String());
+    } catch (e) {
+      debugPrint('Failed to save African news to local storage: $e');
+    }
+  }
+
+  Future<void> _saveFeedYourCuriosityToLocal(List<FeedYourCuriosityTopicsRow> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataToSave = articles.map((article) => article.data).toList();
+      
+      await prefs.setString(_feedYourCuriosityKey, json.encode(dataToSave));
+      await prefs.setString(_lastFetchFeedKey, DateTime.now().toIso8601String());
+    } catch (e) {
+      debugPrint('Failed to save Feed Your Curiosity to local storage: $e');
+    }
+  }
+
+  Future<void> _saveInvestmentNewsToLocal(List<InvestementNewsArticlesRow> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataToSave = articles.map((article) => article.data).toList();
+      
+      await prefs.setString(_investmentNewsKey, json.encode(dataToSave));
+      await prefs.setString(_lastFetchInvestmentKey, DateTime.now().toIso8601String());
+    } catch (e) {
+      debugPrint('Failed to save investment news to local storage: $e');
+    }
+  }
+
   Future<void> fetchAllNews({bool force = false}) async {
     final futures = <Future>[];
 
     if (_shouldFetch(_africanNews, _lastAfricanNewsFetch, force)) {
-      futures.add(fetchAfricanNews(forceRefresh: force));
+      futures.add(_fetchAfricanNewsInBackground(forceRefresh: force));
     }
 
     if (_shouldFetch(_feedYourCuriosityNews, _lastFeedYourCuriosityFetch, force)) {
-      futures.add(fetchFeedYourCuriosity(forceRefresh: force));
+      futures.add(_fetchFeedYourCuriosityInBackground(forceRefresh: force));
     }
 
     if (_shouldFetch(_investmentNews, _lastInvestmentNewsFetch, force)) {
-      futures.add(fetchInvestmentNews(forceRefresh: force));
+      futures.add(_fetchInvestmentNewsInBackground(forceRefresh: force));
     }
 
     if (futures.isNotEmpty) {
       await Future.wait(futures);
+    }
+  }
+
+  Future<void> _fetchAfricanNewsInBackground({bool forceRefresh = false}) async {
+    _isLoadingAfrican = true;
+    notifyListeners();
+    
+    try {
+      final scrapedNews = await NewsScraperService.scrapeAfricaNews();
+      final newArticles = NewsScraperService.convertToNewForceArticles(scrapedNews);
+      
+      if (newArticles.isNotEmpty) {
+        _africanNews = newArticles;
+        _categorizeNews();
+        _lastAfricanNewsFetch = DateTime.now();
+        
+        await _saveAfricanNewsToLocal(_africanNews);
+        await _saveNewsToDatabase(_africanNews);
+        
+        notifyListeners();
+        debugPrint('Background fetch completed: ${_africanNews.length} African articles');
+      }
+    } catch (e) {
+      debugPrint('Background African news fetch failed: $e');
+      await _handleFallback();
+    } finally {
+      _isLoadingAfrican = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _fetchFeedYourCuriosityInBackground({bool forceRefresh = false}) async {
+    _isLoadingFeedYourCuriosity = true;
+    notifyListeners();
+    
+    try {
+      final scrapedNews = await NewsScraperService.scrapeFeedYourCuriosity();
+      final newArticles = NewsScraperService.convertToFeedYourCuriosityTopics(scrapedNews);
+      
+      if (newArticles.isNotEmpty) {
+        _feedYourCuriosityNews = newArticles;
+        _ensureTopicDistribution();
+        _lastFeedYourCuriosityFetch = DateTime.now();
+        
+        await _saveFeedYourCuriosityToLocal(_feedYourCuriosityNews);
+        await _saveFeedYourCuriosityTopicsToDatabase(_feedYourCuriosityNews);
+        
+        notifyListeners();
+        debugPrint('Background fetch completed: ${_feedYourCuriosityNews.length} Feed Your Curiosity articles');
+      }
+    } catch (e) {
+      debugPrint('Background Feed Your Curiosity fetch failed: $e');
+    } finally {
+      _isLoadingFeedYourCuriosity = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _fetchInvestmentNewsInBackground({bool forceRefresh = false}) async {
+    _isLoadingInvestment = true;
+    notifyListeners();
+    
+    try {
+      final scrapedNews = await NewsScraperService.scrapeInvestmentNews();
+      final newArticles = NewsScraperService.convertToInvestmentNewsArticles(scrapedNews);
+      
+      if (newArticles.isNotEmpty) {
+        _investmentNews = newArticles;
+        _ensureInvestmentTopicDistribution();
+        _lastInvestmentNewsFetch = DateTime.now();
+        
+        await _saveInvestmentNewsToLocal(_investmentNews);
+        await _saveInvestmentNewsToDatabase(_investmentNews);
+        
+        notifyListeners();
+        debugPrint('Background fetch completed: ${_investmentNews.length} investment articles');
+      }
+    } catch (e) {
+      debugPrint('Background investment news fetch failed: $e');
+    } finally {
+      _isLoadingInvestment = false;
+      notifyListeners();
     }
   }
 
@@ -111,6 +300,7 @@ class NewsProvider extends ChangeNotifier {
         
         _categorizeNews();
         _lastAfricanNewsFetch = DateTime.now();
+        await _saveAfricanNewsToLocal(_africanNews);
       },
     );
   }
@@ -284,6 +474,7 @@ class NewsProvider extends ChangeNotifier {
           
           _ensureTopicDistribution();
           _lastFeedYourCuriosityFetch = DateTime.now();
+          await _saveFeedYourCuriosityToLocal(_feedYourCuriosityNews);
         } catch (e) {
           debugPrint('Feed Your Curiosity fetch error: $e');
           if (_feedYourCuriosityNews.isEmpty) {
@@ -408,6 +599,7 @@ class NewsProvider extends ChangeNotifier {
           
           _ensureInvestmentTopicDistribution();
           _lastInvestmentNewsFetch = DateTime.now();
+          await _saveInvestmentNewsToLocal(_investmentNews);
           
           debugPrint('Final investment news count: ${_investmentNews.length}');
           final tagCounts = <String, int>{};
@@ -566,5 +758,21 @@ class NewsProvider extends ChangeNotifier {
     });
     
     debugPrint('Overall distribution: $sourceCount');
+  }
+
+  Future<void> clearLocalCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_africanNewsKey);
+      await prefs.remove(_feedYourCuriosityKey);
+      await prefs.remove(_investmentNewsKey);
+      await prefs.remove(_lastFetchAfricanKey);
+      await prefs.remove(_lastFetchFeedKey);
+      await prefs.remove(_lastFetchInvestmentKey);
+      
+      debugPrint('Local cache cleared successfully');
+    } catch (e) {
+      debugPrint('Failed to clear local cache: $e');
+    }
   }
 }

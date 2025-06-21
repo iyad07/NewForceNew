@@ -37,12 +37,22 @@ void main() async {
   final appState = FFAppState();
   await appState.initializePersistedState();
 
+  final newsProvider = NewsProvider();
+  
+  try {
+    print('Initializing news from local storage...');
+    await newsProvider.initializeFromLocalStorage();
+    print('News local storage initialization completed');
+  } catch (e) {
+    print('Error initializing news from local storage: $e');
+  }
+
   print('App initialization completed, launching app...');
 
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context) => appState),
-      ChangeNotifierProvider(create: (context) => NewsProvider()),
+      ChangeNotifierProvider.value(value: newsProvider),
     ],
     child: const MyApp(),
   ));
@@ -93,6 +103,8 @@ class _MyAppState extends State<MyApp> {
 
     try {
       await initializeSupabase();
+      
+      _startBackgroundNewsUpdate();
 
       print(
           'All services initialized successfully in ${stopwatch.elapsedMilliseconds}ms');
@@ -153,6 +165,21 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  void _startBackgroundNewsUpdate() {
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (mounted) {
+        try {
+          final newsProvider = context.read<NewsProvider>();
+          print('Starting background news update...');
+          await newsProvider.fetchAllNews();
+          print('Background news update completed');
+        } catch (e) {
+          print('Background news update failed: $e');
+        }
+      }
+    });
+  }
+
   void setThemeMode(ThemeMode mode) => setState(() {
         _themeMode = mode;
         FlutterFlowTheme.saveThemeMode(mode);
@@ -176,12 +203,10 @@ class _MyAppState extends State<MyApp> {
             ),
             themeMode: _themeMode,
             home: Scaffold(
-              //backgroundColor: Colors.white,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Use the same loading gif during initial check
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: Image.asset(
@@ -191,8 +216,35 @@ class _MyAppState extends State<MyApp> {
                         fit: BoxFit.contain,
                       ),
                     ),
-                    SizedBox(height: 24),
-                    
+                    const SizedBox(height: 24),
+                    Consumer<NewsProvider>(
+                      builder: (context, newsProvider, child) {
+                        final hasData = newsProvider.africanNews.isNotEmpty ||
+                                      newsProvider.feedYourCuriosityNews.isNotEmpty ||
+                                      newsProvider.investmentNews.isNotEmpty;
+                        
+                        return Column(
+                          children: [
+                            Text(
+                              hasData ? 'Loading updates...' : 'Setting up your news feed...',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            if (hasData)
+                              Text(
+                                'Using cached content while updating',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -253,8 +305,7 @@ class _NavBarPageState extends State<NavBarPage> {
   Widget build(BuildContext context) {
     final tabs = {
       'Home': const HomeWidget(),
-      'googleSearch':
-          const GoogleSearchWidget(), // Replace newsFeed with googleSearch
+      'googleSearch': const GoogleSearchWidget(),
       'arWorld': const ArWorldWidget(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
@@ -283,10 +334,9 @@ class _NavBarPageState extends State<NavBarPage> {
             tooltip: '',
           ),
           BottomNavigationBarItem(
-            icon:
-                Icon(Icons.search_outlined), // Changed from newspaper to search
+            icon: Icon(Icons.search_outlined),
             activeIcon: Icon(Icons.search),
-            label: 'Search', // Changed from News to Search
+            label: 'Search',
             tooltip: '',
           ),
           BottomNavigationBarItem(
@@ -309,6 +359,46 @@ class _NavBarPageState extends State<NavBarPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class NewsLoadingWidget extends StatelessWidget {
+  const NewsLoadingWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NewsProvider>(
+      builder: (context, newsProvider, child) {
+        if (!newsProvider.isLoading) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: Colors.blue.shade50,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Updating news in background...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

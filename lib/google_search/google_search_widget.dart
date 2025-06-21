@@ -58,7 +58,7 @@ class _GoogleSearchWidgetState extends State<GoogleSearchWidget> {
           backgroundColor: Colors.orange, // Orange theme
           automaticallyImplyLeading: false,
           title: Text(
-            'Web Search',
+            'Search',
             style: FlutterFlowTheme.of(context).headlineMedium.override(
               fontFamily: 'SFPro',
               color: Colors.white,

@@ -3,9 +3,21 @@ import 'country_profile_widget.dart' show CountryProfileWidget;
 import 'package:flutter/material.dart';
 
 class CountryProfileModel extends FlutterFlowModel<CountryProfileWidget> {
-  @override
-  void initState(BuildContext context) {}
+  bool _isInitialized = false;
+  
+  bool get isInitialized => _isInitialized;
 
   @override
-  void dispose() {}
+  void initState(BuildContext context) {
+    _isInitialized = false;
+  }
+
+  void markAsInitialized() {
+    _isInitialized = true;
+  }
+
+  @override
+  void dispose() {
+    // Clean up any resources if needed
+  }
 }

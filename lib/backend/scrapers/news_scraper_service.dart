@@ -71,13 +71,7 @@ class NewsScraperService {
       }
 
       print('DEBUG: Total scraped articles: ${allArticles.length}');
-      final countryDistribution = <String, int>{};
-      for (final article in allArticles) {
-        final country = article['country'] ?? 'Unknown';
-        countryDistribution[country] = (countryDistribution[country] ?? 0) + 1;
-      }
-      print('DEBUG: Scraped country distribution: $countryDistribution');
-
+      
       if (allArticles.isEmpty) {
         print('DEBUG: No articles scraped, using fallback');
         return getFallbackAfricanNews();
@@ -97,18 +91,26 @@ class NewsScraperService {
 
       final document = html_parser.parse(response.body);
       final articles = <Map<String, dynamic>>[];
-
       final articleElements = _findArticleElements(document);
       
-      for (final element in articleElements.take(10)) {
-        final article = await _extractArticleData(element, url, targetCountry);
-        if (article != null) {
+      final futures = <Future<Map<String, dynamic>?>>[];
+      
+      for (final element in articleElements.take(15)) {
+        futures.add(_extractArticleWithContent(element, url, targetCountry));
+      }
+      
+      final results = await Future.wait(futures);
+      
+      for (final article in results) {
+        if (article != null && article['content'] != null && article['content'].toString().length > 100) {
           articles.add(article);
+          if (articles.length >= 10) break;
         }
       }
 
       return articles;
     } catch (e) {
+      print('DEBUG: Error scraping $url: $e');
       return [];
     }
   }
@@ -117,8 +119,15 @@ class NewsScraperService {
     try {
       return await http.get(
         Uri.parse(url),
-        headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-      ).timeout(const Duration(seconds: 10));
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+        }
+      ).timeout(const Duration(seconds: 15));
     } catch (e) {
       return null;
     }
@@ -126,8 +135,17 @@ class NewsScraperService {
 
   static List<dynamic> _findArticleElements(dynamic document) {
     final selectors = [
-      'article', '.article', '.news-item', '.post', '.story',
-      '.content-item', '.news-block', 'a[href*="news"]', 'a[href*="article"]'
+      'article',
+      '.article',
+      '.news-item', 
+      '.post',
+      '.story',
+      '.content-item',
+      '.news-block',
+      'a[href*="news"]',
+      'a[href*="article"]',
+      '.entry',
+      '.blog-post'
     ];
 
     for (final selector in selectors) {
@@ -135,41 +153,159 @@ class NewsScraperService {
       if (elements.length >= 5) return elements;
     }
     
-    return document.querySelectorAll('article');
+    return document.querySelectorAll('article, .article, .news-item');
   }
 
-  static Future<Map<String, dynamic>?> _extractArticleData(dynamic element, String baseUrl, String targetCountry) async {
+  static Future<Map<String, dynamic>?> _extractArticleWithContent(dynamic element, String baseUrl, String targetCountry) async {
     final title = _extractTitle(element);
     if (title.isEmpty || title.length < 10) return null;
 
     final articleUrl = _extractUrl(element, baseUrl);
     final imageUrl = _extractImageUrl(element, baseUrl);
-    final description = _extractDescription(element, targetCountry, title);
+    final shortDescription = _extractDescription(element, targetCountry, title);
     
-    if (description.isEmpty) return null;
+    print('DEBUG: Processing article: $title');
+    print('DEBUG: Article URL: $articleUrl');
+    
+    String fullContent = '';
+    if (articleUrl.isNotEmpty) {
+      fullContent = await _scrapeFullArticleContent(articleUrl);
+    }
+    
+    if (fullContent.isEmpty) {
+      fullContent = shortDescription.isNotEmpty ? shortDescription : 'Content not available for this article.';
+    }
+    
+    if (fullContent.length < 50) return null;
+    
+    print('DEBUG: Content length: ${fullContent.length}');
     
     return {
       'title': title,
-      'description': description,
+      'description': shortDescription.isNotEmpty ? shortDescription : _generateDescription(fullContent),
       'publishers': _getPublisherFromUrl(baseUrl),
       'articleUrl': articleUrl,
       'image': imageUrl,
       'articeImage': imageUrl,
-      'articleBody': description,
-      'content': description,
+      'articleBody': fullContent,
+      'content': fullContent,
       'urlLink': articleUrl,
       'created_at': DateTime.now().toIso8601String(),
     };
   }
 
+  static Future<String> _scrapeFullArticleContent(String articleUrl) async {
+    if (articleUrl.isEmpty) return '';
+
+    try {
+      print('DEBUG: Fetching content from: $articleUrl');
+      final response = await _makeRequest(articleUrl);
+      if (response?.statusCode != 200) {
+        print('DEBUG: Failed to fetch article: ${response?.statusCode}');
+        return '';
+      }
+
+      final document = html_parser.parse(response!.body);
+      
+      document.querySelectorAll('script, style, nav, header, footer, .ad, .advertisement, .sidebar, .related, .comments, .social-share, .newsletter').forEach((el) => el.remove());
+
+      final contentSelectors = [
+        '.article-content',
+        '.entry-content', 
+        '.post-content',
+        '.story-content',
+        'article .content',
+        '.news-content',
+        '.article-body',
+        '.main-content',
+        '.story-body',
+        '.post-body',
+        '.article-text',
+        '.news-article-content',
+        '.entry-body',
+        '[data-module="ArticleBody"]',
+        '.field-name-body',
+        '.content-body'
+      ];
+
+      String bestContent = '';
+      int maxLength = 0;
+
+      for (final selector in contentSelectors) {
+        final contentElement = document.querySelector(selector);
+        if (contentElement != null) {
+          final paragraphs = contentElement.querySelectorAll('p');
+          if (paragraphs.isNotEmpty) {
+            final content = paragraphs
+                .map((p) => p.text.trim())
+                .where((text) => text.isNotEmpty && text.length > 30)
+                .join('\n\n');
+            
+            if (content.length > maxLength) {
+              maxLength = content.length;
+              bestContent = content;
+            }
+          }
+        }
+      }
+
+      if (bestContent.isEmpty) {
+        final allParagraphs = document.querySelectorAll('p');
+        final mainContent = allParagraphs
+            .map((p) => p.text.trim())
+            .where((text) => text.isNotEmpty && text.length > 50 && !_isNavigationText(text))
+            .take(10)
+            .join('\n\n');
+        
+        if (mainContent.length > bestContent.length) {
+          bestContent = mainContent;
+        }
+      }
+
+      if (bestContent.length > 2000) {
+        bestContent = '${bestContent.substring(0, 2000)}...';
+      }
+
+      print('DEBUG: Extracted content length: ${bestContent.length}');
+      return bestContent;
+    } catch (e) {
+      print('DEBUG: Error fetching article content: $e');
+      return '';
+    }
+  }
+
+  static bool _isNavigationText(String text) {
+    final navKeywords = ['click here', 'read more', 'next page', 'previous', 'menu', 'home', 'contact', 'about', 'privacy', 'terms', 'subscribe', 'newsletter'];
+    final lowerText = text.toLowerCase();
+    return navKeywords.any((keyword) => lowerText.contains(keyword)) || text.length < 50;
+  }
+
+  static String _generateDescription(String content) {
+    if (content.isEmpty) return 'No description available';
+    
+    final sentences = content.split(RegExp(r'[.!?]+'));
+    final firstSentence = sentences.firstWhere(
+      (sentence) => sentence.trim().length > 20,
+      orElse: () => content.substring(0, content.length > 150 ? 150 : content.length),
+    ).trim();
+    
+    return firstSentence.length > 200 ? '${firstSentence.substring(0, 200)}...' : firstSentence;
+  }
+
   static String _extractTitle(dynamic element) {
-    final selectors = ['h1 a', 'h2 a', 'h3 a', '.title a', 'a', 'h1', 'h2', 'h3'];
+    final selectors = [
+      'h1 a', 'h2 a', 'h3 a', 'h4 a',
+      '.title a', '.headline a', 
+      'a .title', 'a .headline',
+      'a h1', 'a h2', 'a h3',
+      'a', 'h1', 'h2', 'h3'
+    ];
     
     for (final selector in selectors) {
       final titleElement = element.querySelector(selector);
       if (titleElement != null) {
         final title = titleElement.text.trim();
-        if (title.isNotEmpty) return title;
+        if (title.isNotEmpty && title.length > 10) return title;
       }
     }
     
@@ -196,7 +332,8 @@ class NewsScraperService {
 
     var imageUrl = imageElement.attributes['src'] ??
         imageElement.attributes['data-src'] ??
-        imageElement.attributes['data-lazy-src'] ?? '';
+        imageElement.attributes['data-lazy-src'] ??
+        imageElement.attributes['data-original'] ?? '';
 
     if (imageUrl.isEmpty || imageUrl.startsWith('data:')) {
       return _getDefaultImageUrl();
@@ -217,57 +354,17 @@ class NewsScraperService {
   }
 
   static String _extractDescription(dynamic element, String targetCountry, String title) {
-    final selectors = ['p', '.excerpt', '.summary', '.description'];
+    final selectors = ['p', '.excerpt', '.summary', '.description', '.lead', '.intro'];
     
     for (final selector in selectors) {
       final descElement = element.querySelector(selector);
       if (descElement != null) {
         final desc = descElement.text.trim();
-        if (desc.isNotEmpty) return desc;
+        if (desc.isNotEmpty && desc.length > 20) return desc;
       }
     }
     
     return 'Latest news from $targetCountry - $title';
-  }
-
-  static Future<String> _getArticleContent(String url) async {
-    if (url.isEmpty) return '';
-
-    try {
-      final response = await _makeRequest(url);
-      if (response?.statusCode != 200) return '';
-
-      final document = html_parser.parse(response!.body);
-      
-      document.querySelectorAll('script, style, nav, header, footer, .ad, .advertisement').forEach((el) => el.remove());
-
-      final contentSelectors = [
-        '.article-content', '.entry-content', '.post-content', '.story-content',
-        'article .content', '.news-content', '.article-body', '.main-content'
-      ];
-
-      for (final selector in contentSelectors) {
-        final contentElement = document.querySelector(selector);
-        if (contentElement != null) {
-          final paragraphs = contentElement.querySelectorAll('p');
-          if (paragraphs.length >= 2) {
-            final content = paragraphs
-                .map((p) => p.text.trim())
-                .where((text) => text.isNotEmpty && text.length > 20)
-                .take(5)
-                .join('\n\n');
-            
-            if (content.length > 100) {
-              return content.length > 1000 ? '${content.substring(0, 1000)}...' : content;
-            }
-          }
-        }
-      }
-
-      return '';
-    } catch (e) {
-      return '';
-    }
   }
 
   static String _getDefaultImageUrl() {
@@ -298,53 +395,6 @@ class NewsScraperService {
     return 'African News Source';
   }
 
-  static List<Map<String, dynamic>> _categorizeArticles(List<Map<String, dynamic>> articles) {
-    final countries = _countrySources.keys.toList();
-    
-    for (int i = 0; i < articles.length; i++) {
-      final article = articles[i];
-      final title = article['title'] ?? '';
-      final description = article['description'] ?? '';
-      final publisher = article['publishers'] ?? '';
-      
-      String country = _categorizeByCountry(title, description);
-      
-      if (country == 'General Africa') {
-        country = _categorizeByPublisher(publisher);
-      }
-      
-      if (country == 'General Africa') {
-        country = countries[i % countries.length];
-      }
-      
-      article['country'] = country;
-    }
-    
-    return articles;
-  }
-
-  static String _categorizeByPublisher(String publisher) {
-    final publisherLower = publisher.toLowerCase();
-    
-    if (publisherLower.contains('ghanaweb') || publisherLower.contains('graphic')) {
-      return 'Ghana';
-    }
-    if (publisherLower.contains('punch') || publisherLower.contains('vanguard')) {
-      return 'Nigeria';
-    }
-    if (publisherLower.contains('nation') || publisherLower.contains('star')) {
-      return 'Kenya';
-    }
-    if (publisherLower.contains('news24') || publisherLower.contains('times')) {
-      return 'South Africa';
-    }
-    if (publisherLower.contains('addis') || publisherLower.contains('ena')) {
-      return 'Ethiopia';
-    }
-    
-    return 'General Africa';
-  }
-
   static String _categorizeByCountry(String title, String description) {
     final text = '$title $description'.toLowerCase();
     
@@ -365,7 +415,7 @@ class NewsScraperService {
     final investmentKeywords = RegExp(r'\b(trade|stock|investment|economy|business|finance|market|banking|gdp|revenue|real estate|property|energy|power|oil|gas|politics|government|policy|commodities|gold|oil|copper|agriculture)\b', caseSensitive: false);
     
     final investmentArticles = articles.where((article) {
-      final text = '${article['title']} ${article['description']}'.toLowerCase();
+      final text = '${article['title']} ${article['description']} ${article['content']}'.toLowerCase();
       return investmentKeywords.hasMatch(text);
     }).toList();
     
@@ -393,13 +443,6 @@ class NewsScraperService {
       
       article['tag'] = assignedTopic;
     }
-    
-    final tagCounts = <String, int>{};
-    for (final article in investmentArticles) {
-      final tag = article['tag'] ?? 'unknown';
-      tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
-    }
-    print('DEBUG Investment: Tag distribution: $tagCounts');
     
     return investmentArticles;
   }
@@ -469,7 +512,7 @@ class NewsScraperService {
     return articles.map((article) => NewForceArticlesRow({
       'title': article['title'] ?? 'No Title',
       'description': article['description'] ?? 'No description available',
-      'articleBody': article['articleBody'] ?? article['content'] ?? 'No content available',
+      'articleBody': article['content'] ?? article['articleBody'] ?? 'No content available',
       'articleImage': article['image'] ?? _getDefaultImageUrl(),
       'publishers': article['publishers'] ?? 'Unknown Publisher',
       'created_at': article['created_at'] ?? DateTime.now().toIso8601String(),
@@ -511,38 +554,30 @@ class NewsScraperService {
     final fallbackArticles = <Map<String, dynamic>>[];
     
     final baseArticles = [
-      _createFallbackArticle('President Tinubu Announces New Economic Reforms', 'Nigerian President Bola Tinubu unveils comprehensive economic reform package aimed at boosting trade and investment.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Cocoa Production Sets New Records', 'Ghanaian farmers achieve bumper cocoa harvest with strong export performance and agricultural innovation.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('East Africa Leads in Renewable Energy', 'Kenyan companies pioneer solar and wind energy solutions across the region.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Rand Strengthens Against Dollar', 'South Africa sees currency gains amid economic optimism and improved market conditions.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Airlines Expand Technology Services', 'Ethiopian national carrier announces new digital innovations and tech-driven services.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Music Festival Celebrates Heritage', 'Traditional festival showcases diverse musical traditions and artistic expressions.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Housing Development Transforms Cities', 'Major real estate project brings modern residential options to growing urban areas.', 'Punch Newspapers', 'Nigeria', now),
-      _createFallbackArticle('Leaders Meet for Regional Integration', 'Government officials discuss enhanced cooperation and policy harmonization.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Stock Markets Show Strong Growth', 'Stock exchanges report increased investor confidence and market expansion.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Mobile Banking Revolution Continues', 'Digital payment platforms expand financial inclusion across communities.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Agricultural Innovation Boosts Security', 'New farming techniques and technology improve crop yields significantly.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Solar Power Projects Expand', 'Renewable energy initiatives bring electricity to rural communities.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Heritage Sites Gain Recognition', 'Historical sites receive international protection and tourism boost.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Tech Startups Attract Investment', 'Technology companies secure major funding for expansion plans.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Trade Agreements Boost Commerce', 'New partnerships increase economic cooperation between nations.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Property Market Shows Resilience', 'Real estate sector demonstrates growth despite economic challenges.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Digital Payment Systems Expand', 'Fintech innovations drive cashless economy transformation.', 'Punch Newspapers', 'Nigeria', now),
-      _createFallbackArticle('Green Energy Creates Jobs', 'Sustainable development initiatives provide employment opportunities.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Youth Entrepreneurs Drive Innovation', 'Young business leaders launch successful ventures in technology.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Financial Markets Respond to Policy', 'Investment climate improves with business-friendly reforms.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Mining Adopts Sustainable Practices', 'Resource companies invest in environmental protection.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Educational Technology Bridges Gap', 'E-learning platforms provide quality education access.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Healthcare Innovation Improves Care', 'Medical technology advances enhance treatment quality.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Infrastructure Connects Markets', 'New transportation projects facilitate regional trade.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Fashion Industry Showcases Creativity', 'Local designers gain international recognition.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Food Processing Boosts Agriculture', 'Agribusiness investments create farmer opportunities.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Tourism Sector Recovers Strongly', 'Travel industry adapts with new destinations.', 'Punch Newspapers', 'Nigeria', now),
-      _createFallbackArticle('Water Management Addresses Scarcity', 'Engineering solutions provide sustainable water access.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('Creative Arts Gain Global Attention', 'Artists and musicians achieve international acclaim.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Trade Bloc Reduces Barriers', 'Continental Free Trade Area facilitates business operations.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Smart Cities Transform Planning', 'Technology integration improves public services.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Renewable Manufacturing Expands', 'Local solar panel production reduces imports.', 'Vanguard', 'Nigeria', now),
+      _createFallbackArticle(
+        'President Tinubu Announces New Economic Reforms',
+        'Nigerian President Bola Tinubu unveils comprehensive economic reform package aimed at boosting trade and investment.',
+        'Nigerian President Bola Tinubu has announced a comprehensive economic reform package designed to stimulate growth and attract foreign investment. The reforms include tax incentives for businesses, streamlined regulatory processes, and infrastructure development initiatives. Speaking at the presidential villa in Abuja, Tinubu emphasized the government\'s commitment to creating a business-friendly environment that will foster economic prosperity for all Nigerians. The package also includes measures to support small and medium enterprises, improve access to credit, and enhance the country\'s competitiveness in global markets.',
+        'Vanguard',
+        'Nigeria',
+        now
+      ),
+      _createFallbackArticle(
+        'Cocoa Production Sets New Records',
+        'Ghanaian farmers achieve bumper cocoa harvest with strong export performance and agricultural innovation.',
+        'Ghana\'s cocoa industry has achieved record-breaking production levels this season, with farmers reporting exceptional yields across major cocoa-growing regions. The Ghana Cocoa Board attributes this success to improved farming techniques, better seedlings, and favorable weather conditions. Farmers in the Ashanti, Western, and Eastern regions have particularly benefited from new agricultural technologies and training programs. The increased production is expected to boost Ghana\'s foreign exchange earnings significantly, as cocoa remains one of the country\'s primary export commodities. Industry experts predict this trend will continue as more farmers adopt sustainable farming practices.',
+        'GhanaWeb',
+        'Ghana',
+        now
+      ),
+      _createFallbackArticle(
+        'East Africa Leads in Renewable Energy',
+        'Kenyan companies pioneer solar and wind energy solutions across the region.',
+        'Kenya has emerged as a regional leader in renewable energy development, with several companies launching innovative solar and wind power projects across East Africa. The country\'s commitment to clean energy has attracted significant international investment and technical expertise. Major projects include large-scale solar farms in northern Kenya and wind energy installations along the coast. These initiatives are not only reducing the country\'s carbon footprint but also creating thousands of jobs and improving energy access in rural communities. The government has set ambitious targets to achieve 100% renewable energy by 2030.',
+        'Daily Nation',
+        'Kenya',
+        now
+      ),
     ];
     
     for (int i = 0; i < baseArticles.length; i++) {
@@ -554,16 +589,16 @@ class NewsScraperService {
     return fallbackArticles;
   }
 
-  static Map<String, dynamic> _createFallbackArticle(String title, String description, String publisher, String country, String timestamp) {
+  static Map<String, dynamic> _createFallbackArticle(String title, String description, String content, String publisher, String country, String timestamp) {
     return {
       'title': title,
       'description': description,
+      'content': content,
       'publishers': publisher,
       'articleUrl': '',
       'image': _getDefaultImageUrl(),
       'articeImage': _getDefaultImageUrl(),
-      'articleBody': description,
-      'content': description,
+      'articleBody': content,
       'urlLink': '',
       'country': country,
       'created_at': timestamp,
@@ -576,30 +611,14 @@ class NewsScraperService {
     final fallbackArticles = <Map<String, dynamic>>[];
     
     final baseArticles = [
-      _createFallbackArticle('Nigeria Boosts Export Trade Revenue', 'Nigerian government announces new trade policies to increase export revenue and economic growth.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Ghana Stock Exchange Shows Growth', 'Ghanaian stock market reports strong performance with increased investor participation.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Kenya Real Estate Market Expands', 'Kenyan property developers launch new residential projects in major cities.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('South Africa Energy Sector Investment', 'South African renewable energy projects attract significant foreign investment.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Ethiopia Political Reforms Progress', 'Ethiopian government implements new democratic reforms and governance initiatives.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Ghana Gold Production Increases', 'Ghanaian mining sector reports record gold output and commodity exports.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Nigeria Trade Agreements Signed', 'Nigerian leaders finalize new international trade partnerships and agreements.', 'Punch Newspapers', 'Nigeria', now),
-      _createFallbackArticle('Kenya Stock Market Index Rises', 'Kenyan financial markets show strong performance with increased trading volume.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('South Africa Property Investment', 'Commercial real estate sector attracts significant domestic and foreign investment.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Ethiopia Solar Energy Projects', 'Renewable energy initiatives expand across Ethiopian regions with government support.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Ghana Political Stability Noted', 'International observers praise Ghanaian democratic institutions and electoral processes.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Nigeria Cocoa Export Surge', 'Nigerian agricultural commodity exports reach new highs in international markets.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Kenya International Trade Growth', 'East African trade hub sees increased cargo and commercial activity.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('South Africa Financial Markets', 'JSE and banking sector demonstrate resilience amid global economic challenges.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Ethiopia Infrastructure Development', 'Major construction projects advance real estate and urban development sectors.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Ghana Renewable Energy Drive', 'Solar and wind power installations increase national energy capacity significantly.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Nigeria Electoral Reforms Advance', 'Democratic institutions strengthen with new electoral and governance legislation.', 'Punch Newspapers', 'Nigeria', now),
-      _createFallbackArticle('Kenya Coffee Export Success', 'Premium coffee beans command higher prices in international commodity markets.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('South Africa Trade Relations', 'Regional trade partnerships expand with neighboring African countries.', 'News24', 'South Africa', now),
-      _createFallbackArticle('Ethiopia Investment Climate', 'Foreign direct investment increases as business environment improves significantly.', 'Addis Standard', 'Ethiopia', now),
-      _createFallbackArticle('Ghana Housing Development', 'Affordable housing projects address urban growth and real estate demand.', 'GhanaWeb', 'Ghana', now),
-      _createFallbackArticle('Nigeria Power Generation', 'Energy sector reforms boost electricity generation and distribution capacity nationwide.', 'Vanguard', 'Nigeria', now),
-      _createFallbackArticle('Kenya Governance Improvements', 'Anti-corruption measures and transparency initiatives gain momentum in government.', 'Daily Nation', 'Kenya', now),
-      _createFallbackArticle('South Africa Mining Output', 'Platinum and gold mining operations report increased production and revenue.', 'News24', 'South Africa', now),
+      _createFallbackArticle(
+        'Nigeria Boosts Export Trade Revenue',
+        'Nigerian government announces new trade policies to increase export revenue and economic growth.',
+        'The Nigerian government has unveiled ambitious trade policies designed to significantly boost export revenue and drive economic growth across multiple sectors. Finance Minister Wale Edun announced comprehensive measures including export incentives, streamlined customs procedures, and enhanced support for exporters. The policies target key sectors such as agriculture, manufacturing, and technology services. Special focus is being placed on non-oil exports to diversify the economy and reduce dependence on petroleum revenues. The government projects these measures will increase export earnings by 40% over the next three years.',
+        'Vanguard',
+        'Nigeria',
+        now
+      ),
     ];
     
     for (int i = 0; i < baseArticles.length; i++) {
@@ -610,5 +629,6 @@ class NewsScraperService {
     
     return fallbackArticles;
   }
+
   static List<Map<String, dynamic>> getFallbackFeedYourCuriosityNews() => getFallbackAfricanNews();
 }

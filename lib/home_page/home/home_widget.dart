@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:new_force_new_hope/home_page/home/offline_handler.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
@@ -32,10 +36,17 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   final animationsMap = <String, AnimationInfo>{};
+  Timer? _realEstateTimer;
+  bool _showRealEstateFallback = false;
+  bool _realEstateLoadingTimedOut = false;
+  Timer? _connectivityTimer;
+  bool _isDialogShowing = false;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    _initConnectivity();
     _model = createModel(context, () => HomeModel());
 
     // Check if user is in guest mode from query parameters
@@ -171,11 +182,93 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         ],
       ),
     });
+    _startRealEstateTimer();
+  }
+
+  Future<void> _initConnectivity() async {
+    final connectivity = Connectivity();
+    final results = await connectivity.checkConnectivity();
+    _updateConnectionStatus(results);
+
+    _connectivitySubscription = connectivity.onConnectivityChanged.listen(
+        _updateConnectionStatus as void Function(
+            List<ConnectivityResult> event)?);
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    final isOnline = !results.contains(ConnectivityResult.none);
+
+    if (!isOnline) {
+      _connectivityTimer?.cancel();
+      _connectivityTimer = Timer(const Duration(seconds: 2), () {
+        if (!_isDialogShowing && mounted) {
+          _showOfflineDialog();
+        }
+      });
+    } else if (isOnline && _isDialogShowing) {
+      _connectivityTimer?.cancel();
+      _hideOfflineDialog();
+    }
+  }
+
+  void _showOfflineDialog() {
+  if (_isDialogShowing || !mounted) return;
+  
+  _isDialogShowing = true;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => OfflineDialog(
+      onReload: () async {
+        // Check connectivity when reload is pressed
+        final connectivity = Connectivity();
+        final results = await connectivity.checkConnectivity();
+        final isOnline = !results.contains(ConnectivityResult.none);
+        
+        if (isOnline) {
+          // Connection restored, close dialog
+          _hideOfflineDialog();
+        } else {
+          // Still offline, show a brief message but keep dialog open
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Still no internet connection. Please check your network.',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: FlutterFlowTheme.of(context).error,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+    ),
+  ).then((_) => _isDialogShowing = false);
+}
+
+  void _hideOfflineDialog() {
+    if (!_isDialogShowing || !mounted) return;
+
+    _isDialogShowing = false;
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
+  void _startRealEstateTimer() {
+    _realEstateTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() {
+          _realEstateLoadingTimedOut = true;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _realEstateTimer?.cancel();
     _model.dispose();
+    _connectivityTimer?.cancel();
+    _connectivitySubscription?.cancel();
 
     super.dispose();
   }
@@ -286,11 +379,42 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               },
                             );
                           },
-                          child: Icon(
-                            FFIcons.kprofileCircle,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            size: 24.0,
-                          ),
+                          child: currentUserPhoto.isNotEmpty
+                              ? Container(
+                                  width: 36.0,
+                                  height: 36.0,
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: currentUserPhoto,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (context, url, error) => Icon(
+                                      FFIcons.kprofileCircle,
+                                      color: FlutterFlowTheme.of(context).primaryText,
+                                      size: 24.0,
+                                    ),
+                                    placeholder: (context, url) => Container(
+                                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 15.0,
+                                          height: 15.0,
+                                          child: CircularProgressIndicator(
+                                            color: FlutterFlowTheme.of(context).primary,
+                                            strokeWidth: 2.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Icon(
+                                  FFIcons.kprofileCircle,
+                                  color: FlutterFlowTheme.of(context).primaryText,
+                                  size: 24.0,
+                                ),
                         ),
                         if (_model.isGuest)
                           FFButtonWidget(
@@ -816,7 +940,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
                   ),*/
-                
+
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -1248,12 +1372,153 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         SizedBox(
                           width: MediaQuery.sizeOf(context).width * 0.9,
                           height: 550.0,
-                          child: custom_widgets.ParallaxCards(
-                            width: MediaQuery.sizeOf(context).width * 0.9,
-                            height: 550.0,
-                            foregroundImages: FFAppState().foregroundImages,
-                            backgroundImages: FFAppState().backgroundImages,
-                            texts: FFAppState().texts,
+                          child: Builder(
+                            builder: (context) {
+                              final appState = FFAppState();
+                              final hasData =
+                                  appState.foregroundImages.isNotEmpty ||
+                                      appState.backgroundImages.isNotEmpty ||
+                                      appState.texts.isNotEmpty;
+
+                              if (!hasData) {
+                                // Show loading widget when no data is available
+                                return Container(
+                                  width: MediaQuery.sizeOf(context).width * 0.9,
+                                  height: 550.0,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        FlutterFlowTheme.of(context)
+                                            .secondaryBackground,
+                                        FlutterFlowTheme.of(context)
+                                            .primaryBackground,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    border: Border.all(
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate,
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // Building icon with subtle animation
+                                      Container(
+                                        width: 100.0,
+                                        height: 100.0,
+                                        decoration: BoxDecoration(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary
+                                              .withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.apartment,
+                                          size: 50.0,
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24.0),
+
+                                      // Loading spinner
+                                      SizedBox(
+                                        width: 40.0,
+                                        height: 40.0,
+                                        child: CircularProgressIndicator(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          strokeWidth: 3.0,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24.0),
+
+                                      // Main loading text
+                                      Text(
+                                        'Loading Real Estate Opportunities',
+                                        style: FlutterFlowTheme.of(context)
+                                            .headlineSmall
+                                            .override(
+                                              fontFamily: 'SFPro',
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
+                                              fontSize: 18.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.w600,
+                                              useGoogleFonts: false,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12.0),
+
+                                      // Descriptive text
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 40.0),
+                                        child: Text(
+                                          'Discovering premium investment properties and development projects across African markets',
+                                          textAlign: TextAlign.center,
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                fontFamily: 'SFPro',
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondaryText,
+                                                fontSize: 14.0,
+                                                letterSpacing: 0.0,
+                                                //height: 1.4,
+                                                useGoogleFonts: false,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24.0),
+
+                                      // Status text
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16.0, vertical: 8.0),
+                                        decoration: BoxDecoration(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20.0),
+                                        ),
+                                        child: Text(
+                                          'Fetching latest investment data...',
+                                          style: FlutterFlowTheme.of(context)
+                                              .labelMedium
+                                              .override(
+                                                fontFamily: 'SFPro',
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                                fontSize: 12.0,
+                                                letterSpacing: 0.0,
+                                                fontWeight: FontWeight.w500,
+                                                useGoogleFonts: false,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              // Show the actual ParallaxCards when data is available
+                              return custom_widgets.ParallaxCards(
+                                width: MediaQuery.sizeOf(context).width * 0.9,
+                                height: 550.0,
+                                foregroundImages: appState.foregroundImages,
+                                backgroundImages: appState.backgroundImages,
+                                texts: appState.texts,
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -1404,25 +1669,21 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               0.0, 8.0, 0.0, 0.0),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     0.0, 0.0, 0.0, 8.0),
                                 child: Text(
-                                  'Invest in the Future of\nAfrica',
-                                  textAlign: TextAlign.center,
-                                  style: FlutterFlowTheme.of(context)
-                                      .headlineLarge
-                                      .override(
-                                        fontFamily: 'SFPro',
-                                        color: FlutterFlowTheme.of(context)
-                                            .primary,
-                                        fontSize: 28.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w500,
-                                        useGoogleFonts: false,
-                                      ),
+                                  'Invest in the Future of Africa',
+                                  textAlign: TextAlign.left,
+                                  style: FlutterFlowTheme.of(context).titleLarge.override(
+                                    fontFamily: 'SFPro',
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 22.0,
+                                    letterSpacing: 0.0,
+                                    useGoogleFonts: false,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1436,14 +1697,31 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               queryFn: (q) => q.order('name'),
                             ),
                             builder: (context, snapshot) {
-                              // Customize what your widget looks like when it's loading.
+                              // Show loading indicator while data is being fetched
                               if (!snapshot.hasData) {
-                                return Image.asset(
-                                  'assets/images/app_launcher_icon.png',
+                                return Container(
+                                  height: 80,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
                                 );
                               }
+
                               List<InvestmentNewsRow> rowInvestmentNewsRowList =
                                   snapshot.data!;
+
+                              // If no data, hide the section completely instead of showing fallback image
+                              if (rowInvestmentNewsRowList.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
 
                               return SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
@@ -1491,18 +1769,47 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             decoration: const BoxDecoration(
                                               shape: BoxShape.circle,
                                             ),
-                                            child: CachedNetworkImage(
-                                              imageUrl: rowInvestmentNewsRow
-                                                  .topicImageUrl!,
-                                              fit: BoxFit.cover,
-                                            ),
+                                            child: rowInvestmentNewsRow
+                                                        .topicImageUrl
+                                                        ?.isNotEmpty ==
+                                                    true
+                                                ? CachedNetworkImage(
+                                                    imageUrl:
+                                                        rowInvestmentNewsRow
+                                                            .topicImageUrl!,
+                                                    fit: BoxFit.cover,
+                                                    errorWidget:
+                                                        (context, url, error) =>
+                                                            Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[300],
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.business,
+                                                        color: Colors.grey[600],
+                                                        size: 30,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[300],
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.business,
+                                                      color: Colors.grey[600],
+                                                      size: 30,
+                                                    ),
+                                                  ),
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.all(5.0),
                                             child: Text(
                                               valueOrDefault<String>(
                                                 rowInvestmentNewsRow.name,
-                                                '0',
+                                                'Investment',
                                               ),
                                               style:
                                                   FlutterFlowTheme.of(context)
@@ -1528,18 +1835,17 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         ),
                         Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(
-                              0.0, 16.0, 0.0, 8.0),
+                              0.0, 16.0, 0.0, 16.0),
                           child: Text(
-                            'Explore and Invest in companies across the African\nContinent',
-                            textAlign: TextAlign.center,
-                            style: FlutterFlowTheme.of(context)
-                                .titleSmall
-                                .override(
-                                  fontFamily: 'SFPro',
-                                  fontSize: 18.0,
-                                  letterSpacing: 0.0,
-                                  useGoogleFonts: false,
-                                ),
+                            'Explore and Invest in companies across the African Continent',
+                            textAlign: TextAlign.left,
+                            style: FlutterFlowTheme.of(context).titleLarge.override(
+                                    fontFamily: 'SFPro',
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 22.0,
+                                    letterSpacing: 0.0,
+                                    useGoogleFonts: false,
+                                  ),
                           ),
                         ),
                         Padding(
@@ -1550,15 +1856,32 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               queryFn: (q) => q,
                             ),
                             builder: (context, snapshot) {
-                              // Customize what your widget looks like when it's loading.
+                              // Show loading indicator while data is being fetched
                               if (!snapshot.hasData) {
-                                return Image.asset(
-                                  'assets/images/app_launcher_icon.png',
+                                return Container(
+                                  height: 100,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
                                 );
                               }
+
                               List<CountryProfilesRow>
                                   listViewCountryProfilesRowList =
                                   snapshot.data!;
+
+                              // If no data, hide the section completely instead of showing fallback image
+                              if (listViewCountryProfilesRowList.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
 
                               return ListView.builder(
                                 padding: EdgeInsets.zero,
@@ -1614,19 +1937,51 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                               decoration: const BoxDecoration(
                                                 shape: BoxShape.circle,
                                               ),
-                                              child: CachedNetworkImage(
-                                                imageUrl:
-                                                    listViewCountryProfilesRow
-                                                        .flagImageUrl!,
-                                                fit: BoxFit.cover,
-                                              ),
+                                              child: listViewCountryProfilesRow
+                                                          .flagImageUrl
+                                                          ?.isNotEmpty ==
+                                                      true
+                                                  ? CachedNetworkImage(
+                                                      imageUrl:
+                                                          listViewCountryProfilesRow
+                                                              .flagImageUrl!,
+                                                      fit: BoxFit.cover,
+                                                      errorWidget: (context,
+                                                              url, error) =>
+                                                          Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              Colors.grey[300],
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.flag,
+                                                          color:
+                                                              Colors.grey[600],
+                                                          size: 25,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[300],
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.flag,
+                                                        color: Colors.grey[600],
+                                                        size: 25,
+                                                      ),
+                                                    ),
                                             ),
                                           ),
                                           Text(
                                             valueOrDefault<String>(
                                               listViewCountryProfilesRow
                                                   .country,
-                                              '0',
+                                              'Unknown Country',
                                             ),
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyMedium
