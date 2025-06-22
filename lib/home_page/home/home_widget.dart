@@ -65,7 +65,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     _model.textFieldFocusNode!.addListener(
       () async {
         context.pushNamed(
-          'searchpage',
+          'googleSearch',
           extra: <String, dynamic>{
             kTransitionInfoKey: const TransitionInfo(
               hasTransition: true,
@@ -447,85 +447,90 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   ).animateOnPageLoad(
                       animationsMap['containerOnPageLoadAnimation1']!),
                   //const SizedBox(height: 4),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        0.0, 0.0, 0.0, 16.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.sizeOf(context).width * 0.9,
-                          child: TextFormField(
-                            controller: _model.textController,
-                            focusNode: _model.textFieldFocusNode,
-                            autofocus: false,
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: 'Search',
-                              labelStyle: FlutterFlowTheme.of(context)
-                                  .labelMedium
+                  GestureDetector(
+                    onTap: (){
+                      context.pushNamed('googleSearch');
+                    },
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          0.0, 0.0, 0.0, 16.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.sizeOf(context).width * 0.9,
+                            child: TextFormField(
+                              controller: _model.textController,
+                              focusNode: _model.textFieldFocusNode,
+                              autofocus: false,
+                              obscureText: false,
+                              decoration: InputDecoration(
+                                labelText: 'Search',
+                                labelStyle: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .override(
+                                      fontFamily: 'Roboto',
+                                      fontSize: 8.0,
+                                      letterSpacing: 0.0,
+                                    ),
+                                hintStyle: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .override(
+                                      fontFamily: 'SFPro',
+                                      letterSpacing: 0.0,
+                                      useGoogleFonts: false,
+                                    ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context).error,
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context).error,
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                prefixIcon: Icon(
+                                  FFIcons.ksearchNormal1,
+                                  color:
+                                      FlutterFlowTheme.of(context).secondaryText,
+                                  size: 23.0,
+                                ),
+                              ),
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
                                   .override(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 8.0,
+                                    fontFamily: 'Tiro Bangla',
+                                    color: FlutterFlowTheme.of(context).secondary,
                                     letterSpacing: 0.0,
                                   ),
-                              hintStyle: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .override(
-                                    fontFamily: 'SFPro',
-                                    letterSpacing: 0.0,
-                                    useGoogleFonts: false,
-                                  ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  width: 1.0,
-                                ),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  width: 1.0,
-                                ),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: FlutterFlowTheme.of(context).error,
-                                  width: 1.0,
-                                ),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: FlutterFlowTheme.of(context).error,
-                                  width: 1.0,
-                                ),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              prefixIcon: Icon(
-                                FFIcons.ksearchNormal1,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                size: 23.0,
-                              ),
+                              validator: _model.textControllerValidator
+                                  .asValidator(context),
                             ),
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  fontFamily: 'Tiro Bangla',
-                                  color: FlutterFlowTheme.of(context).secondary,
-                                  letterSpacing: 0.0,
-                                ),
-                            validator: _model.textControllerValidator
-                                .asValidator(context),
                           ),
-                        ),
-                      ],
-                    ).animateOnPageLoad(
-                        animationsMap['rowOnPageLoadAnimation']!),
+                        ],
+                      ).animateOnPageLoad(
+                          animationsMap['rowOnPageLoadAnimation']!),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1657,182 +1662,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
                   ),*/
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        5.0, 20.0, 5.0, 20.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              0.0, 8.0, 0.0, 0.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 8.0),
-                                child: Text(
-                                  'Invest in the Future of Africa',
-                                  textAlign: TextAlign.left,
-                                  style: FlutterFlowTheme.of(context).titleLarge.override(
-                                    fontFamily: 'SFPro',
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    fontSize: 22.0,
-                                    letterSpacing: 0.0,
-                                    useGoogleFonts: false,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              8.0, 16.0, 8.0, 8.0),
-                          child: FutureBuilder<List<InvestmentNewsRow>>(
-                            future: InvestmentNewsTable().queryRows(
-                              queryFn: (q) => q.order('name'),
-                            ),
-                            builder: (context, snapshot) {
-                              // Show loading indicator while data is being fetched
-                              if (!snapshot.hasData) {
-                                return Container(
-                                  height: 80,
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: FlutterFlowTheme.of(context)
-                                            .primary,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              List<InvestmentNewsRow> rowInvestmentNewsRowList =
-                                  snapshot.data!;
-
-                              // If no data, hide the section completely instead of showing fallback image
-                              if (rowInvestmentNewsRowList.isEmpty) {
-                                return const SizedBox.shrink();
-                              }
-
-                              return SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                controller: _model.rowController5,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: List.generate(
-                                          rowInvestmentNewsRowList.length,
-                                          (rowIndex) {
-                                    final rowInvestmentNewsRow =
-                                        rowInvestmentNewsRowList[rowIndex];
-                                    return InkWell(
-                                      splashColor: Colors.transparent,
-                                      focusColor: Colors.transparent,
-                                      hoverColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-                                      onTap: () async {
-                                        context.pushNamed(
-                                          'investmentTopic',
-                                          queryParameters: {
-                                            'name': serializeParam(
-                                              rowInvestmentNewsRow.name,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
-                                          extra: <String, dynamic>{
-                                            kTransitionInfoKey:
-                                                const TransitionInfo(
-                                              hasTransition: true,
-                                              transitionType:
-                                                  PageTransitionType.fade,
-                                              duration:
-                                                  Duration(milliseconds: 600),
-                                            ),
-                                          },
-                                        );
-                                      },
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          Container(
-                                            width: 60.0,
-                                            height: 60.0,
-                                            clipBehavior: Clip.antiAlias,
-                                            decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: rowInvestmentNewsRow
-                                                        .topicImageUrl
-                                                        ?.isNotEmpty ==
-                                                    true
-                                                ? CachedNetworkImage(
-                                                    imageUrl:
-                                                        rowInvestmentNewsRow
-                                                            .topicImageUrl!,
-                                                    fit: BoxFit.cover,
-                                                    errorWidget:
-                                                        (context, url, error) =>
-                                                            Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.grey[300],
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      child: Icon(
-                                                        Icons.business,
-                                                        color: Colors.grey[600],
-                                                        size: 30,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey[300],
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.business,
-                                                      color: Colors.grey[600],
-                                                      size: 30,
-                                                    ),
-                                                  ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(5.0),
-                                            child: Text(
-                                              valueOrDefault<String>(
-                                                rowInvestmentNewsRow.name,
-                                                'Investment',
-                                              ),
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .override(
-                                                        fontFamily:
-                                                            'Tiro Bangla',
-                                                        fontSize: 12.0,
-                                                        letterSpacing: 0.0,
-                                                      ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  })
-                                      .divide(const SizedBox(width: 8.0))
-                                      .around(const SizedBox(width: 8.0)),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                  
+                 /* 
                         Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               0.0, 16.0, 0.0, 16.0),
@@ -2003,7 +1834,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-                  ),
+                  ),*/
                 ].divide(const SizedBox(height: 16.0)),
               ),
             ),

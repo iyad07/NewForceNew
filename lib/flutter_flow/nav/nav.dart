@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:new_force_new_hope/google_search/google_search_widget.dart';
 import 'package:new_force_new_hope/other_pages/ar_world/ar_preview_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -533,6 +534,26 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'newForcePage1',
           path: '/newForcePage1',
           builder: (context, params) => const NewForcePage1Widget(),
+        ),
+        FFRoute(
+          name: 'searchpage',
+          path: '/searchpage',
+          builder: (context, params) => SearchpageWidget(),
+        ),
+        FFRoute(
+          name: 'googleSearch',
+          path: '/googleSearch',
+          builder: (context, params) => GoogleSearchWidget(),
+        ),
+        FFRoute(
+          name: 'investmentPage',
+          path: '/investmentPage',
+          builder: (context, params) => const InvestmentPageWidget(),
+        ),
+        FFRoute(
+          name: 'BusinessIndex',
+          path: '/businessIndex',
+          builder: (context, params) => const BusinessIndexWidget(),
         ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

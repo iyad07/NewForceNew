@@ -305,7 +305,7 @@ class _NavBarPageState extends State<NavBarPage> {
   Widget build(BuildContext context) {
     final tabs = {
       'Home': const HomeWidget(),
-      'googleSearch': const GoogleSearchWidget(),
+      'investmentPage': const InvestmentPageWidget(),
       'arWorld': const ArWorldWidget(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
@@ -334,9 +334,9 @@ class _NavBarPageState extends State<NavBarPage> {
             tooltip: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
+            icon: Icon(Icons.trending_up_outlined),
+            activeIcon: Icon(Icons.trending_up),
+            label: 'Investment',
             tooltip: '',
           ),
           BottomNavigationBarItem(
