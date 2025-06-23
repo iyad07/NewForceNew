@@ -51,3 +51,4 @@ export 'tables/feedyourcuriosity.dart';
 export 'tables/feed_your_curiosity.dart';
 export 'tables/resourceinsights.dart';
 export 'tables/economicindicators.dart';
+export 'tables/african_richest.dart';

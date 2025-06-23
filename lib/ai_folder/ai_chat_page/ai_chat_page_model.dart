@@ -37,6 +37,9 @@ class AiChatPageModel extends FlutterFlowModel<AiChatPageWidget> {
   ScrollController? scrollingColumn;
   // State field(s) for ConversationListView widget.
   ScrollController? conversationListView;
+  // State field(s) for Title widget.
+  FocusNode? titleFocusNode;
+  TextEditingController? titleTextController;
   // State field(s) for PromptTextField widget.
   FocusNode? promptTextFieldFocusNode;
   TextEditingController? promptTextFieldTextController;
@@ -57,6 +60,8 @@ class AiChatPageModel extends FlutterFlowModel<AiChatPageWidget> {
   void dispose() {
     scrollingColumn?.dispose();
     conversationListView?.dispose();
+    titleFocusNode?.dispose();
+    titleTextController?.dispose();
     promptTextFieldFocusNode?.dispose();
     promptTextFieldTextController?.dispose();
   }

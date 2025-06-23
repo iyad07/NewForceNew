@@ -279,17 +279,18 @@ class _InvestmentTopicWidgetState extends State<InvestmentTopicWidget>
                                             children: [
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(10.0),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: listViewInvestementNewsArticlesRow.image!,
-                                                  width: 110.0,
-                                                  height: 110.0,
-                                                  fit: BoxFit.cover,
-                                                  errorWidget: (context, url, error) => Image.asset(
-                                                    'assets/images/app_launcher_icon.png',
-                                                    width: 110.0,
-                                                    height: 110.0,
-                                                    fit: BoxFit.cover,
-                                                  ),
+                                                child: (listViewInvestementNewsArticlesRow.image?.isNotEmpty ?? false)
+                                                    ? CachedNetworkImage(
+                                                        imageUrl: listViewInvestementNewsArticlesRow.image!,
+                                                        width: 110.0,
+                                                        height: 110.0,
+                                                        fit: BoxFit.cover,
+                                                        errorWidget: (context, url, error) => Image.asset(
+                                                          'assets/images/app_launcher_icon.png',
+                                                          width: 110.0,
+                                                          height: 110.0,
+                                                          fit: BoxFit.cover,
+                                                        ),
                                                   placeholder: (context, url) => Container(
                                                     width: 110.0,
                                                     height: 110.0,
@@ -305,7 +306,13 @@ class _InvestmentTopicWidgetState extends State<InvestmentTopicWidget>
                                                       ),
                                                     ),
                                                   ),
-                                                ),
+                                                )
+                                                    : Image.asset(
+                                                        'assets/images/app_launcher_icon.png',
+                                                        width: 110.0,
+                                                        height: 110.0,
+                                                        fit: BoxFit.cover,
+                                                      ),
                                               ),
                                               Expanded(
                                                 child: Padding(

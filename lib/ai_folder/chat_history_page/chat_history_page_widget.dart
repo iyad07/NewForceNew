@@ -183,7 +183,7 @@ class _ChatHistoryPageWidgetState extends State<ChatHistoryPageWidget>
                                                   'aiChatPage',
                                                   queryParameters: {
                                                     'id': serializeParam(
-                                                      0,
+                                                      conversationListViewChatRow.id,
                                                       ParamType.int,
                                                     ),
                                                   }.withoutNulls,

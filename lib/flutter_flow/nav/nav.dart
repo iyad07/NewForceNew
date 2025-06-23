@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:new_force_new_hope/google_search/google_search_widget.dart';
 import 'package:new_force_new_hope/other_pages/ar_world/ar_preview_screen.dart';
+import 'package:new_force_new_hope/other_pages/countries_list/countries_list_widget.dart';
+import 'package:new_force_new_hope/other_pages/prominent_people/prominent_people_widget.dart';
+import 'package:new_force_new_hope/other_pages/natural_resources/natural_resources_widget.dart';
 import 'package:provider/provider.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -263,6 +266,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'chatHistoryPage',
           path: '/chatHistoryPage',
           builder: (context, params) => const ChatHistoryPageWidget(),
+        ),
+        FFRoute(
+          name: 'aiChatPage',
+          path: '/aiChatPage',
+          builder: (context, params) => AiChatPageWidget(
+            id: params.getParam('id', ParamType.int),
+          ),
         ),
         FFRoute(
           name: 'arWorld',
@@ -554,6 +564,21 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'BusinessIndex',
           path: '/businessIndex',
           builder: (context, params) => const BusinessIndexWidget(),
+        ),
+        FFRoute(
+          name: 'naturalResources',
+          path: '/naturalResources',
+          builder: (context, params) => const NaturalResourcesWidget(),
+        ),
+        FFRoute(
+          name: 'CountriesList',
+          path: '/countriesList',
+          builder: (context, params) => const CountriesListWidget(),
+        ),
+        FFRoute(
+          name: 'ProminentPeople',
+          path: '/prominentPeople',
+          builder: (context, params) => const ProminentPeopleWidget(),
         ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

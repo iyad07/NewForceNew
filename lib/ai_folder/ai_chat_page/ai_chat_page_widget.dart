@@ -52,6 +52,7 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
           true) {
         _model.threadId = _model.chatResult?.first.threadId;
         _model.title = _model.chatResult!.first.title!;
+        _model.titleTextController?.text = _model.title;
         safeSetState(() {});
       }
       _model.conversationResult = await ConversationTable().queryRows(
@@ -73,6 +74,8 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
       );
     });
 
+    _model.titleTextController ??= TextEditingController();
+    _model.titleFocusNode ??= FocusNode();
     _model.promptTextFieldTextController ??= TextEditingController();
     _model.promptTextFieldFocusNode ??= FocusNode();
 
@@ -260,27 +263,49 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                5.0, 0.0, 0.0, 0.0),
-                            child: Text(
-                              _model.title,
-                              style: FlutterFlowTheme.of(context)
-                                  .titleLarge
-                                  .override(
-                                    fontFamily: 'SFPro',
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryText,
-                                    letterSpacing: 0.0,
-                                    useGoogleFonts: false,
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    5.0, 0.0, 0.0, 0.0),
+                                child: TextFormField(
+                                  controller: _model.titleTextController,
+                                  focusNode: _model.titleFocusNode,
+                                  onFieldSubmitted: (value) async {
+                                    if (value.trim().isNotEmpty) {
+                                      await ChatTable().update(
+                                        data: {
+                                          'title': value.trim(),
+                                        },
+                                        matchingRows: (rows) => rows.eq('id', widget.id as Object),
+                                      );
+                                      _model.title = value.trim();
+                                      safeSetState(() {});
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    isDense: true,
                                   ),
-                            ).animateOnPageLoad(
-                                animationsMap['textOnPageLoadAnimation']!),
-                          ),
-                        ],
+                                  style: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .override(
+                                        fontFamily: 'SFPro',
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        letterSpacing: 0.0,
+                                        useGoogleFonts: false,
+                                      ),
+                                ).animateOnPageLoad(
+                                    animationsMap['textOnPageLoadAnimation']!),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       FlutterFlowIconButton(
                         borderColor: Colors.transparent,
@@ -694,14 +719,31 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
                                 safeSetState(() {});
                               },
                               (threadId) async {
+                                // Capture user message before clearing the text field
+                                String userMessage = _model.userConversationResult?.content ?? '';
+                                
                                 safeSetState(() {
                                   _model.promptTextFieldTextController?.clear();
                                 });
+                                
+                                // Update thread_id and auto-generate title if it's still default
+                                Map<String, dynamic> updateData = {
+                                  'thread_id': threadId,
+                                };
+                                
+                                // Auto-generate title from first message if still using default
+                                if (_model.title == 'Conversation' || _model.title.isEmpty) {
+                                  String newTitle = userMessage.length > 50 
+                                    ? '${userMessage.substring(0, 47)}...'
+                                    : userMessage;
+                                  updateData['title'] = newTitle;
+                                  _model.title = newTitle;
+                                  _model.titleTextController?.text = newTitle;
+                                }
+                                
                                 await ChatTable().update(
-                                  data: {
-                                    'thread_id': threadId,
-                                  },
-                                  matchingRows: (rows) => rows,
+                                  data: updateData,
+                                  matchingRows: (rows) => rows.eq('id', widget.id as Object),
                                 );
                                 _model.threadId = threadId;
                                 _model.isLoading = !_model.isLoading;
@@ -710,7 +752,7 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
                                   data: {
                                     'content': FFAppState().streamResponse,
                                   },
-                                  matchingRows: (rows) => rows,
+                                  matchingRows: (rows) => rows.eq('id', _model.latestSystemChatResult!.id),
                                 );
                                 FFAppState().streamResponse = '';
                                 safeSetState(() {});
@@ -721,7 +763,7 @@ class _AiChatPageWidgetState extends State<AiChatPageWidget>
                                   curve: Curves.ease,
                                 );
                               },
-                              'https://rwl0iu.buildship.run/assistantstream',
+                              'https://api.groq.com/openai/v1/chat/completions',
                               _model.promptTextFieldTextController.text,
                               _model.threadId,
                             );

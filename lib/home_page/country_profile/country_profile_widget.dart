@@ -275,21 +275,39 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(50.0),
-          child: CachedNetworkImage(
-            imageUrl: widget.countrydetails?.flagImageUrl ?? '',
-            width: 40.0,
-            height: 40.0,
-            fit: BoxFit.cover,
-            errorWidget: (context, url, error) => Container(
-              width: 40.0,
-              height: 40.0,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-              child: Icon(Icons.flag, color: Colors.grey[600]),
-            ),
-          ),
+          child: (widget.countrydetails?.flagImageUrl?.isNotEmpty ?? false)
+              ? CachedNetworkImage(
+                  imageUrl: widget.countrydetails!.flagImageUrl!,
+                  width: 40.0,
+                  height: 40.0,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
+                    width: 40.0,
+                    height: 40.0,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(50.0),
+                    ),
+                    child: Icon(
+                      Icons.flag,
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      size: 20.0,
+                    ),
+                  ),
+                )
+              : Container(
+                  width: 40.0,
+                  height: 40.0,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    borderRadius: BorderRadius.circular(50.0),
+                  ),
+                  child: Icon(
+                    Icons.flag,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    size: 20.0,
+                  ),
+                ),
         ),
         const SizedBox(height: 5.0),
         _buildInfoRow('Population:', widget.countrydetails?.population ?? '0'),

@@ -45,3 +45,8 @@ export '/searchpage/searchpage_widget.dart' show SearchpageWidget;
 export '/home_page/news_feed/news_feed_widget.dart' show NewsFeedWidget;
 export '/investment_page/investment_page_widget.dart' show InvestmentPageWidget;
 export '/other_pages/business_index/business_index_widget.dart' show BusinessIndexWidget;
+export '/other_pages/natural_resources/natural_resources_widget.dart' show NaturalResourcesWidget;
+export '/other_pages/countries_list/countries_list_widget.dart'
+    show CountriesListWidget;
+export '/other_pages/prominent_people/prominent_people_widget.dart'
+    show ProminentPeopleWidget;

@@ -336,31 +336,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                             size: 24.0,
                           ),
                         ),
-                        // Welcome text
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                20.0, 0.0, 15.0, 0.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _model.isGuest
-                                      ? 'Welcome, Guest'
-                                      : 'Welcome, ${currentUserDisplayName.isEmpty ? 'User' : currentUserDisplayName}',
-                                  style:
-                                      FlutterFlowTheme.of(context).titleMedium,
-                                ),
-                                Text(
-                                  _model.isGuest
-                                      ? 'You are browsing in guest mode'
-                                      : 'You are signed in as ${currentUserEmail}',
-                                  style: FlutterFlowTheme.of(context).bodySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        const Spacer(),
                         // Profile icon
                         InkWell(
                           splashColor: Colors.transparent,
@@ -780,10 +756,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                               Flexible(
                                                 child: Align(
                                                   alignment:
-                                                      const AlignmentDirectional(
-                                                          -0.99, -1.02),
+                                                       Alignment.center,
                                                   child: Text(
-                                                    'Get to know more about the New Force:\nThe newest new school political movement in Africa',
+                                                    'Speak to the New Force AI',
+                                                    textAlign: TextAlign.center,
                                                     style: FlutterFlowTheme.of(
                                                             context)
                                                         .headlineMedium
@@ -793,10 +769,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                           color: FlutterFlowTheme
                                                                   .of(context)
                                                               .primaryText,
-                                                          fontSize: 14.0,
+                                                          fontSize: 24.0,
                                                           letterSpacing: 0.0,
                                                           fontWeight:
-                                                              FontWeight.normal,
+                                                              FontWeight.bold,
                                                         ),
                                                   ),
                                                 ),
@@ -855,7 +831,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                 child: FFButtonWidget(
                                                   onPressed: () async {
                                                     context.pushNamed(
-                                                      'newForcePage1',
+                                                      'aiScreen',
                                                       extra: <String, dynamic>{
                                                         kTransitionInfoKey:
                                                             const TransitionInfo(
@@ -867,7 +843,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                       },
                                                     );
                                                   },
-                                                  text: 'Explore Now',
+                                                  text: 'Speak Now',
                                                   options: FFButtonOptions(
                                                     width: 350.0,
                                                     height: 45.0,
