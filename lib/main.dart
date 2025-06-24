@@ -38,7 +38,7 @@ void main() async {
   final appState = FFAppState();
   await appState.initializePersistedState();
 
-  final newsProvider = NewsProvider();
+  final newsProvider = EnhancedNewsProvider();
   
   try {
     print('Initializing news from local storage...');
@@ -170,7 +170,7 @@ class _MyAppState extends State<MyApp> {
     Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
         try {
-          final newsProvider = context.read<NewsProvider>();
+          final newsProvider = context.read<EnhancedNewsProvider>();
           print('Starting background news update...');
           await newsProvider.fetchAllNews();
           print('Background news update completed');
@@ -218,7 +218,7 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Consumer<NewsProvider>(
+                    Consumer<EnhancedNewsProvider>(
                       builder: (context, newsProvider, child) {
                         final hasData = newsProvider.africanNews.isNotEmpty ||
                                       newsProvider.feedYourCuriosityNews.isNotEmpty ||
@@ -376,7 +376,7 @@ class NewsLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NewsProvider>(
+    return Consumer<EnhancedNewsProvider>(
       builder: (context, newsProvider, child) {
         if (!newsProvider.isLoading) return const SizedBox.shrink();
 

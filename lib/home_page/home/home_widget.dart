@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:new_force_new_hope/flutter_flow/flutter_flow_pdf_viewer.dart';
 import 'package:new_force_new_hope/home_page/home/offline_handler.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
@@ -12,6 +13,7 @@ import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/flutter_flow/flutter_flow_youtube_player.dart';
 import '/flutter_flow/utils/loading_indicator.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import 'package:auto_size_text/auto_size_text.dart';
@@ -583,179 +585,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                               Flexible(
                                                 child: Align(
                                                   alignment:
-                                                      const AlignmentDirectional(
-                                                          -0.99, -1.02),
-                                                  child: Text(
-                                                    'The Next Big Opportunity: Investing in African Markets',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .headlineMedium
-                                                        .override(
-                                                          fontFamily:
-                                                              'Tiro Bangla',
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .primaryText,
-                                                          fontSize: 14.0,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.normal,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
-                                            child: Image.asset(
-                                              'assets/images/2151003694.jpg',
-                                              width: double.infinity,
-                                              height: 224.0,
-                                              fit: BoxFit.contain,
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment:
-                                                const AlignmentDirectional(
-                                                    0.0, 0.97),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional
-                                                      .fromSTEB(
-                                                      8.0, 8.0, 8.0, 8.0),
-                                              child: Container(
-                                                width: double.infinity,
-                                                height: 50.0,
-                                                decoration: BoxDecoration(
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 96.91,
-                                                      color:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .primary,
-                                                      offset: const Offset(
-                                                        0.0,
-                                                        6.14,
-                                                      ),
-                                                      spreadRadius: 0.0,
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      const BorderRadius.only(
-                                                    bottomLeft:
-                                                        Radius.circular(12.0),
-                                                    bottomRight:
-                                                        Radius.circular(12.0),
-                                                    topLeft:
-                                                        Radius.circular(12.0),
-                                                    topRight:
-                                                        Radius.circular(12.0),
-                                                  ),
-                                                ),
-                                                child: FFButtonWidget(
-                                                  onPressed: () async {
-                                                    await _model.mainColumn
-                                                        ?.animateTo(
-                                                      _model
-                                                          .mainColumn!
-                                                          .position
-                                                          .maxScrollExtent,
-                                                      duration: const Duration(
-                                                          milliseconds: 500),
-                                                      curve: Curves.ease,
-                                                    );
-                                                  },
-                                                  text: 'Explore Now',
-                                                  options: FFButtonOptions(
-                                                    width: 350.0,
-                                                    height: 45.0,
-                                                    padding:
-                                                        const EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                            0.0, 0.0, 0.0, 0.0),
-                                                    iconPadding:
-                                                        const EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                            0.0, 0.0, 0.0, 0.0),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .primary,
-                                                    textStyle: FlutterFlowTheme
-                                                            .of(context)
-                                                        .labelMedium
-                                                        .override(
-                                                          fontFamily: 'SFPro',
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .primaryText,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          useGoogleFonts: false,
-                                                        ),
-                                                    elevation: 2.0,
-                                                    borderSide:
-                                                        const BorderSide(
-                                                      color: Colors.transparent,
-                                                      width: 1.0,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8.0),
-                                                  ),
-                                                ).animateOnPageLoad(animationsMap[
-                                                    'buttonOnPageLoadAnimation1']!),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    8.0, 0.0, 15.0, 0.0),
-                                child: InkWell(
-                                  splashColor: Colors.transparent,
-                                  focusColor: Colors.transparent,
-                                  hoverColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  onTap: () async {
-                                    await _model.mainColumn?.animateTo(
-                                      _model
-                                          .mainColumn!.position.maxScrollExtent,
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      curve: Curves.ease,
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 349.0,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                              0.0, 8.0, 0.0, 8.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              Flexible(
-                                                child: Align(
-                                                  alignment:
                                                        Alignment.center,
                                                   child: Text(
                                                     'Speak to the New Force AI',
@@ -921,6 +750,736 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     thickness: 1.0,
                     color: FlutterFlowTheme.of(context).primaryText,
                   ),*/
+
+                  // New Force Section
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 12.0, 0.0, 0.0),
+                    child: Text(
+                      'Popular Write Ups',
+                      style: FlutterFlowTheme.of(context)
+                          .labelLarge
+                          .override(
+                            fontFamily: 'SFPro',
+                            letterSpacing: 0.0,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        0.0, 4.0, 0.0, 0.0),
+                    child: Container(
+                      width: double.infinity,
+                      height: 435.0,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context)
+                            .primaryBackground,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                            0.0, 4.0, 0.0, 5.0),
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          primary: false,
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsetsDirectional
+                                  .fromSTEB(16.0, 8.0, 0.0, 8.0),
+                              child: Container(
+                                width: 200.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 4.0,
+                                      color: Color(0x430F1113),
+                                      offset: Offset(
+                                        0.0,
+                                        1.0,
+                                      ),
+                                    )
+                                  ],
+                                  borderRadius:
+                                      BorderRadius.circular(12.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Hero(
+                                        tag: 'locationImage',
+                                        transitionOnUserGestures:
+                                            true,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                                  8.0),
+                                          child: Image.asset(
+                                            'assets/images/WhatsApp-Image-2024-05-06-at-17.57.29-768x552.jpeg',
+                                            width: double.infinity,
+                                            height: 220.0,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional
+                                                .fromSTEB(
+                                                0.0, 16.0, 0.0, 0.0),
+                                        child: Text(
+                                          'The New Force Movement pledges to change the country\'s fortunes with Save Ghana Fund',
+                                          style: FlutterFlowTheme.of(
+                                                  context)
+                                              .labelSmall
+                                              .override(
+                                                fontFamily: 'SFPro',
+                                                letterSpacing: 0.0,
+                                                useGoogleFonts: false,
+                                              ),
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisSize:
+                                            MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .fromSTEB(4.0,
+                                                    4.0, 0.0, 0.0),
+                                            child: Text(
+                                              'View Now',
+                                              style:
+                                                  FlutterFlowTheme.of(
+                                                          context)
+                                                      .labelMedium
+                                                      .override(
+                                                        fontFamily:
+                                                            'SFPro',
+                                                        letterSpacing:
+                                                            0.0,
+                                                        useGoogleFonts:
+                                                            false,
+                                                      ),
+                                            ),
+                                          ),
+                                          const Icon(
+                                            Icons.navigate_next,
+                                            color: Colors.black,
+                                            size: 24.0,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsetsDirectional
+                                  .fromSTEB(8.0, 8.0, 0.0, 8.0),
+                              child: Container(
+                                width: 200.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 4.0,
+                                      color: Color(0x430F1113),
+                                      offset: Offset(
+                                        0.0,
+                                        1.0,
+                                      ),
+                                    )
+                                  ],
+                                  borderRadius:
+                                      BorderRadius.circular(12.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                                8.0),
+                                        child: Image.asset(
+                                          'assets/images/GDRkcASX0AAU8ws.jpeg',
+                                          width: double.infinity,
+                                          height: 220.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional
+                                                .fromSTEB(
+                                                0.0, 16.0, 0.0, 0.0),
+                                        child: Text(
+                                          'New Africa Foundation Convention cancelled after tension at Independence Square',
+                                          style: FlutterFlowTheme.of(
+                                                  context)
+                                              .labelSmall
+                                              .override(
+                                                fontFamily: 'SFPro',
+                                                letterSpacing: 0.0,
+                                                useGoogleFonts: false,
+                                              ),
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisSize:
+                                            MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .fromSTEB(4.0,
+                                                    4.0, 0.0, 0.0),
+                                            child: Text(
+                                              'View Now',
+                                              style:
+                                                  FlutterFlowTheme.of(
+                                                          context)
+                                                      .labelMedium
+                                                      .override(
+                                                        fontFamily:
+                                                            'SFPro',
+                                                        letterSpacing:
+                                                            0.0,
+                                                        useGoogleFonts:
+                                                            false,
+                                                      ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .fromSTEB(0.0,
+                                                    4.0, 0.0, 0.0),
+                                            child: Icon(
+                                              Icons
+                                                  .keyboard_arrow_right_rounded,
+                                              color:
+                                                  FlutterFlowTheme.of(
+                                                          context)
+                                                      .secondaryText,
+                                              size: 24.0,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsetsDirectional
+                                  .fromSTEB(8.0, 8.0, 16.0, 8.0),
+                              child: Container(
+                                width: 200.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 4.0,
+                                      color: Color(0x430F1113),
+                                      offset: Offset(
+                                        0.0,
+                                        1.0,
+                                      ),
+                                    )
+                                  ],
+                                  borderRadius:
+                                      BorderRadius.circular(12.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                                8.0),
+                                        child: Image.asset(
+                                          'assets/images/cheddar.jpg',
+                                          width: double.infinity,
+                                          height: 220.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional
+                                                .fromSTEB(
+                                                0.0, 16.0, 0.0, 0.0),
+                                        child: Text(
+                                          'Launch of 12 pillars for economic freedom by the New Force: Quotable quotes',
+                                          style: FlutterFlowTheme.of(
+                                                  context)
+                                              .labelSmall
+                                              .override(
+                                                fontFamily: 'SFPro',
+                                                letterSpacing: 0.0,
+                                                useGoogleFonts: false,
+                                              ),
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisSize:
+                                            MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .fromSTEB(4.0,
+                                                    4.0, 0.0, 0.0),
+                                            child: Text(
+                                              'View Now',
+                                              style:
+                                                  FlutterFlowTheme.of(
+                                                          context)
+                                                      .labelMedium
+                                                      .override(
+                                                        fontFamily:
+                                                            'SFPro',
+                                                        letterSpacing:
+                                                            0.0,
+                                                        useGoogleFonts:
+                                                            false,
+                                                      ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .fromSTEB(0.0,
+                                                    4.0, 0.0, 0.0),
+                                            child: Icon(
+                                              Icons
+                                                  .keyboard_arrow_right_rounded,
+                                              color:
+                                                  FlutterFlowTheme.of(
+                                                          context)
+                                                      .secondaryText,
+                                              size: 24.0,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // Upcoming Section
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 0.0, 12.0),
+                    child: Text(
+                      'Upcoming',
+                      style: FlutterFlowTheme.of(context)
+                          .labelLarge
+                          .override(
+                            fontFamily: 'SFPro',
+                            letterSpacing: 0.0,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 12.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context)
+                            .secondaryBackground,
+                        boxShadow: const [
+                          BoxShadow(
+                            blurRadius: 7.0,
+                            color: Color(0x2F1D2429),
+                            offset: Offset(
+                              0.0,
+                              3.0,
+                            ),
+                          )
+                        ],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(8.0),
+                              child: Image.asset(
+                                'assets/images/Nana-Bediako.jpg',
+                                width: double.infinity,
+                                height: 160.0,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsetsDirectional
+                                  .fromSTEB(0.0, 8.0, 0.0, 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'Launch of 12 pillars for economic freedom by the New Force:',
+                                      style: FlutterFlowTheme.of(
+                                              context)
+                                          .bodyLarge
+                                          .override(
+                                            fontFamily:
+                                                'Tiro Bangla',
+                                            letterSpacing: 0.0,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'The first ever virtual policy launch by the New Force "12 Pillars of Economic Freedom". ',
+                                    style: FlutterFlowTheme.of(
+                                            context)
+                                        .labelMedium
+                                        .override(
+                                          fontFamily: 'SFPro',
+                                          letterSpacing: 0.0,
+                                          useGoogleFonts: false,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 12.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context)
+                            .secondaryBackground,
+                        boxShadow: const [
+                          BoxShadow(
+                            blurRadius: 7.0,
+                            color: Color(0x2F1D2429),
+                            offset: Offset(
+                              0.0,
+                              3.0,
+                            ),
+                          )
+                        ],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(8.0),
+                              child: Image.asset(
+                                'assets/images/Snapinsta.app_432432358_1210962189985096_244151756642435234_n_1080.jpg',
+                                width: double.infinity,
+                                height: 160.0,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsetsDirectional
+                                  .fromSTEB(0.0, 8.0, 0.0, 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '16 Regional Listening Tour',
+                                      style: FlutterFlowTheme.of(
+                                              context)
+                                          .bodyLarge
+                                          .override(
+                                            fontFamily:
+                                                'Tiro Bangla',
+                                            letterSpacing: 0.0,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'The 16 regional listening tour focuses on addressing unemployment by promoting regional industrialization and job creation. Bediako\'s plan to listen to people\'s problems will help in crafting a national manifesto which is based on the people\'s problems.',
+                                    style: FlutterFlowTheme.of(
+                                            context)
+                                        .labelMedium
+                                        .override(
+                                          fontFamily: 'SFPro',
+                                          letterSpacing: 0.0,
+                                          useGoogleFonts: false,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Policies Section (PDF Viewer)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 12.0, 0.0, 12.0),
+                    child: Text(
+                      'Policies',
+                      style: FlutterFlowTheme.of(context)
+                          .labelLarge
+                          .override(
+                            fontFamily: 'SFPro',
+                            letterSpacing: 0.0,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 12.0),
+                    child: Container(
+                      width: double.infinity,
+                      height: 400.0,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context)
+                            .secondaryBackground,
+                        boxShadow: const [
+                          BoxShadow(
+                            blurRadius: 7.0,
+                            color: Color(0x2F1D2429),
+                            offset: Offset(
+                              0.0,
+                              3.0,
+                            ),
+                          )
+                        ],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: FlutterFlowPdfViewer(
+                          assetPath:
+                              'assets/pdfs/Nana-Kwame-Bediakos_Policies.pdf',
+                          height: 400.0,
+                          horizontalScroll: false,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Videos Section
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 12.0, 0.0, 12.0),
+                    child: Text(
+                      'Videos',
+                      style: FlutterFlowTheme.of(context)
+                          .labelLarge
+                          .override(
+                            fontFamily: 'SFPro',
+                            letterSpacing: 0.0,
+                            useGoogleFonts: false,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        10.0, 10.0, 10.0, 25.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              width: 300.0,
+                              height: 200.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: const FlutterFlowYoutubePlayer(
+                                url:
+                                    'https://www.youtube.com/watch?v=EO_R4JWU4ZQ',
+                                autoPlay: false,
+                                looping: true,
+                                mute: false,
+                                showControls: true,
+                                showFullScreen: true,
+                                strictRelatedVideos: true,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              width: 300.0,
+                              height: 200.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: const FlutterFlowYoutubePlayer(
+                                url:
+                                    'https://www.youtube.com/watch?v=B8JzCo4gcP0',
+                                autoPlay: false,
+                                looping: true,
+                                mute: false,
+                                showControls: true,
+                                showFullScreen: true,
+                                strictRelatedVideos: true,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              width: 300.0,
+                              height: 200.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: const FlutterFlowYoutubePlayer(
+                                url:
+                                    'https://www.youtube.com/watch?v=vPwwSyv7gbk',
+                                autoPlay: false,
+                                looping: true,
+                                mute: false,
+                                showControls: true,
+                                showFullScreen: true,
+                                strictRelatedVideos: true,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        10.0, 0.0, 10.0, 25.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              width: double.infinity,
+                              height: 200.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: const FlutterFlowYoutubePlayer(
+                                url:
+                                    'https://www.youtube.com/watch?v=QwUcFVR9uIY',
+                                autoPlay: false,
+                                looping: true,
+                                mute: false,
+                                showControls: true,
+                                showFullScreen: true,
+                                strictRelatedVideos: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        10.0, 0.0, 10.0, 25.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              width: double.infinity,
+                              height: 200.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: const FlutterFlowYoutubePlayer(
+                                url:
+                                    'https://www.youtube.com/watch?v=aD4W6KSuuD0',
+                                autoPlay: false,
+                                looping: true,
+                                mute: false,
+                                showControls: true,
+                                showFullScreen: true,
+                                strictRelatedVideos: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   Padding(
                     padding: const EdgeInsets.all(8.0),

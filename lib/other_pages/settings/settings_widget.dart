@@ -294,21 +294,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   ),
                 ),
               ),
-              Padding(
-                padding:
-                    const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 12.0),
-                child: Text(
-                  'Kev Peps',
-                  textAlign: TextAlign.center,
-                  style: FlutterFlowTheme.of(context).headlineSmall.override(
-                        fontFamily: 'SFPro',
-                        color: FlutterFlowTheme.of(context).info,
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.normal,
-                        useGoogleFonts: false,
-                      ),
-                ),
-              ),
               Text(
                 currentUserEmail,
                 style: FlutterFlowTheme.of(context).titleSmall.override(

@@ -69,7 +69,7 @@ class _InvestmentTopicWidgetState extends State<InvestmentTopicWidget>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+      final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
       newsProvider.fetchInvestmentNews(forceRefresh: false);
     });
   }
@@ -127,14 +127,14 @@ class _InvestmentTopicWidgetState extends State<InvestmentTopicWidget>
           top: true,
           child: RefreshIndicator(
             onRefresh: () async {
-              final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+              final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
               await newsProvider.fetchInvestmentNews(forceRefresh: true);
             },
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Consumer<NewsProvider>(
+                  Consumer<EnhancedNewsProvider>(
                     builder: (context, newsProvider, _) {
                       final allArticles = newsProvider.investmentNews;
                       final filteredArticles = allArticles

@@ -7,6 +7,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/backend/supabase/database/tables/country_profiles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'countries_list_model.dart';
 export 'countries_list_model.dart';
@@ -199,6 +200,11 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
             itemCount: listViewCountryProfilesRowList.length,
             itemBuilder: (context, listViewIndex) {
               final listViewCountryProfilesRow = listViewCountryProfilesRowList[listViewIndex];
+              
+              // Debug: Print flag URL to console
+              if (kDebugMode) {
+                print('Country: ${listViewCountryProfilesRow.country}, Flag URL: ${listViewCountryProfilesRow.flagImageUrl}');
+              }
               return InkWell(
                 splashColor: Colors.transparent,
                 focusColor: Colors.transparent,
@@ -242,6 +248,22 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
                               ? CachedNetworkImage(
                                   imageUrl: listViewCountryProfilesRow.flagImageUrl!,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: FlutterFlowTheme.of(context).primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   errorWidget: (context, url, error) => Container(
                                     decoration: BoxDecoration(
                                       color: Colors.grey[300],

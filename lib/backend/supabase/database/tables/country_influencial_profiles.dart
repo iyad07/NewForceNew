@@ -3,7 +3,7 @@ import '../database.dart';
 class CountryInfluencialProfilesTable
     extends SupabaseTable<CountryInfluencialProfilesRow> {
   @override
-  String get tableName => 'countryInfluencialProfiles';
+  String get tableName => 'influentialFigures';
 
   @override
   CountryInfluencialProfilesRow createRow(Map<String, dynamic> data) =>
@@ -16,30 +16,20 @@ class CountryInfluencialProfilesRow extends SupabaseDataRow {
   @override
   SupabaseTable get table => CountryInfluencialProfilesTable();
 
-  int get id => getField<int>('id')!;
-  set id(int value) => setField<int>('id', value);
 
-  DateTime get createdAt => getField<DateTime>('created_at')!;
-  set createdAt(DateTime value) => setField<DateTime>('created_at', value);
 
-  String? get name => getField<String>('name');
-  set name(String? value) => setField<String>('name', value);
+  String? get name => getField<String>('Name');
+  set name(String? value) => setField<String>('Name', value);
 
-  String? get nationality => getField<String>('nationality');
-  set nationality(String? value) => setField<String>('nationality', value);
+  String? get country => getField<String>('Country');
+  set country(String? value) => setField<String>('Country', value);
 
-  String? get networth => getField<String>('networth');
-  set networth(String? value) => setField<String>('networth', value);
+  String? get company => getField<String>('Company');
+  set company(String? value) => setField<String>('Company', value);
 
-  String? get profession => getField<String>('profession');
-  set profession(String? value) => setField<String>('profession', value);
+  String? get achievements => getField<String>('Achievements');
+  set achievements(String? value) => setField<String>('Achievements', value);
 
-  String? get bio => getField<String>('bio');
-  set bio(String? value) => setField<String>('bio', value);
-
-  String? get contributions => getField<String>('contributions');
-  set contributions(String? value) => setField<String>('contributions', value);
-
-  String? get image => getField<String>('image');
-  set image(String? value) => setField<String>('image', value);
+  String? get image => getField<String>('Image');
+  set image(String? value) => setField<String>('Image', value);
 }

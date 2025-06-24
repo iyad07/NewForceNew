@@ -15,27 +15,23 @@ class SuccessstoriesRow extends SupabaseDataRow {
   @override
   SupabaseTable get table => SuccessstoriesTable();
 
-  int get id => getField<int>('id')!;
-  set id(int value) => setField<int>('id', value);
 
-  DateTime get createdAt => getField<DateTime>('created_at')!;
-  set createdAt(DateTime value) => setField<DateTime>('created_at', value);
 
-  String? get title => getField<String>('title');
-  set title(String? value) => setField<String>('title', value);
+  String? get title => getField<String>('Title');
+  set title(String? value) => setField<String>('Title', value);
 
-  String? get description => getField<String>('description');
-  set description(String? value) => setField<String>('description', value);
+  String? get description => getField<String>('Description');
+  set description(String? value) => setField<String>('Description', value);
 
-  String? get industry => getField<String>('industry');
-  set industry(String? value) => setField<String>('industry', value);
+  String? get sector => getField<String>('Sector');
+  set sector(String? value) => setField<String>('Sector', value);
 
-  String? get country => getField<String>('country');
-  set country(String? value) => setField<String>('country', value);
+  String? get country => getField<String>('Country');
+  set country(String? value) => setField<String>('Country', value);
 
-  String? get achievements => getField<String>('achievements');
-  set achievements(String? value) => setField<String>('achievements', value);
+  String? get impactMetrics => getField<String>('Impact Metrics');
+  set impactMetrics(String? value) => setField<String>('Impact Metrics', value);
 
-  String? get keyfigures => getField<String>('keyfigures');
-  set keyfigures(String? value) => setField<String>('keyfigures', value);
+  String? get imageUrl => getField<String>('Image URL');
+  set imageUrl(String? value) => setField<String>('Image URL', value);
 }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:ui';
+import 'dart:async';
 import 'natural_resources_model.dart';
 export 'natural_resources_model.dart';
 
@@ -32,6 +33,17 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
       vsync: this,
       length: 2,
     );
+    
+    // Initialize PageView controllers with viewportFraction for partial visibility
+    _model.pageViewController = PageController(
+      viewportFraction: 0.85, // Shows part of next/previous cards
+    );
+    _model.cashCropsPageViewController = PageController(
+      viewportFraction: 0.85, // Shows part of next/previous cards
+    );
+    
+    // Start auto-slide timers
+    _startAutoSlide();
 
     animationsMap.addAll({
       'containerOnPageLoadAnimation': AnimationInfo(
@@ -61,6 +73,34 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
     _model.dispose();
     super.dispose();
   }
+  
+  void _startAutoSlide() {
+    // Auto-slide for minerals tab
+    _model.mineralsAutoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_model.pageViewController != null && _model.pageViewController!.hasClients) {
+        final currentPage = _model.pageViewCurrentIndex;
+        final nextPage = (currentPage + 1) % mineralsData.length;
+        _model.pageViewController!.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+    
+    // Auto-slide for cash crops tab
+    _model.cashCropsAutoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_model.cashCropsPageViewController != null && _model.cashCropsPageViewController!.hasClients) {
+        final currentPage = _model.cashCropsCurrentIndex;
+        final nextPage = (currentPage + 1) % cashCropsData.length;
+        _model.cashCropsPageViewController!.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   // Sample data for minerals
   final List<Map<String, dynamic>> mineralsData = [
@@ -89,7 +129,7 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
         },
         {
           'country': 'Burkina Faso',
-          'flag': '🇧🇫',
+          'flag': '��',
           'exportValue': '\$3.5B',
           'globalRank': '#4 Global',
           'nationalExport': '78%',
@@ -98,7 +138,7 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
         },
         {
           'country': 'Mali',
-          'flag': '🇲🇱',
+          'flag': '��',
           'exportValue': '\$3.5B',
           'globalRank': '#7 Global',
           'nationalExport': '64%',
@@ -159,7 +199,7 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
         },
         {
           'country': 'Zimbabwe',
-          'flag': '🇿🇼',
+          'flag': '🇼',
           'exportValue': '\$89M',
           'globalRank': '#35 Global',
           'nationalExport': '2.1%',
@@ -268,6 +308,110 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
           'globalRank': '#22 Global',
           'nationalExport': '0.3%',
           'destinations': 'Turkey, Italy',
+          'year': '2025'
+        }
+      ]
+    },
+    {
+      'name': 'Crude Oil',
+      'icon': '🛢️',
+      'color': const Color(0xFF2F4F4F),
+      'countries': [
+        {
+          'country': 'Nigeria',
+          'flag': '🇳🇬',
+          'exportValue': '\$45.2B',
+          'globalRank': '#8 Global',
+          'nationalExport': '85%',
+          'destinations': 'India, USA, Spain',
+          'year': '2025'
+        },
+        {
+          'country': 'Angola',
+          'flag': '🇦🇴',
+          'exportValue': '\$32.1B',
+          'globalRank': '#12 Global',
+          'nationalExport': '92%',
+          'destinations': 'China, India, USA',
+          'year': '2025'
+        },
+        {
+          'country': 'Algeria',
+          'flag': '🇩🇿',
+          'exportValue': '\$28.5B',
+          'globalRank': '#15 Global',
+          'nationalExport': '78%',
+          'destinations': 'Italy, Spain, France',
+          'year': '2025'
+        },
+        {
+          'country': 'Libya',
+          'flag': '🇱🇾',
+          'exportValue': '\$18.7B',
+          'globalRank': '#18 Global',
+          'nationalExport': '95%',
+          'destinations': 'Italy, Germany, Spain',
+          'year': '2025'
+        },
+        {
+          'country': 'Egypt',
+          'flag': '🇪🇬',
+          'exportValue': '\$12.3B',
+          'globalRank': '#22 Global',
+          'nationalExport': '45%',
+          'destinations': 'Italy, India, Jordan',
+          'year': '2025'
+        }
+      ]
+    },
+    {
+      'name': 'Natural Gas',
+      'icon': '🔥',
+      'color': const Color(0xFF4169E1),
+      'countries': [
+        {
+          'country': 'Algeria',
+          'flag': '🇩🇿',
+          'exportValue': '\$15.8B',
+          'globalRank': '#7 Global',
+          'nationalExport': '42%',
+          'destinations': 'Italy, Spain, Turkey',
+          'year': '2025'
+        },
+        {
+          'country': 'Nigeria',
+          'flag': '🇳🇬',
+          'exportValue': '\$8.9B',
+          'globalRank': '#14 Global',
+          'nationalExport': '18%',
+          'destinations': 'Spain, France, India',
+          'year': '2025'
+        },
+        {
+          'country': 'Egypt',
+          'flag': '🇪🇬',
+          'exportValue': '\$6.2B',
+          'globalRank': '#18 Global',
+          'nationalExport': '22%',
+          'destinations': 'Jordan, Italy, Turkey',
+          'year': '2025'
+        },
+        {
+          'country': 'Libya',
+          'flag': '🇱🇾',
+          'exportValue': '\$4.1B',
+          'globalRank': '#25 Global',
+          'nationalExport': '12%',
+          'destinations': 'Italy, Turkey, Spain',
+          'year': '2025'
+        },
+        {
+          'country': 'Mozambique',
+          'flag': '🇲🇿',
+          'exportValue': '\$2.8B',
+          'globalRank': '#32 Global',
+          'nationalExport': '65%',
+          'destinations': 'India, Japan, China',
           'year': '2025'
         }
       ]
@@ -794,7 +938,7 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
                                 children: [
                                   Row(
                                     children: [
-                                      const Text('📤', style: TextStyle(fontSize: 16.0)),
+                                      const Text('�', style: TextStyle(fontSize: 16.0)),
                                       const SizedBox(width: 4.0),
                                       Text(
                                         '${country['nationalExport']} of exports',
@@ -810,7 +954,7 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
                                   const SizedBox(height: 8.0),
                                   Row(
                                     children: [
-                                      const Text('📦', style: TextStyle(fontSize: 16.0)),
+                                      const Text('�', style: TextStyle(fontSize: 16.0)),
                                       const SizedBox(width: 4.0),
                                       Expanded(
                                         child: Text(
@@ -966,9 +1110,9 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
                         controller: _model.pageViewController,
                         itemCount: mineralsData.length,
                         itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
                               vertical: 20.0,
                             ),
                             child: _buildResourceCard(mineralsData[index]),
@@ -980,11 +1124,12 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
                     Container(
                       height: double.infinity,
                       child: PageView.builder(
+                        controller: _model.cashCropsPageViewController,
                         itemCount: cashCropsData.length,
                         itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
                               vertical: 20.0,
                             ),
                             child: _buildResourceCard(cashCropsData[index]),

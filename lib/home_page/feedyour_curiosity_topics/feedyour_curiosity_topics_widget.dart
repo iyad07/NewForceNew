@@ -36,7 +36,7 @@ class _FeedyourCuriosityTopicsWidgetState
     super.initState();
     _model = createModel(context, () => FeedyourCuriosityTopicsModel());
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+      final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
       newsProvider.fetchFeedYourCuriosity(forceRefresh: false);
     });
   }
@@ -95,7 +95,7 @@ class _FeedyourCuriosityTopicsWidgetState
           top: true,
           child: RefreshIndicator(
             onRefresh: () async {
-              final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+              final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
               await newsProvider.fetchFeedYourCuriosity(forceRefresh: true);
             },
             child: SingleChildScrollView(
@@ -103,7 +103,7 @@ class _FeedyourCuriosityTopicsWidgetState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Consumer<NewsProvider>(
+                Consumer<EnhancedNewsProvider>(
                   builder: (context, newsProvider, _) {
                     final allArticles = newsProvider.feedYourCuriosityNews;
                     final filteredArticles = allArticles

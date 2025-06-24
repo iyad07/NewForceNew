@@ -24,14 +24,14 @@ class CountryProfilesRow extends SupabaseDataRow {
   String? get country => getField<String>('country');
   set country(String? value) => setField<String>('country', value);
 
-  String? get flagImageUrl => getField<String>('flagImageUrl');
-  set flagImageUrl(String? value) => setField<String>('flagImageUrl', value);
+  String? get flagImageUrl => getField<String>('flagimage');
+  set flagImageUrl(String? value) => setField<String>('flagimage', value);
 
-  String? get countryGDP => getField<String>('countryGDP');
-  set countryGDP(String? value) => setField<String>('countryGDP', value);
+  String? get countryGDP => getField<String>('gdp');
+  set countryGDP(String? value) => setField<String>('gdp', value);
 
-  String? get gdpRate => getField<String>('gdpRate');
-  set gdpRate(String? value) => setField<String>('gdpRate', value);
+  String? get gdpRate => getField<String>('rateofgdp');
+  set gdpRate(String? value) => setField<String>('rateofgdp', value);
 
   String? get currency => getField<String>('currency');
   set currency(String? value) => setField<String>('currency', value);

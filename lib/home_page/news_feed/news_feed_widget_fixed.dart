@@ -56,7 +56,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
   Future<void> _fetchNews({bool forceRefresh = false}) async {
     try {
       if (!mounted) return;
-      final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+      final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
       await newsProvider.fetchAllNews(force: forceRefresh);
     } catch (e) {
       print('Error fetching news: $e');
@@ -68,7 +68,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
     }
   }
 
-  List<NewForceArticlesRow> _getFilteredNews(NewsProvider newsProvider) {
+  List<NewForceArticlesRow> _getFilteredNews(EnhancedNewsProvider newsProvider) {
     if (_selectedCountry == 'All') {
       return newsProvider.africanNews;
     } else {
@@ -108,7 +108,7 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
         ),
         body: SafeArea(
           top: true,
-          child: Consumer<NewsProvider>(
+          child: Consumer<EnhancedNewsProvider>(
             builder: (context, newsProvider, child) {
               if (newsProvider.isLoading) {
                 return Center(

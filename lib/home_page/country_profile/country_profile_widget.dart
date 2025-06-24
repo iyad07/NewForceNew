@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -72,7 +73,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   void _initializeData() async {
-    final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+    final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
 
     await newsProvider.initializeFromLocalStorage();
 
@@ -113,7 +114,6 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                   children: [
                     _buildCountryHeader(),
                     _buildNewsSection(countryName),
-                    _buildActionButtons(),
                   ].addToEnd(const SizedBox(height: 44.0)),
                 ),
               ),
@@ -125,7 +125,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Future<void> _refreshNews() async {
-    final newsProvider = Provider.of<NewsProvider>(context, listen: false);
+    final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
     await newsProvider.fetchAllNews(force: true);
   }
 
@@ -146,7 +146,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         onPressed: () => context.pop(),
       ),
       title: Text(
-        'Country Profile',
+        valueOrDefault<String>(widget.countrydetails?.country, 'Country Profile'),
         style: FlutterFlowTheme.of(context).headlineMedium.override(
               fontFamily: 'SFPro',
               color: FlutterFlowTheme.of(context).primaryText,
@@ -156,7 +156,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             ),
       ),
       actions: [
-        Consumer<NewsProvider>(
+        Consumer<EnhancedNewsProvider>(
           builder: (context, newsProvider, child) {
             return IconButton(
               icon: Icon(
@@ -183,14 +183,33 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _buildCountryStats(),
-          _buildCountryInfo(),
-        ].divide(const SizedBox(width: 8.0)),
+          Expanded(
+            flex: 3,
+            child: _buildCountryStats(),
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            flex: 2,
+            child: _buildCountryInfo(),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCountryStats() {
+    // Debug print to check database values
+    if (kDebugMode) {
+      print('=== COUNTRY PROFILE DEBUG ===');
+      print('Country: ${widget.countrydetails?.country}');
+      print('GDP: ${widget.countrydetails?.countryGDP}');
+      print('GDP Rate: ${widget.countrydetails?.gdpRate}');
+      print('Population: ${widget.countrydetails?.population}');
+      print('Currency: ${widget.countrydetails?.currency}');
+      print('Flag URL: ${widget.countrydetails?.flagImageUrl}');
+      print('============================');
+    }
+    
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -218,14 +237,18 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                   ),
             ),
             const SizedBox(width: 6.0),
-            Text(
-              valueOrDefault<String>(widget.countrydetails?.countryGDP, '0'),
-              style: FlutterFlowTheme.of(context).displaySmall.override(
-                    fontFamily: 'SFPro',
-                    fontSize: 20.0,
-                    letterSpacing: 0.0,
-                    useGoogleFonts: false,
-                  ),
+            Expanded(
+              child: Text(
+                _formatCurrency(widget.countrydetails?.countryGDP ?? '0'),
+                style: FlutterFlowTheme.of(context).displaySmall.override(
+                      fontFamily: 'SFPro',
+                      fontSize: 20.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
+                    ),
+                overflow: TextOverflow.visible,
+                softWrap: true,
+              ),
             ),
           ],
         ),
@@ -238,28 +261,32 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
               size: 20.0,
             ),
             const SizedBox(width: 4.0),
-            RichText(
-              textScaler: MediaQuery.of(context).textScaler,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: valueOrDefault<String>(
-                        widget.countrydetails?.gdpRate, '0'),
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Tiro Bangla',
-                          color: FlutterFlowTheme.of(context).primary,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const TextSpan(text: ' from 2023'),
-                ],
-                style: FlutterFlowTheme.of(context).labelMedium.override(
-                      fontFamily: 'SFPro',
-                      fontSize: 14.0,
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
+            Expanded(
+              child: RichText(
+                textScaler: MediaQuery.of(context).textScaler,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: valueOrDefault<String>(
+                          widget.countrydetails?.gdpRate, '0'),
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Tiro Bangla',
+                            color: FlutterFlowTheme.of(context).primary,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                    const TextSpan(text: ' from 2023'),
+                  ],
+                  style: FlutterFlowTheme.of(context).labelMedium.override(
+                        fontFamily: 'SFPro',
+                        fontSize: 14.0,
+                        letterSpacing: 0.0,
+                        useGoogleFonts: false,
+                      ),
+                ),
+                overflow: TextOverflow.visible,
+                softWrap: true,
               ),
             ),
           ],
@@ -275,43 +302,11 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(50.0),
-          child: (widget.countrydetails?.flagImageUrl?.isNotEmpty ?? false)
-              ? CachedNetworkImage(
-                  imageUrl: widget.countrydetails!.flagImageUrl!,
-                  width: 40.0,
-                  height: 40.0,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    width: 40.0,
-                    height: 40.0,
-                    decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).secondaryBackground,
-                      borderRadius: BorderRadius.circular(50.0),
-                    ),
-                    child: Icon(
-                      Icons.flag,
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      size: 20.0,
-                    ),
-                  ),
-                )
-              : Container(
-                  width: 40.0,
-                  height: 40.0,
-                  decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                    borderRadius: BorderRadius.circular(50.0),
-                  ),
-                  child: Icon(
-                    Icons.flag,
-                    color: FlutterFlowTheme.of(context).secondaryText,
-                    size: 20.0,
-                  ),
-                ),
+          child: _buildFlagImage(),
         ),
         const SizedBox(height: 5.0),
-        _buildInfoRow('Population:', widget.countrydetails?.population ?? '0'),
-        _buildInfoRow('Currency:', widget.countrydetails?.currency ?? '0'),
+        _buildInfoRow('Population:', _formatPopulation(widget.countrydetails?.population ?? '0')),
+        _buildInfoRow('Currency:', widget.countrydetails?.currency ?? 'N/A'),
       ],
     );
   }
@@ -319,6 +314,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   Widget _buildInfoRow(String label, String value) {
     return Row(
       mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -329,13 +325,18 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
               ),
         ),
         const SizedBox(width: 5.0),
-        Text(
-          value,
-          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                fontFamily: 'Tiro Bangla',
-                fontSize: 12.0,
-                letterSpacing: 0.0,
-              ),
+        Expanded(
+          child: Text(
+            value,
+            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                  fontFamily: 'Tiro Bangla',
+                  fontSize: 12.0,
+                  letterSpacing: 0.0,
+                ),
+            overflow: TextOverflow.visible,
+            softWrap: true,
+            textAlign: TextAlign.end,
+          ),
         ),
       ],
     );
@@ -374,7 +375,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildUpdateIndicator() {
-    return Consumer<NewsProvider>(
+    return Consumer<EnhancedNewsProvider>(
       builder: (context, newsProvider, child) {
         if (!newsProvider.isLoadingAfrican) return const SizedBox.shrink();
 
@@ -411,7 +412,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildNewsList(String countryName) {
-    return Consumer<NewsProvider>(
+    return Consumer<EnhancedNewsProvider>(
       builder: (context, newsProvider, child) {
         final countryNews = newsProvider.getNewsByCountry(countryName);
 
@@ -436,7 +437,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     );
   }
 
-  Widget _buildEmptyState(String countryName, NewsProvider newsProvider) {
+  Widget _buildEmptyState(String countryName, EnhancedNewsProvider newsProvider) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -695,86 +696,6 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     );
   }
 
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(0.0, 12.0, 0.0, 0.0),
-      child: Row(
-        children: [
-          _buildActionButton(
-            icon: Icons.trending_up_rounded,
-            label: 'Top Stocks',
-            onTap: () => context.pushNamed(
-              'topStocksPage',
-              queryParameters: {
-                'country': serializeParam(
-                    widget.countrydetails?.country, ParamType.String),
-              }.withoutNulls,
-            ),
-          ),
-          _buildActionButton(
-            icon: Icons.groups_3_sharp,
-            label: 'Top Profiles',
-            onTap: () => context.pushNamed(
-              'countryInfluencialFigures',
-              queryParameters: {
-                'country': serializeParam(
-                    widget.countrydetails?.country, ParamType.String),
-              }.withoutNulls,
-            ),
-          ),
-        ].divide(const SizedBox(width: 12.0)),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.0),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              height: 64.0,
-              margin: const EdgeInsets.symmetric(horizontal: 20.0),
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).secondaryBackground,
-                boxShadow: const [
-                  BoxShadow(
-                    blurRadius: 3.0,
-                    color: Color(0x33000000),
-                    offset: Offset(0.0, 1.0),
-                  )
-                ],
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: FlutterFlowTheme.of(context).alternate,
-                  width: 1.0,
-                ),
-              ),
-              child: Icon(icon,
-                  color: FlutterFlowTheme.of(context).primary, size: 32.0),
-            ),
-            const SizedBox(height: 12.0),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Tiro Bangla',
-                    letterSpacing: 0.0,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
 void _navigateToArticleDetails(dynamic article) {
     final imageUrl = _extractImageUrl(article);
     
@@ -821,6 +742,126 @@ void _navigateToArticleDetails(dynamic article) {
           transitionType: PageTransitionType.fade,
         ),
       },
+    );  
+  }
+
+  // Helper method to format currency values
+  String _formatCurrency(String value) {
+    if (value.isEmpty || value == '0') return '0';
+    
+    // Remove any existing formatting
+    String cleanValue = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    try {
+      double numValue = double.parse(cleanValue);
+      
+      // Format based on magnitude
+      if (numValue >= 1000000000000) {
+        return '${(numValue / 1000000000000).toStringAsFixed(1)} Trillion';
+      } else if (numValue >= 1000000000) {
+        return '${(numValue / 1000000000).toStringAsFixed(1)} Billion';
+      } else if (numValue >= 1000000) {
+        return '${(numValue / 1000000).toStringAsFixed(1)} Million';
+      } else if (numValue >= 1000) {
+        return '${(numValue / 1000).toStringAsFixed(1)}K';
+      } else {
+        return numValue.toStringAsFixed(0);
+      }
+    } catch (e) {
+      return value; // Return original if parsing fails
+    }
+  }
+
+  // Helper method to format population values
+  String _formatPopulation(String value) {
+    if (value.isEmpty || value == '0') return '0';
+    
+    // Remove any existing formatting
+    String cleanValue = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    try {
+      double numValue = double.parse(cleanValue);
+      
+      // Format based on magnitude
+      if (numValue >= 1000000000) {
+        return '${(numValue / 1000000000).toStringAsFixed(1)} Billion';
+      } else if (numValue >= 1000000) {
+        return '${(numValue / 1000000).toStringAsFixed(1)} Million';
+      } else if (numValue >= 1000) {
+        return '${(numValue / 1000).toStringAsFixed(1)}K';
+      } else {
+        return numValue.toStringAsFixed(0);
+      }
+    } catch (e) {
+      return value; // Return original if parsing fails
+    }
+  }
+
+  Widget _buildFlagImage() {
+    final flagUrl = widget.countrydetails?.flagImageUrl;
+    
+    // Check if URL is valid and not empty
+    if (flagUrl == null || flagUrl.isEmpty || !_isValidImageUrl(flagUrl)) {
+      return _buildFallbackFlag();
+    }
+    
+    return CachedNetworkImage(
+      imageUrl: flagUrl,
+      width: 40.0,
+      height: 40.0,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(
+        width: 40.0,
+        height: 40.0,
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(50.0),
+        ),
+        child: const CircularProgressIndicator(strokeWidth: 2.0),
+      ),
+      errorWidget: (context, url, error) {
+        if (kDebugMode) {
+          print('Flag image error for URL: $url - Error: $error');
+        }
+        return _buildFallbackFlag();
+      },
+    );
+  }
+
+  bool _isValidImageUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      return uri.hasScheme && 
+             (uri.scheme == 'http' || uri.scheme == 'https') &&
+             uri.host.isNotEmpty &&
+             (url.toLowerCase().contains('.png') || 
+              url.toLowerCase().contains('.jpg') || 
+              url.toLowerCase().contains('.jpeg') || 
+              url.toLowerCase().contains('.gif') || 
+              url.toLowerCase().contains('.webp') ||
+              url.toLowerCase().contains('.svg'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Widget _buildFallbackFlag() {
+    return Container(
+      width: 40.0,
+      height: 40.0,
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).secondaryBackground,
+        borderRadius: BorderRadius.circular(50.0),
+        border: Border.all(
+          color: FlutterFlowTheme.of(context).alternate,
+          width: 1.0,
+        ),
+      ),
+      child: Icon(
+        Icons.flag_outlined,
+        color: FlutterFlowTheme.of(context).secondaryText,
+        size: 20.0,
+      ),
     );
   }
 }

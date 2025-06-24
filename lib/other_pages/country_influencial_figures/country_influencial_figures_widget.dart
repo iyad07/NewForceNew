@@ -93,7 +93,7 @@ class _CountryInfluencialFiguresWidgetState
                   FutureBuilder<List<CountryInfluencialProfilesRow>>(
                     future: CountryInfluencialProfilesTable().queryRows(
                       queryFn: (q) => q.eq(
-                        'nationality',
+                        'Country',
                         widget.country as Object,
                       ),
                     ),
@@ -383,7 +383,7 @@ class _CountryInfluencialFiguresWidgetState
                                                                 valueOrDefault<
                                                                     String>(
                                                                   listViewCountryInfluencialProfilesRow
-                                                                      .profession,
+                                                                      .company,
                                                                   '0',
                                                                 ),
                                                                 style: FlutterFlowTheme.of(
@@ -445,7 +445,7 @@ class _CountryInfluencialFiguresWidgetState
                                                                   valueOrDefault<
                                                                       String>(
                                                                     listViewCountryInfluencialProfilesRow
-                                                                        .networth,
+                                                                        .company,
                                                                     '0',
                                                                   ),
                                                                   style: FlutterFlowTheme.of(
@@ -516,7 +516,7 @@ class _CountryInfluencialFiguresWidgetState
                                                   child: Text(
                                                     valueOrDefault<String>(
                                                       listViewCountryInfluencialProfilesRow
-                                                          .bio,
+                                                          .achievements,
                                                       '0',
                                                     ),
                                                     style: FlutterFlowTheme.of(
@@ -570,7 +570,7 @@ class _CountryInfluencialFiguresWidgetState
                                         Text(
                                           valueOrDefault<String>(
                                             listViewCountryInfluencialProfilesRow
-                                                .contributions,
+                                                .achievements,
                                             '0',
                                           ),
                                           style: FlutterFlowTheme.of(context)

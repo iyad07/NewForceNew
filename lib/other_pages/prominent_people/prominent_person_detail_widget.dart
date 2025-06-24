@@ -172,14 +172,14 @@ class _ProminentPersonDetailWidgetState
                         ),
                       ),
                       
-                      // Profession
-                      if (widget.person.profession != null &&
-                          widget.person.profession!.isNotEmpty)
+                      // Company
+                      if (widget.person.company != null &&
+                          widget.person.company!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               0.0, 8.0, 0.0, 0.0),
                           child: Text(
-                            widget.person.profession!,
+                            widget.person.company!,
                             style: FlutterFlowTheme.of(context).titleMedium.override(
                               fontFamily: 'SF Pro Display',
                               color: Colors.white.withOpacity(0.9),
@@ -207,8 +207,8 @@ class _ProminentPersonDetailWidgetState
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           // Nationality Card
-                          if (widget.person.nationality != null &&
-                              widget.person.nationality!.isNotEmpty)
+                          if (widget.person.country != null &&
+                          widget.person.country!.isNotEmpty)
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
@@ -245,7 +245,7 @@ class _ProminentPersonDetailWidgetState
                                     ),
                                     const SizedBox(height: 2.0),
                                     Text(
-                                      widget.person.nationality!,
+                                      widget.person.country!,
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -260,15 +260,15 @@ class _ProminentPersonDetailWidgetState
                               ),
                             ),
                           
-                          if (widget.person.nationality != null &&
-                              widget.person.nationality!.isNotEmpty &&
-                              widget.person.networth != null &&
-                              widget.person.networth!.isNotEmpty)
+                          if (widget.person.country != null &&
+                          widget.person.country!.isNotEmpty &&
+                          widget.person.company != null &&
+                          widget.person.company!.isNotEmpty)
                             const SizedBox(width: 12.0),
                           
                           // Net Worth Card
-                          if (widget.person.networth != null &&
-                              widget.person.networth!.isNotEmpty)
+                          if (widget.person.company != null &&
+                          widget.person.company!.isNotEmpty)
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
@@ -305,7 +305,7 @@ class _ProminentPersonDetailWidgetState
                                     ),
                                     const SizedBox(height: 2.0),
                                     Text(
-                                      widget.person.networth!,
+                                      widget.person.company!,
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -323,8 +323,8 @@ class _ProminentPersonDetailWidgetState
                       ),
                       
                       // Biography Section
-                      if (widget.person.bio != null &&
-                          widget.person.bio!.isNotEmpty) ...[
+                      if (widget.person.achievements != null &&
+                          widget.person.achievements!.isNotEmpty) ...[
                         const SizedBox(height: 32.0),
                         Text(
                           'Biography',
@@ -349,7 +349,7 @@ class _ProminentPersonDetailWidgetState
                             ),
                           ),
                           child: Text(
-                            widget.person.bio!,
+                            widget.person.achievements!,
                             style: FlutterFlowTheme.of(context).bodyLarge.override(
                               fontFamily: 'SF Pro Display',
                               letterSpacing: 0.0,
@@ -361,8 +361,7 @@ class _ProminentPersonDetailWidgetState
                       ],
                       
                       // Contributions Section
-                      if (widget.person.contributions != null &&
-                          widget.person.contributions!.isNotEmpty) ...[
+                      // Contributions section removed as it's now merged with achievements
                         const SizedBox(height: 32.0),
                         Text(
                           'Contributions',
@@ -387,7 +386,7 @@ class _ProminentPersonDetailWidgetState
                             ),
                           ),
                           child: Text(
-                            widget.person.contributions!,
+                            'Additional achievements',
                             style: FlutterFlowTheme.of(context).bodyLarge.override(
                               fontFamily: 'SF Pro Display',
                               letterSpacing: 0.0,
@@ -396,7 +395,6 @@ class _ProminentPersonDetailWidgetState
                             ),
                           ),
                         ),
-                      ],
                       
                       const SizedBox(height: 32.0),
                     ],
