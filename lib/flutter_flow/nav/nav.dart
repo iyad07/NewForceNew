@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 
 import '/backend/supabase/supabase.dart';
 import '/auth/base_auth_user_provider.dart';
+import '/community_hub/community_hub_widget.dart';
+import '/community_hub/topic_detail_widget.dart';
 import '/index.dart';
 import '/main.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -579,6 +581,21 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'ProminentPeople',
           path: '/prominentPeople',
           builder: (context, params) => const ProminentPeopleWidget(),
+        ),
+        FFRoute(
+          name: 'communityHub',
+          path: '/communityHub',
+          builder: (context, params) => params.isEmpty
+              ? const NavBarPage(page: CommunityHubWidget())
+              : const CommunityHubWidget(),
+        ),
+        FFRoute(
+          name: 'topicDetail',
+          path: '/topicDetail',
+          builder: (context, params) => TopicDetailWidget(
+            topicId: params.getParam('topicId', ParamType.int),
+            topicTitle: params.getParam('topicTitle', ParamType.String) ?? '',
+          ),
         ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

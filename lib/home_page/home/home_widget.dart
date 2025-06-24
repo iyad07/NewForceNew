@@ -1660,7 +1660,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                               0.0, 8.0, 0.0, 40.0),
                           child: FutureBuilder<List<CountryProfilesRow>>(
                             future: CountryProfilesTable().queryRows(
-                              queryFn: (q) => q,
+                              queryFn: (q) => q.order('country', ascending: true).limit(100),
                             ),
                             builder: (context, snapshot) {
                               // Show loading indicator while data is being fetched

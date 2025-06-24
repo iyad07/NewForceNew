@@ -11,6 +11,7 @@ import 'auth/supabase_auth/auth_util.dart';
 import 'package:go_router/go_router.dart';
 
 import '/backend/supabase/supabase.dart';
+import '/community_hub/community_hub_widget.dart';
 import 'flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
@@ -306,6 +307,7 @@ class _NavBarPageState extends State<NavBarPage> {
     final tabs = {
       'Home': const HomeWidget(),
       'investmentPage': const InvestmentPageWidget(),
+      'communityHub': const CommunityHubWidget(),
       'arWorld': const ArWorldWidget(),
       'reels': const ReelsWidget(),
       'Game': const GameWidget(),
@@ -337,6 +339,12 @@ class _NavBarPageState extends State<NavBarPage> {
             icon: Icon(Icons.trending_up_outlined),
             activeIcon: Icon(Icons.trending_up),
             label: 'Investment',
+            tooltip: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.forum_outlined),
+            activeIcon: Icon(Icons.forum),
+            label: 'Community',
             tooltip: '',
           ),
           BottomNavigationBarItem(

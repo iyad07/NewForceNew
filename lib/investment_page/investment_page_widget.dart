@@ -952,11 +952,11 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
   }
 
   Widget _buildCountryPreview(
-    BuildContext context, {
-    required String flag,
-    required String name,
-    required String gdp,
-    required Color color,
+    String flag,
+    String name,
+    String gdp,
+    Color color, {
+    CountryProfilesRow? countryData,
   }) {
     return Expanded(
       child: Container(
