@@ -62,21 +62,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       });
     });
 
-    _model.textController ??= TextEditingController();
-    _model.textFieldFocusNode ??= FocusNode();
-    _model.textFieldFocusNode!.addListener(
-      () async {
-        context.pushNamed(
-          'googleSearch',
-          extra: <String, dynamic>{
-            kTransitionInfoKey: const TransitionInfo(
-              hasTransition: true,
-              transitionType: PageTransitionType.fade,
-            ),
-          },
-        );
-      },
-    );
+    // Search functionality moved to GestureDetector in UI
+    // TextController and FocusNode no longer needed for inactive search bar
     animationsMap.addAll({
       'containerOnPageLoadAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -438,71 +425,54 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         children: [
                           SizedBox(
                             width: MediaQuery.sizeOf(context).width * 0.9,
-                            child: TextFormField(
-                              controller: _model.textController,
-                              focusNode: _model.textFieldFocusNode,
-                              autofocus: false,
-                              obscureText: false,
-                              decoration: InputDecoration(
-                                labelText: 'Search',
-                                labelStyle: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .override(
-                                      fontFamily: 'Roboto',
-                                      fontSize: 8.0,
-                                      letterSpacing: 0.0,
+                            child: GestureDetector(
+                              onTap: () {
+                                context.pushNamed(
+                                  'googleSearch',
+                                  extra: <String, dynamic>{
+                                    kTransitionInfoKey: const TransitionInfo(
+                                      hasTransition: true,
+                                      transitionType: PageTransitionType.fade,
                                     ),
-                                hintStyle: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .override(
-                                      fontFamily: 'SFPro',
-                                      letterSpacing: 0.0,
-                                      useGoogleFonts: false,
-                                    ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 56.0,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
                                     color: FlutterFlowTheme.of(context).primary,
                                     width: 1.0,
                                   ),
                                   borderRadius: BorderRadius.circular(10.0),
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    width: 1.0,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: FlutterFlowTheme.of(context).error,
-                                    width: 1.0,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                                focusedErrorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: FlutterFlowTheme.of(context).error,
-                                    width: 1.0,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                                prefixIcon: Icon(
-                                  FFIcons.ksearchNormal1,
-                                  color:
-                                      FlutterFlowTheme.of(context).secondaryText,
-                                  size: 23.0,
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(
+                                          12.0, 0.0, 12.0, 0.0),
+                                      child: Icon(
+                                        FFIcons.ksearchNormal1,
+                                        color: FlutterFlowTheme.of(context).secondaryText,
+                                        size: 23.0,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        'Search',
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelMedium
+                                            .override(
+                                              fontFamily: 'SFPro',
+                                              color: FlutterFlowTheme.of(context).secondaryText,
+                                              letterSpacing: 0.0,
+                                              useGoogleFonts: false,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    fontFamily: 'Tiro Bangla',
-                                    color: FlutterFlowTheme.of(context).secondary,
-                                    letterSpacing: 0.0,
-                                  ),
-                              validator: _model.textControllerValidator
-                                  .asValidator(context),
                             ),
                           ),
                         ],
@@ -1480,7 +1450,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-
+/*
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -1692,7 +1662,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         ),
                       );
                     },
-                  ),
+                  ),*/
                   const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1887,7 +1857,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       children: [
                         Flexible(
                           child: Text(
-                            ' Africa has Real Estate\nInvestment Opportunities',
+                            'Investment Opportunities',
                             textAlign: TextAlign.center,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium

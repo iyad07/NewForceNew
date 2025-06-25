@@ -16,8 +16,6 @@ class CountryInfluencialProfilesRow extends SupabaseDataRow {
   @override
   SupabaseTable get table => CountryInfluencialProfilesTable();
 
-
-
   String? get name => getField<String>('Name');
   set name(String? value) => setField<String>('Name', value);
 

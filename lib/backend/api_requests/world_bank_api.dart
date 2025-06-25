@@ -133,6 +133,24 @@ class WorldBankApiService {
     );
   }
   
+  // Get Foreign Direct Investment (FDI) data
+  static Future<ApiCallResponse> getFDIData({
+    String? countryCode = 'ZA',
+    String? startYear = '2017',
+    String? endYear = '2024',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getFDIData',
+      apiUrl: '$baseUrl/country/$countryCode/indicator/BX.KLT.DINV.CD.WD?date=$startYear:$endYear&format=json&per_page=100',
+      callType: ApiCallType.GET,
+      headers: {
+        'Accept': 'application/json',
+      },
+      returnBody: true,
+      decodeUtf8: true,
+    );
+  }
+  
   // Get multiple African countries data
   static Future<ApiCallResponse> getAfricanCountriesData({
     String? indicator = 'NY.GDP.MKTP.CD',

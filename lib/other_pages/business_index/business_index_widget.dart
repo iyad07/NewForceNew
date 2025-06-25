@@ -6,6 +6,7 @@ import 'package:new_force_new_hope/backend/supabase/database/tables/investment_n
 import 'package:new_force_new_hope/backend/supabase/supabase.dart';
 
 import '/backend/api_requests/world_bank_api.dart';
+import '/event_details/event_details_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -307,13 +308,10 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                         highlightColor: Colors.transparent,
                         onTap: () async {
                           context.pushNamed(
-                            'investmentTopic',
+                            'InvestmentOpportunities',
                             queryParameters: {
-                              'name': serializeParam(
-                                rowInvestmentNewsRow.name,
-                                ParamType.String,
-                              ),
-                            }.withoutNulls,
+                              'sector': rowInvestmentNewsRow.name ?? '',
+                            },
                             extra: <String, dynamic>{
                               kTransitionInfoKey: const TransitionInfo(
                                 hasTransition: true,
@@ -814,132 +812,6 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
                       _buildContinentalContent(),
 
-                      // Economic Indicators Row
-                      FutureBuilder<List<ApiCallResponse>>(
-                        future: Future.wait([
-                          WorldBankApiService.getGDPData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                          WorldBankApiService.getUnemploymentData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                          WorldBankApiService.getInflationData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                        ]),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: SizedBox(
-                                width: 50.0,
-                                height: 50.0,
-                                child: SpinKitFadingCircle(
-                                  color: Color(0xFFFF8D07),
-                                  size: 50.0,
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (snapshot.hasError || !snapshot.hasData) {
-                            print(
-                                'Error fetching economic indicators from World Bank API: ${snapshot.error}');
-                            return Column(
-                              children: [
-                                Text(
-                                  'World Bank API Connection Issue',
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                                        color: Colors.red,
-                                        useGoogleFonts: false,
-                                      ),
-                                ),
-                                const SizedBox(height: 8.0),
-                                _buildDefaultIndicators(),
-                              ],
-                            );
-                          }
-
-                          final responses = snapshot.data!;
-                          final gdpResponse = responses[0];
-                          final unemploymentResponse = responses[1];
-                          final inflationResponse = responses[2];
-
-                          // Parse World Bank API responses
-                          final gdpData = gdpResponse.succeeded
-                              ? WorldBankApiService.parseWorldBankResponse(
-                                  gdpResponse.bodyText)
-                              : <Map<String, dynamic>>[];
-                          final unemploymentData =
-                              unemploymentResponse.succeeded
-                                  ? WorldBankApiService.parseWorldBankResponse(
-                                      unemploymentResponse.bodyText)
-                                  : <Map<String, dynamic>>[];
-                          final inflationData = inflationResponse.succeeded
-                              ? WorldBankApiService.parseWorldBankResponse(
-                                  inflationResponse.bodyText)
-                              : <Map<String, dynamic>>[];
-
-                          // Get latest values
-                          final latestGDP =
-                              WorldBankApiService.getLatestValue(gdpData);
-                          final latestUnemployment =
-                              WorldBankApiService.getLatestValue(
-                                  unemploymentData);
-                          final latestInflation =
-                              WorldBankApiService.getLatestValue(inflationData);
-
-                          print(
-                              'World Bank API Data - GDP: ${WorldBankApiService.formatLargeNumber(latestGDP)}, Unemployment: ${WorldBankApiService.formatPercentage(latestUnemployment)}, Inflation: ${WorldBankApiService.formatPercentage(latestInflation)}');
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _buildEconomicCard(
-                                  'GDP (Current US\$)',
-                                  WorldBankApiService.formatLargeNumber(
-                                      latestGDP),
-                                  'Total economic output',
-                                  FlutterFlowTheme.of(context).primary,
-                                ).animateOnPageLoad(
-                                    animationsMap['economicCardAnimation1']!),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: _buildEconomicCard(
-                                  'Unemployment Rate',
-                                  WorldBankApiService.formatPercentage(
-                                      latestUnemployment),
-                                  'Total labor force',
-                                  FlutterFlowTheme.of(context).secondary,
-                                ).animateOnPageLoad(
-                                    animationsMap['economicCardAnimation2']!),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: _buildEconomicCard(
-                                  'Inflation Rate',
-                                  WorldBankApiService.formatPercentage(
-                                      latestInflation),
-                                  'Consumer price index',
-                                  FlutterFlowTheme.of(context).tertiary,
-                                ).animateOnPageLoad(
-                                    animationsMap['economicCardAnimation3']!),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-
                       // GDP & Investment Inflows Chart Section
 
                       // Upcoming Events Section
@@ -1104,33 +976,27 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
                           // If no data, show default investors
                           if (stocksData.isEmpty) {
-                            return Row(
+                            return Column(
                               children: [
-                                Expanded(
-                                  child: _buildInvestorCard(
-                                    'AfricInvest',
-                                    'Country Focus',
-                                    'Morocco',
-                                    FlutterFlowTheme.of(context).primary,
-                                  ),
+                                _buildInvestorCard(
+                                  'AfricInvest',
+                                  'Country Focus',
+                                  'Morocco',
+                                  FlutterFlowTheme.of(context).primary,
                                 ),
-                                const SizedBox(width: 12.0),
-                                Expanded(
-                                  child: _buildInvestorCard(
-                                    'Acumen',
-                                    'Country Focus',
-                                    'Nigeria',
-                                    FlutterFlowTheme.of(context).secondary,
-                                  ),
+                                const SizedBox(height: 12.0),
+                                _buildInvestorCard(
+                                  'Acumen',
+                                  'Country Focus',
+                                  'Nigeria',
+                                  FlutterFlowTheme.of(context).secondary,
                                 ),
-                                const SizedBox(width: 12.0),
-                                Expanded(
-                                  child: _buildInvestorCard(
-                                    'Helios',
-                                    'Sectoral Focus',
-                                    'Technology',
-                                    FlutterFlowTheme.of(context).tertiary,
-                                  ),
+                                const SizedBox(height: 12.0),
+                                _buildInvestorCard(
+                                  'Helios',
+                                  'Sectoral Focus',
+                                  'Technology',
+                                  FlutterFlowTheme.of(context).tertiary,
                                 ),
                               ],
                             );
@@ -1143,7 +1009,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                             FlutterFlowTheme.of(context).tertiary,
                           ];
 
-                          return Row(
+                          return Column(
                             children: stocksData
                                 .asMap()
                                 .entries
@@ -1151,19 +1017,18 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                                   int index = entry.key;
                                   CountryTopStocksRow stock = entry.value;
 
-                                  return [
-                                    if (index > 0) const SizedBox(width: 12.0),
-                                    Expanded(
-                                      child: _buildInvestorCard(
+                                  return Column(
+                                    children: [
+                                      if (index > 0) const SizedBox(height: 12.0),
+                                      _buildInvestorCard(
                                         stock.stockName ?? 'Top Stock',
                                         'Stock Rate',
                                         '${stock.stockRate ?? 0}%',
                                         colors[index % colors.length],
                                       ),
-                                    ),
-                                  ];
+                                    ],
+                                  );
                                 })
-                                .expand((element) => element)
                                 .toList(),
                           );
                         },
@@ -1361,6 +1226,19 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         _cardAnimationController.forward().then((_) {
           _cardAnimationController.reverse();
         });
+        
+        // Navigate to event details page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventDetailsWidget(
+              eventTitle: title,
+              eventLocation: location,
+              eventCategory: category,
+              eventDescription: '',
+            ),
+          ),
+        );
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -1457,6 +1335,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
   Widget _buildInvestorCard(
       String name, String type, String focus, Color color) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -1466,56 +1345,62 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
           width: 1.0,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Container(
-            width: 40.0,
-            height: 40.0,
+            width: 50.0,
+            height: 50.0,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(10.0),
             ),
             child: Icon(
               Icons.business,
               color: Colors.white,
-              size: 20.0,
+              size: 24.0,
             ),
           ),
-          const SizedBox(height: 12.0),
-          Text(
-            name,
-            style: FlutterFlowTheme.of(context).bodyLarge.override(
-                  fontFamily: 'SF Pro Display',
-                  color: FlutterFlowTheme.of(context).primaryText,
-                  fontSize: 16.0,
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.w600,
-                  useGoogleFonts: false,
+          const SizedBox(width: 16.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: FlutterFlowTheme.of(context).bodyLarge.override(
+                        fontFamily: 'SF Pro Display',
+                        color: FlutterFlowTheme.of(context).primaryText,
+                        fontSize: 16.0,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                        useGoogleFonts: false,
+                      ),
                 ),
-          ),
-          const SizedBox(height: 4.0),
-          Text(
-            type,
-            style: FlutterFlowTheme.of(context).bodySmall.override(
-                  fontFamily: 'SF Pro Display',
-                  color: FlutterFlowTheme.of(context).secondaryText,
-                  fontSize: 12.0,
-                  letterSpacing: 0.0,
-                  useGoogleFonts: false,
+                const SizedBox(height: 4.0),
+                Text(
+                  type,
+                  style: FlutterFlowTheme.of(context).bodySmall.override(
+                        fontFamily: 'SF Pro Display',
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        fontSize: 12.0,
+                        letterSpacing: 0.0,
+                        useGoogleFonts: false,
+                      ),
                 ),
-          ),
-          const SizedBox(height: 2.0),
-          Text(
-            focus,
-            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  fontFamily: 'SF Pro Display',
-                  color: color,
-                  fontSize: 14.0,
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.w500,
-                  useGoogleFonts: false,
+                const SizedBox(height: 2.0),
+                Text(
+                  focus,
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'SF Pro Display',
+                        color: color,
+                        fontSize: 14.0,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w500,
+                        useGoogleFonts: false,
+                      ),
                 ),
+              ],
+            ),
           ),
         ],
       ),

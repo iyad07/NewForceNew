@@ -6,6 +6,7 @@ export 'row.dart';
 export 'table.dart';
 
 export 'tables/investment_news.dart';
+export 'tables/investment_opportunities.dart';
 export 'tables/generalinformatioin.dart';
 export 'tables/country_influencial_profiles.dart';
 export 'tables/african_tourism.dart';

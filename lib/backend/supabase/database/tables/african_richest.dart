@@ -15,8 +15,6 @@ class AfricanRichestRow extends SupabaseDataRow {
   @override
   SupabaseTable get table => AfricanRichestTable();
 
-
-
   String? get name => getField<String>('Name');
   set name(String? value) => setField<String>('Name', value);
 

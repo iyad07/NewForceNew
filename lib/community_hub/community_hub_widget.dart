@@ -1,7 +1,9 @@
+// community_hub_widget.dart - Updated with modern UI style
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'community_hub_model.dart';
 export 'community_hub_model.dart';
@@ -22,6 +24,11 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => CommunityHubModel());
+    
+    // Start background loading immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _model.preloadTopics();
+    });
   }
 
   @override
@@ -38,209 +45,317 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
           : FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: false,
-          title: Text(
-            'Community Hub',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-              fontFamily: 'SF Pro Display',
-              color: Colors.white,
-              fontSize: 22.0,
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.w600,
-              useGoogleFonts: false,
-            ),
-          ),
-          centerTitle: true,
-          elevation: 2.0,
-        ),
+        backgroundColor: Color(0xFF1E2022),
         body: SafeArea(
           top: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 8.0),
-                child: Text(
-                  'Join the conversation on topics that matter to Africa',
-                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'SF Pro Display',
-                    color: FlutterFlowTheme.of(context).secondaryText,
-                    fontSize: 16.0,
-                    letterSpacing: 0.0,
-                    useGoogleFonts: false,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await _model.refreshTopics();
+                setState(() {});
+              },
+              color: Color(0xFFFF8000),
+              backgroundColor: Color(0xFF2A2D30),
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header Section with modern UI style
+                  Padding(
+                    padding: EdgeInsets.all(14.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      elevation: 1.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        height: 80.0,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+                            stops: [0.0, 1.0],
+                            begin: AlignmentDirectional(0.59, -1.0),
+                            end: AlignmentDirectional(-0.59, 1.0),
+                          ),
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Forum Hub',
+                                    style: FlutterFlowTheme.of(context)
+                                        .headlineLarge
+                                        .override(
+                                          fontFamily: 'SF Pro Display',
+                                          useGoogleFonts: false,
+                                          color: Colors.white,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                  Text(
+                                    'Join the conversation',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontFamily: 'SF Pro Display',
+                                          useGoogleFonts: false,
+                                          color: Color(0xFFB0B3B8),
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
+
+                  // Topics of the Day Section
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(24.0, 20.0, 24.0, 20.0),
+                    child: Container(
+                      width: double.infinity,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Topics of the Day',
+                            style: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  fontFamily: 'SF Pro Display',
+                                  useGoogleFonts: false,
+                                  color: Color(0x47FF8000),
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Topics List with Backend Integration
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
+                    child: _buildTopicsList(),
+                  ),
+                ],
               ),
-              Expanded(
-                child: _buildTopicsList(),
-              ),
-            ],
+            ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<List<TopicsRow>> _getTopicsOrderedByLatestPost() async {
-    try {
-      // Get all active topics
-      final topics = await TopicsTable().queryRows(
-        queryFn: (q) => q.eq('is_active', true),
-      );
-
-      // For each topic, get the latest post timestamp
-      final topicsWithLatestPost = <Map<String, dynamic>>[];
-      
-      for (final topic in topics) {
-        final latestPosts = await CommunityPostsTable().queryRows(
-          queryFn: (q) => q
-              .eq('topic_id', topic.id)
-              .order('created_at', ascending: false)
-              .limit(1),
+  Widget _buildTopicsGrid(List<TopicsRow> topics) {
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: topics.length,
+      itemBuilder: (context, index) {
+        final topic = topics[index];
+        return Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 16.0),
+          child: _buildModernTopicCard(topic),
         );
-        
-        final latestPostTime = latestPosts.isNotEmpty 
-            ? latestPosts.first.createdAt 
-            : topic.createdAt; // Fallback to topic creation time
-            
-        topicsWithLatestPost.add({
-          'topic': topic,
-          'latest_post_time': latestPostTime,
-        });
-      }
-      
-      // Sort by latest post time (most recent first)
-      topicsWithLatestPost.sort((a, b) => 
-          (b['latest_post_time'] as DateTime).compareTo(a['latest_post_time'] as DateTime));
-      
-      // Return sorted topics
-      return topicsWithLatestPost.map((item) => item['topic'] as TopicsRow).toList();
-    } catch (e) {
-      debugPrint('Error fetching topics ordered by latest post: $e');
-      // Fallback to original query
-      return TopicsTable().queryRows(
-        queryFn: (q) => q.eq('is_active', true).order('created_at', ascending: false),
-      );
-    }
+      },
+    );
+  }
+
+  // Optimized topics loading with caching
+  Future<List<TopicsRow>> _getTopicsOptimized() async {
+    return await _model.getTopics();
   }
 
   Widget _buildTopicsList() {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 16.0),
-      child: FutureBuilder<List<TopicsRow>>(
-        future: _getTopicsOrderedByLatestPost(),
-        builder: (context, snapshot) {
-          // Handle errors
-          if (snapshot.hasError) {
-            debugPrint('Error fetching topics: ${snapshot.error}');
-            return Center(
+    // Show cached data immediately if available
+    final cachedTopics = _model.cachedTopics;
+    
+    return FutureBuilder<List<TopicsRow>>(
+      future: _getTopicsOptimized(),
+      builder: (context, snapshot) {
+        // If we have cached data and are loading, show cached data with refresh indicator
+        if (cachedTopics != null && cachedTopics.isNotEmpty && !snapshot.hasData) {
+          return Column(
+            children: [
+              // Subtle loading indicator
+              Container(
+                height: 2.0,
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF8000)),
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              _buildTopicsGrid(cachedTopics),
+            ],
+          );
+        }
+        // Handle errors with modern UI
+        if (snapshot.hasError) {
+          debugPrint('Error fetching topics: ${snapshot.error}');
+          return Center(
+            child: Container(
+              padding: EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Color(0xFF2A2D30),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: Color(0xFF3A3D41),
+                  width: 1.0,
+                ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.error_outline,
                     size: 64.0,
-                    color: FlutterFlowTheme.of(context).error,
+                    color: Color(0xFFFF6B6B),
                   ),
                   const SizedBox(height: 16.0),
                   Text(
                     'Error loading topics',
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                      fontFamily: 'SF Pro Display',
-                      color: FlutterFlowTheme.of(context).error,
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
-                    ),
+                    style: FlutterFlowTheme.of(context)
+                        .titleMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                        ),
                   ),
                   const SizedBox(height: 4.0),
                   Text(
                     'Please try again later',
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
-                    ),
+                    style: FlutterFlowTheme.of(context)
+                        .bodyMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Color(0xFFB0B3B8),
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                        ),
                   ),
                 ],
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          // Show loading indicator while data is being fetched
-          if (!snapshot.hasData) {
-            return Center(
+        // Show loading indicator with modern UI
+        if (!snapshot.hasData) {
+          return Center(
+            child: Container(
+              padding: EdgeInsets.all(48.0),
               child: SizedBox(
                 width: 40.0,
                 height: 40.0,
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    FlutterFlowTheme.of(context).primary,
+                    Color(0xFFFF8000),
                   ),
+                  strokeWidth: 3.0,
                 ),
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          List<TopicsRow> topicsRowList = snapshot.data!;
+        List<TopicsRow> topicsRowList = snapshot.data!;
 
-          // If no data, show empty state
-          if (topicsRowList.isEmpty) {
-            return Center(
+        // If no data, show empty state with modern UI
+        if (topicsRowList.isEmpty) {
+          return Center(
+            child: Container(
+              padding: EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Color(0xFF2A2D30),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: Color(0xFF3A3D41),
+                  width: 1.0,
+                ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.forum_outlined,
                     size: 64.0,
-                    color: FlutterFlowTheme.of(context).secondaryText,
+                    color: Color(0xFF6C7075),
                   ),
                   const SizedBox(height: 16.0),
                   Text(
                     'No topics available',
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                      fontFamily: 'SF Pro Display',
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
-                    ),
+                    style: FlutterFlowTheme.of(context)
+                        .titleMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                        ),
                   ),
                   const SizedBox(height: 6.0),
                   Text(
                     'Check back later for new discussions',
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
-                    ),
+                    style: FlutterFlowTheme.of(context)
+                        .bodyMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Color(0xFFB0B3B8),
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                        ),
                   ),
                 ],
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.zero,
-            itemCount: topicsRowList.length,
-            itemBuilder: (context, index) {
-              final topic = topicsRowList[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: _buildTopicCard(topic),
-              );
-            },
+            ),
           );
-        },
-      ),
+        }
+
+        // Build topics list with modern UI cards
+        return _buildTopicsGrid(topicsRowList);
+      },
     );
   }
 
-  Widget _buildTopicCard(TopicsRow topic) {
+  Widget _buildModernTopicCard(TopicsRow topic) {
     return InkWell(
       splashColor: Colors.transparent,
       focusColor: Colors.transparent,
@@ -261,140 +376,172 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
           }.withoutNulls,
         );
       },
-      child: IntrinsicHeight(
-        child: Container(
-          decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(
-            color: FlutterFlowTheme.of(context).alternate,
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 4.0,
-              color: const Color(0x1A000000),
-              offset: const Offset(
-                0.0,
-                2.0,
-              ),
-            )
-          ],
-          ),
-          child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            // Topic Image
-            SizedBox(
-              width: 85.0,
-              height: 85.0,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(12.0),
-                  bottomRight: Radius.circular(0.0),
-                  topLeft: Radius.circular(12.0),
-                  topRight: Radius.circular(0.0),
-                ),
-                child: topic.imageUrl != null && topic.imageUrl!.isNotEmpty
-                    ? Image.network(
-                        topic.imageUrl!,
-                        width: 85.0,
-                        height: 85.0,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 85.0,
-                            height: 85.0,
-                            color: FlutterFlowTheme.of(context).alternate,
-                            child: Icon(
-                              Icons.forum,
-                              size: 40.0,
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        width: 85.0,
-                        height: 85.0,
-                        color: FlutterFlowTheme.of(context).alternate,
-                        child: Icon(
-                          Icons.forum,
-                          size: 40.0,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                        ),
-                      ),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+        ),
+        child: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFF2A2D30),
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: Color(0xFF3A3D41),
+                width: 1.0,
               ),
             ),
-            // Topic Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(12.0, 4.0, 8.0, 4.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        topic.title ?? 'Untitled Topic',
-                        style: FlutterFlowTheme.of(context).titleMedium.override(
-                          fontFamily: 'SF Pro Display',
-                          color: FlutterFlowTheme.of(context).primaryText,
-                          fontSize: 18.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w600,
-                          useGoogleFonts: false,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 3.0),
-                    if (topic.description != null && topic.description!.isNotEmpty)
-                      Flexible(
-                        child: Text(
-                          topic.description!,
-                          style: FlutterFlowTheme.of(context).bodySmall.override(
-                            fontFamily: 'SF Pro Display',
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            fontSize: 14.0,
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Topic Image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: topic.imageUrl != null && topic.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            topic.imageUrl!,
+                            width: 50.0,
+                            height: 50.0,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 50.0,
+                                height: 50.0,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF3A3D41),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: Icon(
+                                  Icons.forum,
+                                  color: Color(0xFF6C7075),
+                                  size: 24.0,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            width: 50.0,
+                            height: 50.0,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF3A3D41),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Icon(
+                              Icons.forum,
+                              color: Color(0xFF6C7075),
+                              size: 24.0,
+                            ),
                           ),
+                  ),
+                  
+                  // Topic Content
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          topic.title ?? 'Untitled Topic',
+                          style: FlutterFlowTheme.of(context)
+                              .titleMedium
+                              .override(
+                                fontFamily: 'SF Pro Display',
+                                useGoogleFonts: false,
+                                color: Colors.white,
+                                letterSpacing: 0.0,
+                              ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    const SizedBox(height: 3.0),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          size: 16.0,
-                        ),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          '${topic.postsCount ?? 0} posts',
-                          style: FlutterFlowTheme.of(context).bodySmall.override(
-                            fontFamily: 'SF Pro Display',
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            fontSize: 12.0,
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
+                        if (topic.description != null && topic.description!.isNotEmpty)
+                          Text(
+                            topic.description!,
+                            style: FlutterFlowTheme.of(context)
+                                .bodySmall
+                                .override(
+                                  fontFamily: 'SF Pro Display',
+                                  useGoogleFonts: false,
+                                  color: Color(0xFFB0B3B8),
+                                  letterSpacing: 0.0,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Icon(
+                                  Icons.people_rounded,
+                                  color: Color(0xFF6C7075),
+                                  size: 16.0,
+                                ),
+                                Text(
+                                  _formatCount(topic.postsCount ?? 0),
+                                  style: FlutterFlowTheme.of(context)
+                                      .labelSmall
+                                      .override(
+                                        fontFamily: 'SF Pro Display',
+                                        useGoogleFonts: false,
+                                        color: Color(0xFF6C7075),
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ].divide(SizedBox(width: 4.0)),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_rounded,
+                                  color: Color(0xFF6C7075),
+                                  size: 16.0,
+                                ),
+                                Text(
+                                  '${topic.postsCount ?? 0}',
+                                  style: FlutterFlowTheme.of(context)
+                                      .labelSmall
+                                      .override(
+                                        fontFamily: 'SF Pro Display',
+                                        useGoogleFonts: false,
+                                        color: Color(0xFF6C7075),
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ].divide(SizedBox(width: 4.0)),
+                            ),
+                          ].divide(SizedBox(width: 16.0)),
                         ),
-                      ],
+                      ].divide(SizedBox(height: 4.0)),
                     ),
-                  ],
-                ),
+                  ),
+                  
+                  // Arrow Icon
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Color(0xFF6C7075),
+                    size: 20.0,
+                  ),
+                ].divide(SizedBox(width: 16.0)),
               ),
             ),
-            ],
           ),
         ),
       ),
     );
+  }
+
+  String _formatCount(int count) {
+    if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}k';
+    }
+    return count.toString();
   }
 }

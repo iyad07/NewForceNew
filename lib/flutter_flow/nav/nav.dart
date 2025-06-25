@@ -13,6 +13,7 @@ import '/auth/base_auth_user_provider.dart';
 import '/community_hub/community_hub_widget.dart';
 import '/community_hub/topic_detail_widget.dart';
 import '/index.dart';
+import '/investment_opportunities/investment_opportunities_widget.dart';
 import '/main.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -342,6 +343,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'articleNews',
               ParamType.String,
             ),
+          ),
+        ),
+        FFRoute(
+          name: 'InvestmentOpportunities',
+          path: '/investmentOpportunities',
+          builder: (context, params) => InvestmentOpportunitiesWidget(
+            initialSector: params.getParam('sector', ParamType.String),
           ),
         ),
         FFRoute(

@@ -56,7 +56,23 @@ class _GoogleSearchWidgetState extends State<GoogleSearchWidget> {
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
           backgroundColor: Colors.orange, // Orange theme
-          automaticallyImplyLeading: false,
+          automaticallyImplyLeading: true,
+          leading: FlutterFlowIconButton(
+            borderColor: Colors.transparent,
+            borderRadius: 30.0,
+            borderWidth: 1.0,
+            buttonSize: 50.0,
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: Colors.white,
+              size: 24.0,
+            ),
+            onPressed: () async {
+              print('Back button pressed in Google Search');
+              // Always navigate back to Home to ensure consistent behavior
+              context.goNamed('Home');
+            },
+          ),
           title: Text(
             'Search',
             style: FlutterFlowTheme.of(context).headlineMedium.override(

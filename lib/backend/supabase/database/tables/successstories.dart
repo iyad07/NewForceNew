@@ -1,8 +1,9 @@
+// Fixed SuccessstoriesRow
 import '../database.dart';
 
 class SuccessstoriesTable extends SupabaseTable<SuccessstoriesRow> {
   @override
-  String get tableName => 'successstories';
+  String get tableName => 'successStories';
 
   @override
   SuccessstoriesRow createRow(Map<String, dynamic> data) =>
@@ -14,8 +15,6 @@ class SuccessstoriesRow extends SupabaseDataRow {
 
   @override
   SupabaseTable get table => SuccessstoriesTable();
-
-
 
   String? get title => getField<String>('Title');
   set title(String? value) => setField<String>('Title', value);

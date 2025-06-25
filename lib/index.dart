@@ -18,6 +18,8 @@ export '/home_page/country_profile/country_profile_widget.dart'
 export '/other_pages/reels/reels_widget.dart' show ReelsWidget;
 export '/other_pages/investment_topic/investment_topic_widget.dart'
     show InvestmentTopicWidget;
+export '/investment_opportunities/investment_opportunities_widget.dart'
+    show InvestmentOpportunitiesWidget;
 export '/home_page/investment_topics_article_details/investment_topics_article_details_widget.dart'
     show InvestmentTopicsArticleDetailsWidget;
 export '/other_pages/donation/donation_widget.dart' show DonationWidget;
@@ -50,3 +52,4 @@ export '/other_pages/countries_list/countries_list_widget.dart'
     show CountriesListWidget;
 export '/other_pages/prominent_people/prominent_people_widget.dart'
     show ProminentPeopleWidget;
+export '/event_details/event_details_widget.dart' show EventDetailsWidget;

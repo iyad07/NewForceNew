@@ -12,10 +12,7 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
 
   // State field(s) for mainColumn widget.
   ScrollController? mainColumn;
-  // State field(s) for TextField widget.
-  FocusNode? textFieldFocusNode;
-  TextEditingController? textController;
-  String? Function(BuildContext, String?)? textControllerValidator;
+  // TextField removed - search bar is now inactive and uses GestureDetector
   // State field(s) for Carousel widget.
   CarouselController? carouselController;
   int carouselCurrentIndex = 0;
@@ -50,8 +47,7 @@ class HomeModel extends FlutterFlowModel<HomeWidget> {
   @override
   void dispose() {
     mainColumn?.dispose();
-    textFieldFocusNode?.dispose();
-    textController?.dispose();
+    // TextController and FocusNode disposal removed - no longer used
 
     rowController1?.dispose();
     rowController2?.dispose();
