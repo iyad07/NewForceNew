@@ -177,7 +177,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                             startYear: '2020',
                             endYear: '2024',
                           ),
-                          WorldBankApiService.getUnemploymentData(
+                          WorldBankApiService.getFDIData(
                             countryCode: 'ZA',
                             startYear: '2020',
                             endYear: '2024',
@@ -209,7 +209,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
 
                           final responses = snapshot.data!;
                           final gdpResponse = responses[0];
-                          final unemploymentResponse = responses[1];
+                          final fdiResponse = responses[1];
                           final inflationResponse = responses[2];
 
                           // Parse World Bank API responses
@@ -217,10 +217,10 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                               ? WorldBankApiService.parseWorldBankResponse(
                                   gdpResponse.bodyText)
                               : <Map<String, dynamic>>[];
-                          final unemploymentData =
-                              unemploymentResponse.succeeded
+                          final fdiData =
+                              fdiResponse.succeeded
                                   ? WorldBankApiService.parseWorldBankResponse(
-                                      unemploymentResponse.bodyText)
+                                      fdiResponse.bodyText)
                                   : <Map<String, dynamic>>[];
                           final inflationData = inflationResponse.succeeded
                               ? WorldBankApiService.parseWorldBankResponse(
@@ -230,9 +230,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                           // Get latest values
                           final latestGDP =
                               WorldBankApiService.getLatestValue(gdpData);
-                          final latestUnemployment =
+                          final latestFDI =
                               WorldBankApiService.getLatestValue(
-                                  unemploymentData);
+                                  fdiData);
                           final latestInflation =
                               WorldBankApiService.getLatestValue(inflationData);
 
@@ -248,9 +248,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                               SizedBox(width: 10.0),
                               Expanded(
                                 child: _buildEconomicCard(
-                                  'Unemployment Rate',
-                                  WorldBankApiService.formatPercentage(
-                                      latestUnemployment),
+                                  'FDI (USD \$)',
+                                  WorldBankApiService.formatLargeNumber(
+                                      latestFDI),
                                 ),
                               ),
                               SizedBox(width: 10.0),
@@ -602,17 +602,17 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                           getTitlesWidget: (value, meta) {
                                             // Show relative scale indicators
                                             if (value == 0)
-                                              return Text('Low',
+                                              return Text('0%',
                                                   style: TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 10));
                                             if (value == 50)
-                                              return Text('Mid',
+                                              return Text('50%',
                                                   style: TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 10));
                                             if (value == 100)
-                                              return Text('High',
+                                              return Text('100%',
                                                   style: TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 10));
@@ -1256,7 +1256,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
         ),
         SizedBox(width: 10.0),
         Expanded(
-          child: _buildEconomicCard('Unemployment', '28.5%'),
+          child: _buildEconomicCard('FDI (USD \$)', '\$12.5B'),
         ),
         SizedBox(width: 10.0),
         Expanded(

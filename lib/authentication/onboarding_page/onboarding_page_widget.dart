@@ -419,7 +419,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                       Expanded(
                         child: FFButtonWidget(
                           onPressed: () async {
-                            context.pushNamed(
+                            context.goNamed(
                               'signInPage',
                               extra: <String, dynamic>{
                                 kTransitionInfoKey: const TransitionInfo(

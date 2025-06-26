@@ -1162,37 +1162,50 @@ Widget build(BuildContext context) {
     child: Scaffold(
       key: scaffoldKey,
       backgroundColor: Color(0xFF222426),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF222426),
-        automaticallyImplyLeading: false,
-        leading: FlutterFlowIconButton(
-          borderColor: Colors.transparent,
-          borderRadius: 30.0,
-          borderWidth: 1.0,
-          buttonSize: 60.0,
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: FlutterFlowTheme.of(context).primaryText,
-            size: 30.0,
-          ),
-          onPressed: () async {
-            context.pop();
-          },
-        ),
-        title: Text(
-          'Natural Resources',
-          style: FlutterFlowTheme.of(context).headlineMedium.override(
-                fontFamily: 'SF Pro Display',
-                useGoogleFonts: false,
-                color: FlutterFlowTheme.of(context).primaryText,
-                fontSize: 22.0,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.bold,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50.0),
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(0.59, -1.0),
+                end: AlignmentDirectional(-0.59, 1.0),
               ),
+            ),
+          ),
+          leading: FlutterFlowIconButton(
+            borderColor: Colors.transparent,
+            borderRadius: 30.0,
+            borderWidth: 1.0,
+            buttonSize: 60.0,
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: Colors.white,
+              size: 30.0,
+            ),
+            onPressed: () async {
+              context.pop();
+            },
+          ),
+          title: Text(
+            'Natural Resources',
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+                  fontFamily: 'SF Pro Display',
+                  useGoogleFonts: false,
+                  color: Colors.white,
+                  fontSize: 22.0,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          actions: const [],
+          centerTitle: false,
+          elevation: 0.0,
         ),
-        actions: const [],
-        centerTitle: false,
-        elevation: 0.0,
       ),
       body: SafeArea(
         top: true,

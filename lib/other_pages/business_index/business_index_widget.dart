@@ -32,6 +32,74 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Tab state management - removed sectors, showing general continental data
+  late TabController _regionalTabController;
+
+  // Regional mapping for African countries
+  final Map<String, String> _countryToRegion = {
+    // Northern Africa
+    'Egypt': 'Northern Africa',
+    'Libya': 'Northern Africa',
+    'Tunisia': 'Northern Africa',
+    'Algeria': 'Northern Africa',
+    'Morocco': 'Northern Africa',
+    'Sudan': 'Northern Africa',
+    
+    // Southern Africa
+    'South Africa': 'Southern Africa',
+    'Botswana': 'Southern Africa',
+    'Namibia': 'Southern Africa',
+    'Zimbabwe': 'Southern Africa',
+    'Zambia': 'Southern Africa',
+    'Lesotho': 'Southern Africa',
+    'Eswatini': 'Southern Africa',
+    'Malawi': 'Southern Africa',
+    'Mozambique': 'Southern Africa',
+    
+    // West Africa
+    'Nigeria': 'West Africa',
+    'Ghana': 'West Africa',
+    'Senegal': 'West Africa',
+    'Mali': 'West Africa',
+    'Burkina Faso': 'West Africa',
+    'Niger': 'West Africa',
+    'Guinea': 'West Africa',
+    'Sierra Leone': 'West Africa',
+    'Liberia': 'West Africa',
+    'Ivory Coast': 'West Africa',
+    'Togo': 'West Africa',
+    'Benin': 'West Africa',
+    'Mauritania': 'West Africa',
+    'Gambia': 'West Africa',
+    'Guinea-Bissau': 'West Africa',
+    'Cape Verde': 'West Africa',
+    
+    // Eastern Africa
+    'Kenya': 'Eastern Africa',
+    'Tanzania': 'Eastern Africa',
+    'Uganda': 'Eastern Africa',
+    'Rwanda': 'Eastern Africa',
+    'Burundi': 'Eastern Africa',
+    'Ethiopia': 'Eastern Africa',
+    'Somalia': 'Eastern Africa',
+    'Djibouti': 'Eastern Africa',
+    'Eritrea': 'Eastern Africa',
+    'Madagascar': 'Eastern Africa',
+    'Mauritius': 'Eastern Africa',
+    'Seychelles': 'Eastern Africa',
+    'Comoros': 'Eastern Africa',
+    
+    // Central Africa
+    'Congo':'Central Africa',
+    'Cameroon': 'Central Africa',
+    'Central African Republic': 'Central Africa',
+    'Chad': 'Central Africa',
+    'Democratic Republic of the Congo': 'Central Africa',
+    'Republic of the Congo': 'Central Africa',
+    'Equatorial Guinea': 'Central Africa',
+    'Gabon': 'Central Africa',
+    'São Tomé and Príncipe': 'Central Africa',
+    'Angola': 'Central Africa',
+  };
 
   final animationsMap = <String, AnimationInfo>{};
   late AnimationController _tabAnimationController;
@@ -43,6 +111,9 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
   void initState() {
     super.initState();
     _model = createModel(context, () => BusinessIndexModel());
+
+    // Initialize regional tab controller
+    _regionalTabController = TabController(length: 5, vsync: this);
 
     // Initialize custom animation controllers
     _tabAnimationController = AnimationController(
@@ -219,6 +290,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
   @override
   void dispose() {
+    _regionalTabController.dispose();
     _tabAnimationController.dispose();
     _cardAnimationController.dispose();
     _model.dispose();
@@ -956,10 +1028,10 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                         },
                       ),
 
-                      // Africa's Top Investors & Partners Section
+                      // Regional Top Stocks Section
                       const SizedBox(height: 32.0),
                       Text(
-                        'Africa\'s Top Investors & Partners',
+                        'Top Stocks by African Region',
                         style: FlutterFlowTheme.of(context)
                             .headlineSmall
                             .override(
@@ -972,96 +1044,8 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                             ),
                       ),
                       const SizedBox(height: 16.0),
-
-                      FutureBuilder<List<CountryTopStocksRow>>(
-                        future: CountryTopStocksTable().queryRows(
-                          queryFn: (q) =>
-                              q.order('stockRate', ascending: false).limit(3),
-                        ),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(
-                              child: SizedBox(
-                                width: 30.0,
-                                height: 30.0,
-                                child: SpinKitFadingCircle(
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  size: 30.0,
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (snapshot.hasError) {
-                            print(
-                                'Error fetching country top stocks data: ${snapshot.error}');
-                          }
-
-                          List<CountryTopStocksRow> stocksData =
-                              snapshot.data ?? [];
-                          print(
-                              'Fetched ${stocksData.length} top stocks entries from Supabase');
-
-                          // If no data, show default investors
-                          if (stocksData.isEmpty) {
-                            return Column(
-                              children: [
-                                _buildInvestorCard(
-                                  'AfricInvest',
-                                  'Country Focus',
-                                  'Morocco',
-                                  FlutterFlowTheme.of(context).primary,
-                                ),
-                                const SizedBox(height: 12.0),
-                                _buildInvestorCard(
-                                  'Acumen',
-                                  'Country Focus',
-                                  'Nigeria',
-                                  FlutterFlowTheme.of(context).secondary,
-                                ),
-                                const SizedBox(height: 12.0),
-                                _buildInvestorCard(
-                                  'Helios',
-                                  'Sectoral Focus',
-                                  'Technology',
-                                  FlutterFlowTheme.of(context).tertiary,
-                                ),
-                              ],
-                            );
-                          }
-
-                          // Use stocks data to create investor cards
-                          List<Color> colors = [
-                            FlutterFlowTheme.of(context).primary,
-                            FlutterFlowTheme.of(context).secondary,
-                            FlutterFlowTheme.of(context).tertiary,
-                          ];
-
-                          return Column(
-                            children: stocksData
-                                .asMap()
-                                .entries
-                                .map((entry) {
-                                  int index = entry.key;
-                                  CountryTopStocksRow stock = entry.value;
-
-                                  return Column(
-                                    children: [
-                                      if (index > 0) const SizedBox(height: 12.0),
-                                      _buildInvestorCard(
-                                        stock.stockName ?? 'Top Stock',
-                                        'Stock Rate',
-                                        '${stock.stockRate ?? 0}%',
-                                        colors[index % colors.length],
-                                      ),
-                                    ],
-                                  );
-                                })
-                                .toList(),
-                          );
-                        },
-                      ),
+                      
+                      _buildRegionalStocksTabs(),
 
                       const SizedBox(height: 32.0),
                     ],
@@ -1504,6 +1488,237 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                       ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build regional stocks tabs
+  Widget _buildRegionalStocksTabs() {
+    return Container(
+      height: 400,
+      child: Column(
+        children: [
+          // Tab Bar
+          Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF2A2D30),
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(
+                color: Color(0xFF3A3D41),
+                width: 1.0,
+              ),
+            ),
+            child: TabBar(
+              controller: _regionalTabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Color(0xFFB0B3B8),
+              indicatorColor: Color(0xFFFF8000),
+              indicatorWeight: 3.0,
+              labelStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                fontFamily: 'SF Pro Display',
+                fontSize: 9.0,
+                fontWeight: FontWeight.w600,
+                useGoogleFonts: false,
+              ),
+              unselectedLabelStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                fontFamily: 'SF Pro Display',
+                fontSize: 9.0,
+                fontWeight: FontWeight.w500,
+                useGoogleFonts: false,
+              ),
+              tabs: [
+                Tab(text: 'North\nAfrica'),
+                Tab(text: 'South\nAfrica'),
+                Tab(text: 'West\nAfrica'),
+                Tab(text: 'East\nAfrica'),
+                Tab(text: 'Central\nAfrica'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16.0),
+          // Tab Bar View
+          Expanded(
+            child: TabBarView(
+              controller: _regionalTabController,
+              children: [
+                _buildRegionalStocksList('Northern Africa'),
+                _buildRegionalStocksList('Southern Africa'),
+                _buildRegionalStocksList('West Africa'),
+                _buildRegionalStocksList('Eastern Africa'),
+                _buildRegionalStocksList('Central Africa'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build stocks list for a specific region
+  Widget _buildRegionalStocksList(String region) {
+    return FutureBuilder<List<CountryTopStocksRow>>(
+      future: CountryTopStocksTable().queryRows(
+        queryFn: (q) => q.order('stockRate', ascending: false),
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: SizedBox(
+              width: 30.0,
+              height: 30.0,
+              child: SpinKitFadingCircle(
+                color: FlutterFlowTheme.of(context).primary,
+                size: 30.0,
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          print('Error fetching stocks data: ${snapshot.error}');
+        }
+
+        List<CountryTopStocksRow> allStocks = snapshot.data ?? [];
+        
+        // Filter stocks by region
+        List<CountryTopStocksRow> regionalStocks = allStocks.where((stock) {
+          String? country = stock.country;
+          if (country == null) return false;
+          return _countryToRegion[country] == region;
+        }).toList();
+
+        // If no regional data, show default message
+        if (regionalStocks.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.trending_up,
+                  color: Color(0xFFB0B3B8),
+                  size: 48.0,
+                ),
+                const SizedBox(height: 16.0),
+                Text(
+                  'No stocks data available\nfor $region',
+                  textAlign: TextAlign.center,
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                    fontFamily: 'SF Pro Display',
+                    color: Color(0xFFB0B3B8),
+                    fontSize: 14.0,
+                    letterSpacing: 0.0,
+                    useGoogleFonts: false,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Display regional stocks
+        List<Color> colors = [
+          FlutterFlowTheme.of(context).primary,
+          FlutterFlowTheme.of(context).secondary,
+          FlutterFlowTheme.of(context).tertiary,
+          Color(0xFFFF8000),
+        ];
+
+        return ListView.separated(
+          padding: EdgeInsets.zero,
+          itemCount: regionalStocks.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12.0),
+          itemBuilder: (context, index) {
+            CountryTopStocksRow stock = regionalStocks[index];
+            return _buildRegionalStockCard(
+              stock.stockName ?? 'Unknown Stock',
+              stock.country ?? 'Unknown Country',
+              '${stock.stockRate ?? 0}%',
+              colors[index % colors.length],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Build individual stock card for regional display
+  Widget _buildRegionalStockCard(
+      String stockName, String country, String rate, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
+      decoration: BoxDecoration(
+        color: Color(0xFF2A2D30),
+        borderRadius: BorderRadius.circular(15.0),
+        border: Border.all(
+          color: Color(0xFF3A3D41),
+          width: 1.0,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Icon(
+              Icons.trending_up,
+              color: color,
+              size: 24.0,
+            ),
+          ),
+          const SizedBox(width: 16.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stockName,
+                  style: FlutterFlowTheme.of(context).bodyLarge.override(
+                        fontFamily: 'SF Pro Display',
+                        color: Colors.white,
+                        fontSize: 16.0,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                        useGoogleFonts: false,
+                      ),
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  country,
+                  style: FlutterFlowTheme.of(context).bodySmall.override(
+                        fontFamily: 'SF Pro Display',
+                        color: Color(0xFFB0B3B8),
+                        fontSize: 12.0,
+                        letterSpacing: 0.0,
+                        useGoogleFonts: false,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsetsDirectional.fromSTEB(12.0, 6.0, 12.0, 6.0),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Text(
+              rate,
+              style: FlutterFlowTheme.of(context).bodyMedium.override(
+                    fontFamily: 'SF Pro Display',
+                    color: color,
+                    fontSize: 14.0,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                    useGoogleFonts: false,
+                  ),
             ),
           ),
         ],

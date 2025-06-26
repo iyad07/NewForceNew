@@ -545,8 +545,8 @@ class _SignInPageWidgetState extends State<SignInPageWidget>
                                         if (user == null) {
                                           // Error is already shown by authManager
                                         } else {
-                                          // Use pushNamed for consistent navigation behavior
-                                          context.pushNamed(
+                                          // Use goNamed to replace current route and clear navigation stack
+                                          context.goNamed(
                                             'Home',
                                             extra: <String, dynamic>{
                                               kTransitionInfoKey:

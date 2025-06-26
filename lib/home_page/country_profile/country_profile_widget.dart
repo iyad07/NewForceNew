@@ -119,14 +119,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                 backgroundColor: Color(0xFF2A2D30),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildCountryHeader(),
-                      _buildNewsSection(countryName),
-                    ].addToEnd(const SizedBox(height: 44.0)),
-                  ),
+                  
                 ),
               ),
             ),

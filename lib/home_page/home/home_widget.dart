@@ -755,7 +755,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             MainAxisAlignment
                                                 .spaceBetween,
                                         children: [
-                                          Padding(
+                                          /*Padding(
                                             padding:
                                                 const EdgeInsetsDirectional
                                                     .fromSTEB(4.0,
@@ -780,7 +780,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             Icons.navigate_next,
                                             color: Colors.black,
                                             size: 24.0,
-                                          ),
+                                          ),*/
                                         ],
                                       ),
                                     ],
@@ -852,7 +852,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             MainAxisAlignment
                                                 .spaceBetween,
                                         children: [
-                                          Padding(
+                                          /*Padding(
                                             padding:
                                                 const EdgeInsetsDirectional
                                                     .fromSTEB(4.0,
@@ -887,7 +887,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                       .secondaryText,
                                               size: 24.0,
                                             ),
-                                          ),
+                                          ),*/
                                         ],
                                       ),
                                     ],
@@ -959,7 +959,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             MainAxisAlignment
                                                 .spaceBetween,
                                         children: [
-                                          Padding(
+                                          /*Padding(
                                             padding:
                                                 const EdgeInsetsDirectional
                                                     .fromSTEB(4.0,
@@ -994,7 +994,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                       .secondaryText,
                                               size: 24.0,
                                             ),
-                                          ),
+                                          ),*/
                                         ],
                                       ),
                                     ],
