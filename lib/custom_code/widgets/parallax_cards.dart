@@ -18,6 +18,7 @@ class ParallaxCards extends StatefulWidget {
     this.foregroundImages,
     this.backgroundImages,
     this.texts,
+    this.onCardTap,
   });
 
   final double? width;
@@ -25,6 +26,7 @@ class ParallaxCards extends StatefulWidget {
   final List<String>? foregroundImages;
   final List<String>? backgroundImages;
   final List<String>? texts;
+  final Function(int)? onCardTap;
 
   @override
   _ParallaxCardsState createState() => _ParallaxCardsState();
@@ -78,13 +80,19 @@ class _ParallaxCardsState extends State<ParallaxCards> {
 
         return Builder(
           builder: (BuildContext context) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
+            return GestureDetector(
+              onTap: () {
+                if (widget.onCardTap != null) {
+                  widget.onCardTap!(index);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
                     // Background Image
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 100),
@@ -143,7 +151,8 @@ class _ParallaxCardsState extends State<ParallaxCards> {
                         ),
                       ],
                     )
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );

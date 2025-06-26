@@ -98,23 +98,35 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: Color(0xFF1E2022),
         appBar: _buildAppBar(),
         body: SafeArea(
           top: true,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(10.0, 0.0, 10.0, 0.0),
-            child: RefreshIndicator(
-              onRefresh: () => _refreshNews(),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCountryHeader(),
-                    _buildNewsSection(countryName),
-                  ].addToEnd(const SizedBox(height: 44.0)),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(10.0, 0.0, 10.0, 0.0),
+              child: RefreshIndicator(
+                onRefresh: () => _refreshNews(),
+                color: Color(0xFFFF8000),
+                backgroundColor: Color(0xFF2A2D30),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCountryHeader(),
+                      _buildNewsSection(countryName),
+                    ].addToEnd(const SizedBox(height: 44.0)),
+                  ),
                 ),
               ),
             ),
@@ -131,8 +143,18 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      backgroundColor: Colors.transparent,
       automaticallyImplyLeading: false,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+            stops: [0.0, 1.0],
+            begin: AlignmentDirectional(0.59, -1.0),
+            end: AlignmentDirectional(-0.59, 1.0),
+          ),
+        ),
+      ),
       leading: FlutterFlowIconButton(
         borderColor: Colors.transparent,
         borderRadius: 30.0,
@@ -140,7 +162,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         buttonSize: 60.0,
         icon: Icon(
           Icons.arrow_back_rounded,
-          color: FlutterFlowTheme.of(context).primaryText,
+          color: Colors.white,
           size: 30.0,
         ),
         onPressed: () => context.pop(),
@@ -149,7 +171,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         valueOrDefault<String>(widget.countrydetails?.country, 'Country Profile'),
         style: FlutterFlowTheme.of(context).headlineMedium.override(
               fontFamily: 'SFPro',
-              color: FlutterFlowTheme.of(context).primaryText,
+              color: Colors.white,
               fontSize: 20.0,
               letterSpacing: 0.0,
               useGoogleFonts: false,
@@ -161,7 +183,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             return IconButton(
               icon: Icon(
                 Icons.refresh,
-                color: FlutterFlowTheme.of(context).primaryText,
+                color: Colors.white,
               ),
               onPressed: newsProvider.isLoading
                   ? null

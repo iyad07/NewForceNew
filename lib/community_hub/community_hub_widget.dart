@@ -161,7 +161,7 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
 
                   // Topics List with Backend Integration
                   Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
+                    padding: EdgeInsetsDirectional.fromSTEB(14.0, 0.0, 14.0, 0.0),
                     child: _buildTopicsList(),
                   ),
                 ],
@@ -183,7 +183,7 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
       itemBuilder: (context, index) {
         final topic = topics[index];
         return Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 16.0),
+          padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 16.0),
           child: _buildModernTopicCard(topic),
         );
       },
@@ -382,12 +382,12 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
           color: Colors.transparent,
         ),
         child: Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
+          padding: EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
               color: Color(0xFF2A2D30),
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(15.0),
               border: Border.all(
                 color: Color(0xFF3A3D41),
                 width: 1.0,
@@ -453,6 +453,7 @@ class _CommunityHubWidgetState extends State<CommunityHubWidget> {
                                 fontFamily: 'SF Pro Display',
                                 useGoogleFonts: false,
                                 color: Colors.white,
+                                fontSize: 16.0,
                                 letterSpacing: 0.0,
                               ),
                           maxLines: 2,

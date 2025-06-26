@@ -57,7 +57,22 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
     try {
       if (!mounted) return;
       final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
+      
+      // Debug information
+      print('=== NEWS FETCH DEBUG ===');
+      print('Force refresh: $forceRefresh');
+      print('Current African news count: ${newsProvider.africanNews.length}');
+      print('Is loading: ${newsProvider.isLoading}');
+      print('Error message: ${newsProvider.errorMessage}');
+      print('Available countries: ${newsProvider.availableCountries.length}');
+      
       await newsProvider.fetchAllNews(force: forceRefresh);
+      
+      // Debug after fetch
+      print('After fetch - African news count: ${newsProvider.africanNews.length}');
+      print('After fetch - Available countries: ${newsProvider.availableCountries.length}');
+      print('========================');
+      
     } catch (e) {
       print('Error fetching news: $e');
       if (mounted) {
@@ -101,6 +116,27 @@ class _NewsFeedWidgetState extends State<NewsFeedWidget> {
                 size: 24.0,
               ),
               onPressed: () => _fetchNews(forceRefresh: true),
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.bug_report,
+                color: Colors.white,
+                size: 24.0,
+              ),
+              onPressed: () async {
+                final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
+                print('=== MANUAL DEBUG INFO ===');
+                print('African news: ${newsProvider.africanNews.length}');
+                print('Feed curiosity news: ${newsProvider.feedYourCuriosityNews.length}');
+                print('Investment news: ${newsProvider.investmentNews.length}');
+                print('Available countries: ${newsProvider.availableCountries}');
+                print('Is loading: ${newsProvider.isLoading}');
+                print('Error: ${newsProvider.errorMessage}');
+                print('========================');
+                
+                // Force clear cache and refresh
+                await _fetchNews(forceRefresh: true);
+              },
             ),
           ],
           centerTitle: true,

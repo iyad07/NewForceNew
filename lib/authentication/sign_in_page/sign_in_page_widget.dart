@@ -604,7 +604,7 @@ class _SignInPageWidgetState extends State<SignInPageWidget>
                                     onPressed: () async {
                                       // For guest access, we use pushNamed instead of goNamedAuth
                                       // This ensures we bypass auth checks completely
-                                      context.pushNamed(
+                                      context.pushReplacementNamed(
                                         'Home',
                                         extra: <String, dynamic>{
                                           kTransitionInfoKey:

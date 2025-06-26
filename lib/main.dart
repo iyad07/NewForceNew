@@ -39,7 +39,7 @@ void main() async {
   await appState.initializePersistedState();
 
   final newsProvider = EnhancedNewsProvider();
-  
+
   try {
     print('Initializing news from local storage...');
     await newsProvider.initializeFromLocalStorage();
@@ -104,7 +104,7 @@ class _MyAppState extends State<MyApp> {
 
     try {
       await initializeSupabase();
-      
+
       _startBackgroundNewsUpdate();
 
       print(
@@ -204,6 +204,7 @@ class _MyAppState extends State<MyApp> {
             ),
             themeMode: _themeMode,
             home: Scaffold(
+              backgroundColor: Colors.black,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -218,34 +219,6 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Consumer<EnhancedNewsProvider>(
-                      builder: (context, newsProvider, child) {
-                        final hasData = newsProvider.africanNews.isNotEmpty ||
-                                      newsProvider.feedYourCuriosityNews.isNotEmpty ||
-                                      newsProvider.investmentNews.isNotEmpty;
-                        
-                        return Column(
-                          children: [
-                            Text(
-                              hasData ? 'Loading updates...' : 'Setting up your news feed...',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            if (hasData)
-                              Text(
-                                'Using cached content while updating',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -288,10 +261,10 @@ class NavBarPage extends StatefulWidget {
   final Widget? page;
 
   @override
-  _NavBarPageState createState() => _NavBarPageState();
+  NavBarPageState createState() => NavBarPageState();
 }
 
-class _NavBarPageState extends State<NavBarPage> {
+class NavBarPageState extends State<NavBarPage> {
   String _currentPageName = 'Home';
   late Widget? _currentPage;
 
@@ -300,6 +273,13 @@ class _NavBarPageState extends State<NavBarPage> {
     super.initState();
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
+  }
+
+  void navigateToTab(String tabName) {
+    setState(() {
+      _currentPage = null;
+      _currentPageName = tabName;
+    });
   }
 
   @override
@@ -390,7 +370,8 @@ class NewsLoadingWidget extends StatelessWidget {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
                 ),
               ),
               const SizedBox(width: 12),

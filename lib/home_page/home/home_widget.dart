@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:new_force_new_hope/flutter_flow/flutter_flow_pdf_viewer.dart';
-import 'package:new_force_new_hope/home_page/home/offline_handler.dart';
 
 import '/auth/supabase_auth/auth_util.dart';
 import '/backend/supabase/supabase.dart';
@@ -16,7 +14,9 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/flutter_flow_youtube_player.dart';
 import '/flutter_flow/utils/loading_indicator.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
+import '/main.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -41,14 +41,12 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   Timer? _realEstateTimer;
   bool _showRealEstateFallback = false;
   bool _realEstateLoadingTimedOut = false;
-  Timer? _connectivityTimer;
-  bool _isDialogShowing = false;
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
 
   @override
   void initState() {
     super.initState();
-    _initConnectivity();
+
     _model = createModel(context, () => HomeModel());
 
     // Check if user is in guest mode from query parameters
@@ -174,73 +172,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     _startRealEstateTimer();
   }
 
-  Future<void> _initConnectivity() async {
-    final connectivity = Connectivity();
-    final results = await connectivity.checkConnectivity();
-    _updateConnectionStatus(results);
 
-    _connectivitySubscription = connectivity.onConnectivityChanged.listen(
-        _updateConnectionStatus as void Function(
-            List<ConnectivityResult> event)?);
-  }
-
-  void _updateConnectionStatus(List<ConnectivityResult> results) {
-    final isOnline = !results.contains(ConnectivityResult.none);
-
-    if (!isOnline) {
-      _connectivityTimer?.cancel();
-      _connectivityTimer = Timer(const Duration(seconds: 2), () {
-        if (!_isDialogShowing && mounted) {
-          _showOfflineDialog();
-        }
-      });
-    } else if (isOnline && _isDialogShowing) {
-      _connectivityTimer?.cancel();
-      _hideOfflineDialog();
-    }
-  }
-
-  void _showOfflineDialog() {
-  if (_isDialogShowing || !mounted) return;
-  
-  _isDialogShowing = true;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => OfflineDialog(
-      onReload: () async {
-        // Check connectivity when reload is pressed
-        final connectivity = Connectivity();
-        final results = await connectivity.checkConnectivity();
-        final isOnline = !results.contains(ConnectivityResult.none);
-        
-        if (isOnline) {
-          // Connection restored, close dialog
-          _hideOfflineDialog();
-        } else {
-          // Still offline, show a brief message but keep dialog open
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Still no internet connection. Please check your network.',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: FlutterFlowTheme.of(context).error,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-    ),
-  ).then((_) => _isDialogShowing = false);
-}
-
-  void _hideOfflineDialog() {
-    if (!_isDialogShowing || !mounted) return;
-
-    _isDialogShowing = false;
-    Navigator.of(context, rootNavigator: true).pop();
-  }
 
   void _startRealEstateTimer() {
     _realEstateTimer = Timer(const Duration(seconds: 10), () {
@@ -256,8 +188,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   void dispose() {
     _realEstateTimer?.cancel();
     _model.dispose();
-    _connectivityTimer?.cancel();
-    _connectivitySubscription?.cancel();
+
 
     super.dispose();
   }
@@ -741,7 +672,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         0.0, 4.0, 0.0, 0.0),
                     child: Container(
                       width: double.infinity,
-                      height: 435.0,
+                      height: 350.0,
                       decoration: BoxDecoration(
                         color: FlutterFlowTheme.of(context)
                             .primaryBackground,
@@ -1078,7 +1009,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   ),
                   
                   // Upcoming Section
-                  Padding(
+                  /*Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         16.0, 0.0, 0.0, 12.0),
                     child: Text(
@@ -1251,56 +1182,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                  ),
+                  ),*/
 
-                  // Policies Section (PDF Viewer)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 12.0, 0.0, 12.0),
-                    child: Text(
-                      'Policies',
-                      style: FlutterFlowTheme.of(context)
-                          .labelLarge
-                          .override(
-                            fontFamily: 'SFPro',
-                            letterSpacing: 0.0,
-                            useGoogleFonts: false,
-                          ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 12.0),
-                    child: Container(
-                      width: double.infinity,
-                      height: 400.0,
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context)
-                            .secondaryBackground,
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 7.0,
-                            color: Color(0x2F1D2429),
-                            offset: Offset(
-                              0.0,
-                              3.0,
-                            ),
-                          )
-                        ],
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: FlutterFlowPdfViewer(
-                          assetPath:
-                              'assets/pdfs/Nana-Kwame-Bediakos_Policies.pdf',
-                          height: 400.0,
-                          horizontalScroll: false,
-                        ),
-                      ),
-                    ),
-                  ),
-
+                  // Polici
                   // Videos Section
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1703,6 +1587,30 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       }
                       List<FeedyourcuriosityRow> rowFeedyourcuriosityRowList =
                           snapshot.data!;
+                      
+                      // Provide fallback data if table is empty
+                      if (rowFeedyourcuriosityRowList.isEmpty) {
+                        rowFeedyourcuriosityRowList = [
+                          FeedyourcuriosityRow({
+                            'id': 1,
+                            'created_at': DateTime.now().toIso8601String(),
+                            'title': 'African Culture & Lifestyle',
+                            'image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=300&fit=crop',
+                          }),
+                          FeedyourcuriosityRow({
+                            'id': 2,
+                            'created_at': DateTime.now().toIso8601String(),
+                            'title': 'African Agriculture',
+                            'image': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&h=300&fit=crop',
+                          }),
+                          FeedyourcuriosityRow({
+                            'id': 3,
+                            'created_at': DateTime.now().toIso8601String(),
+                            'title': 'African Technology',
+                            'image': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=500&h=300&fit=crop',
+                          }),
+                        ];
+                      }
 
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -2027,6 +1935,13 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                 foregroundImages: appState.foregroundImages,
                                 backgroundImages: appState.backgroundImages,
                                 texts: appState.texts,
+                                onCardTap: (index) {
+                                  // Navigate to investment tab in bottom navigation
+                                  final navBarState = context.findAncestorStateOfType<NavBarPageState>();
+                                  if (navBarState != null) {
+                                    navBarState.navigateToTab('investmentPage');
+                                  }
+                                },
                               );
                             },
                           ),

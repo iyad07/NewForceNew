@@ -1,4 +1,4 @@
-// natural_resources_widget.dart - Updated with glassmorphic UI
+// natural_resources_widget.dart - Fixed syntax errors
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -9,6 +9,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import 'dart:async';
+import '/backend/supabase/database/tables/africa_resources.dart';
 import 'natural_resources_model.dart';
 export 'natural_resources_model.dart';
 
@@ -27,23 +28,30 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
 
   final animationsMap = <String, AnimationInfo>{};
 
+  // Carousel controllers
+  late PageController _mineralsPageController;
+  late PageController _cashCropsPageController;
+  Timer? _mineralsTimer;
+  Timer? _cashCropsTimer;
+
+  // No longer need state for expanded country details since we're using popup
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => NaturalResourcesModel());
-    _model.tabBarController = TabController(
-      vsync: this,
-      length: 2,
+
+    // Initialize carousel controllers
+    _mineralsPageController = PageController(
+      viewportFraction: 0.4, // Shows wider cards with less gap
     );
-    
-    // Initialize PageView controllers with viewportFraction for partial visibility
-    _model.pageViewController = PageController(
-      viewportFraction: 0.85, // Shows part of next/previous cards
+    _cashCropsPageController = PageController(
+      viewportFraction: 0.4, // Shows wider cards with less gap
     );
-    _model.cashCropsPageViewController = PageController(
-      viewportFraction: 0.85, // Shows part of next/previous cards
-    );
-    
+
+    // Fetch data from Supabase
+    _fetchData();
+
     // Start auto-slide timers
     _startAutoSlide();
 
@@ -73,35 +81,444 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
   @override
   void dispose() {
     _model.dispose();
+    _mineralsTimer?.cancel();
+    _cashCropsTimer?.cancel();
+    _mineralsPageController.dispose();
+    _cashCropsPageController.dispose();
+
     super.dispose();
   }
-  
+
+  // Fetch data from Supabase
+  Future<void> _fetchData() async {
+    await _model.fetchAfricaResourcesData();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _startAutoSlide() {
-    // Auto-slide for minerals tab
-    _model.mineralsAutoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_model.pageViewController != null && _model.pageViewController!.hasClients) {
-        final currentPage = _model.pageViewCurrentIndex;
-        final nextPage = (currentPage + 1) % mineralsData.length;
-        _model.pageViewController!.animateToPage(
+    // Auto-slide for minerals
+    _mineralsTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (mounted && _mineralsPageController.hasClients && mineralsData.isNotEmpty) {
+        int currentPage = _mineralsPageController.page?.round() ?? 0;
+        int nextPage = (currentPage + 1) % mineralsData.length;
+        _mineralsPageController.animateToPage(
           nextPage,
-          duration: const Duration(milliseconds: 800),
+          duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
       }
     });
-    
-    // Auto-slide for cash crops tab
-    _model.cashCropsAutoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_model.cashCropsPageViewController != null && _model.cashCropsPageViewController!.hasClients) {
-        final currentPage = _model.cashCropsCurrentIndex;
-        final nextPage = (currentPage + 1) % cashCropsData.length;
-        _model.cashCropsPageViewController!.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
-        );
+
+    // Auto-slide for cash crops (with slight delay to avoid synchronization)
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        _cashCropsTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+          if (mounted && _cashCropsPageController.hasClients && cashCropsData.isNotEmpty) {
+            int currentPage = _cashCropsPageController.page?.round() ?? 0;
+            int nextPage = (currentPage + 1) % cashCropsData.length;
+            _cashCropsPageController.animateToPage(
+              nextPage,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
       }
     });
+  }
+
+// Enhanced _buildResourceCard method with onTap functionality
+Widget _buildResourceCard(Map<String, dynamic> resourceData) {
+  return _buildGlassmorphicContainer(
+    color: resourceData['color'],
+    child: Container(
+      height: 280.0,
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Resource Header
+          Row(
+            children: [
+              Text(
+                resourceData['icon'],
+                style: const TextStyle(fontSize: 18.0),
+              ),
+              const SizedBox(width: 6.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      resourceData['name'],
+                      style: FlutterFlowTheme.of(context)
+                          .headlineMedium
+                          .override(
+                            fontFamily: 'SF Pro Display',
+                            useGoogleFonts: false,
+                            color: Colors.white,
+                            fontSize: 14.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 1.0),
+                    Text(
+                      'Top 5 Producers',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'SF Pro Display',
+                            useGoogleFonts: false,
+                            color: Colors.white70,
+                            fontSize: 9.0,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8.0),
+
+          // Show countries list
+          Expanded(
+            child: _buildCountriesList(resourceData),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// Build scrollable countries list
+Widget _buildCountriesList(Map<String, dynamic> resourceData) {
+  return SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: resourceData['countries']
+          .take(5)
+          .map<Widget>((country) => _buildCountryCard(country, resourceData))
+          .toList(),
+    ),
+  );
+}
+
+// Build individual country card with onTap
+Widget _buildCountryCard(Map<String, dynamic> country, Map<String, dynamic> resourceData) {
+  return GestureDetector(
+    onTap: () {
+      _showCountryDetailsPopup(country, resourceData);
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.0),
+        color: Colors.white.withOpacity(0.12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.25),
+          width: 1.0,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Flag and country name column
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Country flag
+              Text(
+                country['flag'],
+                style: const TextStyle(fontSize: 16.0),
+              ),
+              const SizedBox(height: 4.0),
+              // Country name
+              Text(
+                country['country'],
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'SF Pro Display',
+                      useGoogleFonts: false,
+                      color: Colors.white,
+                      fontSize: 9.0,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          
+          const Spacer(),
+          
+          // Export value
+          Text(
+            country['exportValue'],
+            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                  fontFamily: 'SF Pro Display',
+                  useGoogleFonts: false,
+                  color: const Color(0xFF00FF0A),
+                  fontSize: 10.0,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  // Show country details in a glassmorphic popup
+  void _showCountryDetailsPopup(Map<String, dynamic> country, Map<String, dynamic> resourceData) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withOpacity(0.5),
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(
+            maxWidth: 400,
+            maxHeight: 600,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20.0),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20.0),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      resourceData['color'].withOpacity(0.2),
+                      resourceData['color'].withOpacity(0.1),
+                      Colors.black.withOpacity(0.3),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1.0,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header with close button
+                      Row(
+                        children: [
+                          Text(
+                            country['flag'],
+                            style: const TextStyle(fontSize: 32.0),
+                          ),
+                          const SizedBox(width: 16.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  country['country'],
+                                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                                        fontFamily: 'SF Pro Display',
+                                        useGoogleFonts: false,
+                                        color: Colors.white,
+                                        fontSize: 24.0,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(height: 4.0),
+                                Text(
+                                  '${resourceData['name']} Production Details',
+                                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                        fontFamily: 'SF Pro Display',
+                                        useGoogleFonts: false,
+                                        color: Colors.white70,
+                                        fontSize: 14.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20.0),
+                                color: Colors.white.withOpacity(0.2),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24.0),
+
+                      // Detailed information cards
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              _buildDetailCard(
+                                'Global Rank',
+                                country['globalRank'],
+                                Icons.public,
+                                const Color(0xFF00FF0A),
+                              ),
+                              const SizedBox(height: 12.0),
+
+                              _buildDetailCard(
+                                'Export Value',
+                                country['exportValue'],
+                                Icons.trending_up,
+                                const Color(0xFF00FF0A),
+                              ),
+                              const SizedBox(height: 12.0),
+
+                              _buildDetailCard(
+                                'National Export %',
+                                country['nationalExport'] ?? 'N/A',
+                                Icons.pie_chart,
+                                Colors.orange,
+                              ),
+                              const SizedBox(height: 12.0),
+
+                              _buildDetailCard(
+                                'Major Destinations',
+                                country['destinations'] ?? 'N/A',
+                                Icons.location_on,
+                                Colors.blue,
+                              ),
+                              const SizedBox(height: 12.0),
+
+                              _buildDetailCard(
+                                'Year',
+                                country['year'],
+                                Icons.calendar_today,
+                                Colors.purple,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+// Build individual detail card
+Widget _buildDetailCard(String title, String value, IconData icon, Color color) {
+  return Container(
+    padding: const EdgeInsets.all(16.0),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12.0),
+      color: Colors.white.withOpacity(0.1),
+      border: Border.all(
+        color: color.withOpacity(0.3),
+        width: 1.0,
+      ),
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.0),
+            color: color.withOpacity(0.2),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 20.0,
+          ),
+        ),
+        const SizedBox(width: 16.0),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: FlutterFlowTheme.of(context).bodySmall.override(
+                      fontFamily: 'SF Pro Display',
+                      useGoogleFonts: false,
+                      color: Colors.white70,
+                      fontSize: 12.0,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+              const SizedBox(height: 4.0),
+              Text(
+                value,
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'SF Pro Display',
+                      useGoogleFonts: false,
+                      color: Colors.white,
+                      fontSize: 16.0,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildGlassmorphicContainer({
+    required Widget child,
+    required Color color,
+  }) {
+    return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 1.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.1),
+              color.withOpacity(0.05),
+            ],
+          ),
+          border: Border.all(
+            color: Color(0x5257636C),
+            width: 1.0,
+          ),
+        ),
+        child: ClipRRect(
+            borderRadius: BorderRadius.circular(16.0),
+            child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  child: child,
+                ))));
   }
 
   // Sample data for minerals with glassmorphic styling
@@ -735,377 +1152,190 @@ class _NaturalResourcesWidgetState extends State<NaturalResourcesWidget>
       ]
     }
   ];
-
-  Widget _buildGlassmorphicContainer({
-    required Widget child,
-    required Color color,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20.0),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-          ],
-        ),
-        border: Border.all(
-          color: Color(0x5257636C),
-          width: 1.0,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20.0),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResourceCard(Map<String, dynamic> resourceData) {
-    return _buildGlassmorphicContainer(
-      color: resourceData['color'],
-      child: Container(
-        width: 350.0,
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  resourceData['name'],
-                  style: FlutterFlowTheme.of(context).headlineLarge.override(
-                    fontFamily: 'SF Pro Display',
-                                         useGoogleFonts: false,
-                    color: Colors.white,
-                    fontSize: 16.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  resourceData['icon'],
-                  style: const TextStyle(fontSize: 32.0),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            // Subtitle
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Top Producers:',
-                  style: FlutterFlowTheme.of(context).labelLarge.override(
-                    fontFamily: 'SF Pro Display',
-               useGoogleFonts: false,
-                    color: Colors.white,
-                    letterSpacing: 0.0,
-                  ),
-                ),
-                const SizedBox(height: 18.0),
-                // Countries List
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: resourceData['countries']
-                      .take(5)
-                      .map<Widget>((country) => Container(
-                            margin: const EdgeInsets.only(bottom: 7.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      country['flag'],
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .override(
-                                            fontFamily: 'SF Pro Display',
-                        useGoogleFonts: false,
-                                            fontSize: 12.0,
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                    Text(
-                                      country['country'],
-                                      style: FlutterFlowTheme.of(context)
-                                          .labelSmall
-                                          .override(
-                                            fontFamily: 'SF Pro Display',
-                            useGoogleFonts: false,
-                                            color: Colors.white,
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  country['exportValue'],
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                           useGoogleFonts: false,
-                                        color: Color(0xFF00FF0A),
-                                        letterSpacing: 0.0,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _model.unfocusNode.canRequestFocus
-          ? FocusScope.of(context).requestFocus(_model.unfocusNode)
-          : FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        key: scaffoldKey,
+Widget build(BuildContext context) {
+  return GestureDetector(
+    onTap: () => _model.unfocusNode.canRequestFocus
+        ? FocusScope.of(context).requestFocus(_model.unfocusNode)
+        : FocusScope.of(context).unfocus(),
+    child: Scaffold(
+      key: scaffoldKey,
+      backgroundColor: Color(0xFF222426),
+      appBar: AppBar(
         backgroundColor: Color(0xFF222426),
-        appBar: AppBar(
-          backgroundColor: Color(0xFF222426),
-          automaticallyImplyLeading: false,
-          leading: FlutterFlowIconButton(
-            borderColor: Colors.transparent,
-            borderRadius: 30.0,
-            borderWidth: 1.0,
-            buttonSize: 60.0,
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: FlutterFlowTheme.of(context).primaryText,
-              size: 30.0,
-            ),
-            onPressed: () async {
-              context.pop();
-            },
+        automaticallyImplyLeading: false,
+        leading: FlutterFlowIconButton(
+          borderColor: Colors.transparent,
+          borderRadius: 30.0,
+          borderWidth: 1.0,
+          buttonSize: 60.0,
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: FlutterFlowTheme.of(context).primaryText,
+            size: 30.0,
           ),
-          title: Text(
-            'Natural Resources',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-              fontFamily: 'SF Pro Display',
-                                         useGoogleFonts: false,
-              color: FlutterFlowTheme.of(context).primaryText,
-              fontSize: 22.0,
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          actions: const [],
-          centerTitle: false,
-          elevation: 0.0,
+          onPressed: () async {
+            context.pop();
+          },
         ),
-        body: SafeArea(
-          top: true,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF222426), Color(0xFF121416)],
-                stops: [0.0, 1.0],
-                begin: AlignmentDirectional(1.0, -0.34),
-                end: AlignmentDirectional(-1.0, 0.34),
+        title: Text(
+          'Natural Resources',
+          style: FlutterFlowTheme.of(context).headlineMedium.override(
+                fontFamily: 'SF Pro Display',
+                useGoogleFonts: false,
+                color: FlutterFlowTheme.of(context).primaryText,
+                fontSize: 22.0,
+                letterSpacing: 0.0,
+                fontWeight: FontWeight.bold,
               ),
+        ),
+        actions: const [],
+        centerTitle: false,
+        elevation: 0.0,
+      ),
+      body: SafeArea(
+        top: true,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF222426), Color(0xFF121416)],
+              stops: [0.0, 1.0],
+              begin: AlignmentDirectional(1.0, -0.34),
+              end: AlignmentDirectional(-1.0, 0.34),
             ),
-            child: Column(
-              children: [
-                // Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20.0),
+          ),
+          child: Column(
+            children: [
+              // Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Africa\'s Natural Wealth',
+                      style: FlutterFlowTheme.of(context)
+                          .headlineLarge
+                          .override(
+                            fontFamily: 'SF Pro Display',
+                            useGoogleFonts: false,
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Explore the continent\'s rich mineral deposits and agricultural exports with detailed export data and market insights.',
+                      style: FlutterFlowTheme.of(context).bodyLarge.override(
+                            fontFamily: 'SF Pro Display',
+                            useGoogleFonts: false,
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                  ],
+                ),
+              ).animateOnPageLoad(
+                  animationsMap['containerOnPageLoadAnimation']!),
+
+              // Content - Sectioned Layout
+              Expanded(
+                child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Africa\'s Natural Wealth',
-                        style: FlutterFlowTheme.of(context).headlineLarge.override(
-                          fontFamily: 'SF Pro Display',
-                        useGoogleFonts: false,
-                          color: FlutterFlowTheme.of(context).primaryText,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        'Explore the continent\'s rich mineral deposits and agricultural exports with detailed export data and market insights.',
-                        style: FlutterFlowTheme.of(context).bodyLarge.override(
-                          fontFamily: 'SF Pro Display',
-               useGoogleFonts: false,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          letterSpacing: 0.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!),
-                
-                // Tab Bar
-                Container(
-                  width: double.infinity,
-                  height: 60.0,
-                  child: TabBar(
-                    controller: _model.tabBarController,
-                    labelColor: FlutterFlowTheme.of(context).primary,
-                    unselectedLabelColor: FlutterFlowTheme.of(context).secondaryText,
-                    labelStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      useGoogleFonts: false,
-                      letterSpacing: 0.0,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      useGoogleFonts: false,
-                      letterSpacing: 0.0,
-                    ),
-                    indicatorColor: FlutterFlowTheme.of(context).primary,
-                    indicatorWeight: 3.0,
-                    tabs: [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'MINERALS',
-                              style: FlutterFlowTheme.of(context).labelLarge.override(
+                      // Minerals Section
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          'MINERALS',
+                          style: FlutterFlowTheme.of(context)
+                              .headlineSmall
+                              .override(
                                 fontFamily: 'SF Pro Display',
-                            useGoogleFonts: false,
-                                fontSize: 16.0,
+                                useGoogleFonts: false,
+                                color: FlutterFlowTheme.of(context).primary,
+                                fontSize: 24.0,
                                 letterSpacing: 0.0,
                                 fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          ],
                         ),
                       ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'CASH CROPS',
-                              style: FlutterFlowTheme.of(context).labelLarge.override(
+
+                      // Minerals Carousel
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          height: 320.0, // Increased height for better content accommodation
+                          child: PageView.builder(
+                            controller: _mineralsPageController,
+                            itemCount: mineralsData.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                key: ValueKey('mineral_${index}_${mineralsData[index]['name']}'),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 10.0),
+                                child: _buildResourceCard(mineralsData[index]),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // Cash Crops Section
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          'CASH CROPS',
+                          style: FlutterFlowTheme.of(context)
+                              .headlineSmall
+                              .override(
                                 fontFamily: 'SF Pro Display',
-                           useGoogleFonts: false,
-                                fontSize: 16.0,
+                                useGoogleFonts: false,
+                                color: FlutterFlowTheme.of(context).primary,
+                                fontSize: 24.0,
                                 letterSpacing: 0.0,
                                 fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          ],
                         ),
                       ),
+
+                      // Cash Crops Carousel
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          height: 320.0, // Increased height for better content accommodation
+                          child: PageView.builder(
+                            controller: _cashCropsPageController,
+                            itemCount: cashCropsData.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                key: ValueKey('cashcrop_${index}_${cashCropsData[index]['name']}'),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 10.0),
+                                child: _buildResourceCard(cashCropsData[index]),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40.0),
                     ],
                   ),
                 ),
-                
-                // Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _model.tabBarController,
-                    children: [
-                      // Minerals Tab
-                      Container(
-                        height: double.infinity,
-                        child: PageView.builder(
-                          controller: _model.pageViewController,
-                          itemCount: mineralsData.length,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 20.0,
-                              ),
-                              child: _buildResourceCard(mineralsData[index]),
-                            );
-                          },
-                        ),
-                      ),
-                      // Cash Crops Tab
-                      Container(
-                        height: double.infinity,
-                        child: PageView.builder(
-                          controller: _model.cashCropsPageViewController,
-                          itemCount: cashCropsData.length,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 20.0,
-                              ),
-                              child: _buildResourceCard(cashCropsData[index]),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Page Indicator
-                Container(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Swipe to explore more resources',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'SF Pro Display',
-                          useGoogleFonts: false,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          letterSpacing: 0.0,
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      Icon(
-                        Icons.swipe,
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        size: 20.0,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
+  
+  }

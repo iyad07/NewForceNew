@@ -25,6 +25,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
   late InvestmentPageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  // Add refresh key to force FutureBuilder to rebuild
+  Key _refreshKey = UniqueKey();
 
   @override
   void initState() {
@@ -112,25 +115,46 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.0),
                                 ),
-                                child: Container(
-                                  width: 150.0,
-                                  height: 32.0,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFEF9A39),
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  alignment: AlignmentDirectional(0.0, 0.0),
-                                  child: Text(
-                                    'Explore Africa Now',
-                                    style: FlutterFlowTheme.of(context)
-                                        .bodySmall
-                                        .override(
-                                          fontFamily: 'SF Pro Display',
-                                                     useGoogleFonts: false,
+                                child: InkWell(
+                                  onTap: () {
+                                    // Refresh the World Bank data
+                                    setState(() {
+                                      _refreshKey = UniqueKey();
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(16.0),
+                                  child: Container(
+                                    width: 150.0,
+                                    height: 32.0,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFEF9A39),
+                                      borderRadius: BorderRadius.circular(16.0),
+                                    ),
+                                    alignment: AlignmentDirectional(0.0, 0.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.refresh,
                                           color: FlutterFlowTheme.of(context)
                                               .primaryBackground,
-                                          letterSpacing: 0.0,
+                                          size: 16.0,
                                         ),
+                                        SizedBox(width: 4.0),
+                                        Text(
+                                          'Refresh Data',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color: FlutterFlowTheme.of(context)
+                                                    .primaryBackground,
+                                                letterSpacing: 0.0,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -144,306 +168,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
 
                     // Market Trends Section
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 12.0, 12.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Continent Market Trends',
-                            style: FlutterFlowTheme.of(context)
-                                .labelLarge
-                                .override(
-                                  fontFamily: 'SF Pro Display',
-                                   useGoogleFonts: false,
-                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  fontSize: 14.0,
-                                  letterSpacing: 0.0,
-                                  //fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          Text(
-                            'Last 5 years ',
-                            style: FlutterFlowTheme.of(context)
-                                .labelLarge
-                                .override(
-                                  fontFamily: 'SF Pro Display',
-                                   useGoogleFonts: false,
-                                   fontWeight: FontWeight.normal,
-                                  color: Color(0xFF00FF0C),
-                                  fontSize: 14.0,
-                                  letterSpacing: 0.0,
-                                ),
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width - 32.0, // Full width minus padding
-                            height: 200.0, // Increased height for better visibility
-                            child: FutureBuilder<List<ApiCallResponse>>(
-                              future: Future.wait([
-                                WorldBankApiService.getAfricanCountriesData(
-                                  indicator: 'NY.GDP.MKTP.CD', // GDP indicator
-                                  startYear: '2020',
-                                  endYear: '2024',
-                                ).then((response) {
-                                  debugPrint('GDP API Response: ${response.jsonBody}');
-                                  return response;
-                                }),
-                                WorldBankApiService.getAfricanCountriesData(
-                                  indicator: 'BX.KLT.DINV.CD.WD', // FDI indicator
-                                  startYear: '2020',
-                                  endYear: '2024',
-                                ).then((response) {
-                                  debugPrint('FDI API Response: ${response.jsonBody}');
-                                  return response;
-                                }),
-                              ]),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      color: Color(0xFF39EF8C),
-                                    ),
-                                  );
-                                }
-                                
-                                List<FlSpot> gdpSpots = [];
-                                List<FlSpot> fdiSpots = [];
-                                String displayPeriod = 'Last 5 years'; // Display period
-                                
-                                if (snapshot.hasData && snapshot.data != null) {
-                                  // Parse GDP data for African continent
-                                  try {
-                                    final gdpResponse = snapshot.data![0];
-                                    if (gdpResponse.jsonBody != null) {
-                                      final data = gdpResponse.jsonBody;
-                                      if (data is List && data.length > 1 && data[1] is List) {
-                                        final gdpData = data[1] as List;
-                                        
-                                        // Group data by year and sum values across all African countries
-                                        Map<String, double> yearlyGDP = {};
-                                        for (var item in gdpData) {
-                                          if (item != null && item['date'] != null && item['value'] != null) {
-                                            String year = item['date'].toString();
-                                            double value = (item['value'] as num).toDouble();
-                                            yearlyGDP[year] = (yearlyGDP[year] ?? 0) + value;
-                                          }
-                                        }
-                                        
-                                        debugPrint('Available GDP years: ${yearlyGDP.keys.toList()}');
-                                        
-                                        // Create 5-year chart points (2020-2024)
-                                        List<String> years = ['2020', '2021', '2022', '2023', '2024'];
-                                        for (int i = 0; i < years.length; i++) {
-                                          String year = years[i];
-                                          if (yearlyGDP.containsKey(year)) {
-                                            double gdpValue = yearlyGDP[year]! / 1000000000000; // Convert to trillions
-                                            gdpSpots.add(FlSpot(i.toDouble(), gdpValue));
-                                            debugPrint('GDP $year: $gdpValue trillion');
-                                          }
-                                        }
-
-                                      }
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Error parsing GDP data: $e');
-                                  }
-                                  
-                                  // Parse FDI data for African continent
-                                  try {
-                                    final fdiResponse = snapshot.data![1];
-                                    if (fdiResponse.jsonBody != null) {
-                                      final data = fdiResponse.jsonBody;
-                                      if (data is List && data.length > 1 && data[1] is List) {
-                                        final fdiData = data[1] as List;
-                                        
-                                        // Group data by year and sum values across all African countries
-                                        Map<String, double> yearlyFDI = {};
-                                        for (var item in fdiData) {
-                                          if (item != null && item['date'] != null && item['value'] != null) {
-                                            String year = item['date'].toString();
-                                            double value = (item['value'] as num).toDouble();
-                                            yearlyFDI[year] = (yearlyFDI[year] ?? 0) + value;
-                                          }
-                                        }
-                                        
-                                        debugPrint('Available FDI years: ${yearlyFDI.keys.toList()}');
-                                        
-                                        // Create 5-year chart points (2020-2024)
-                                        List<String> years = ['2020', '2021', '2022', '2023', '2024'];
-                                        for (int i = 0; i < years.length; i++) {
-                                          String year = years[i];
-                                          if (yearlyFDI.containsKey(year)) {
-                                            double fdiValue = yearlyFDI[year]! / 1000000000; // Convert to billions
-                                            fdiSpots.add(FlSpot(i.toDouble(), fdiValue));
-                                            debugPrint('FDI $year: $fdiValue billion');
-                                          }
-                                        }
-                                      }
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Error parsing FDI data: $e');
-                                  }
-                                }
-                                
-                                // Fallback to sample data if API fails (African continent 2020-2024)
-                                if (gdpSpots.isEmpty) {
-                                  gdpSpots = [
-                                    FlSpot(0, 2.8), // 2020 - $2.8T
-                                    FlSpot(1, 2.9), // 2021 - $2.9T
-                                    FlSpot(2, 3.1), // 2022 - $3.1T
-                                    FlSpot(3, 3.3), // 2023 - $3.3T
-                                    FlSpot(4, 3.5), // 2024 - $3.5T
-                                  ];
-                                }
-                                
-                                if (fdiSpots.isEmpty) {
-                                  fdiSpots = [
-                                    FlSpot(0, 38.5), // 2020 - $38.5B
-                                    FlSpot(1, 42.1), // 2021 - $42.1B
-                                    FlSpot(2, 48.3), // 2022 - $48.3B
-                                    FlSpot(3, 52.7), // 2023 - $52.7B
-                                    FlSpot(4, 58.2), // 2024 - $58.2B
-                                  ];
-                                }
-                                
-                                return LineChart(
-                                  LineChartData(
-                                    gridData: FlGridData(
-                                      show: false, // Removed grid lines
-                                    ),
-                                titlesData: FlTitlesData(
-                                  show: true,
-                                  rightTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  topTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      reservedSize: 40,
-                                      getTitlesWidget: (value, meta) {
-                                        return Text(
-                                          value.toInt().toString(),
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                borderData: FlBorderData(
-                                  show: true,
-                                  border: Border.all(
-                                    color: Colors.transparent,
-                                    width: 1,
-                                  ),
-                                ),
-                                minX: 0,
-                                maxX: 4, // 5 data points (0-4) for 2020-2024 data
-                                minY: 0,
-                                maxY: null, // Auto-scale based on data
-                                    lineBarsData: [
-                                      // GDP Line (Green)
-                                      LineChartBarData(
-                                        spots: gdpSpots,
-                                        isCurved: true,
-                                        color: Color(0xFF39EF8C),
-                                        barWidth: 2,
-                                        isStrokeCapRound: true,
-                                        dotData: FlDotData(show: false),
-                                        belowBarData: BarAreaData(
-                                          show: true,
-                                          color: Color(0xFF39EF8C).withValues(alpha: 0.1),
-                                        ),
-                                      ),
-                                      // FDI Line (Red)
-                                      LineChartBarData(
-                                        spots: fdiSpots,
-                                        isCurved: true,
-                                        color: Color(0xFFCC2929),
-                                        barWidth: 2,
-                                        isStrokeCapRound: true,
-                                        dotData: FlDotData(show: false),
-                                        belowBarData: BarAreaData(
-                                          show: true,
-                                          color: Color(0xFFCC2929).withValues(alpha: 0.1),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          // Chart Legend
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 16,
-                                      height: 3,
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFF39EF8C),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Africa GDP (Last 5yrs)',
-                                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                                        fontFamily: 'Inter',
-                                        color: FlutterFlowTheme.of(context).secondaryText,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(width: 24),
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 16,
-                                      height: 3,
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFCC2929),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Africa FDI (Last 5yrs)',
-                                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                                        fontFamily: 'Inter',
-                                        color: FlutterFlowTheme.of(context).secondaryText,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ].divide(SizedBox(height: 5.0)),
-                      ),
-                    ),
-
-                    // Economic Indicators with World Bank API
-                    Padding(
                       padding: EdgeInsets.all(10.0),
                       child: FutureBuilder<List<ApiCallResponse>>(
+                        key: _refreshKey,
                         future: Future.wait([
                           WorldBankApiService.getGDPData(
                             countryCode: 'ZA',
@@ -462,7 +189,8 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                           ),
                         ]),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Center(
                               child: SizedBox(
                                 width: 50.0,
@@ -489,19 +217,22 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                               ? WorldBankApiService.parseWorldBankResponse(
                                   gdpResponse.bodyText)
                               : <Map<String, dynamic>>[];
-                          final unemploymentData = unemploymentResponse.succeeded
-                              ? WorldBankApiService.parseWorldBankResponse(
-                                  unemploymentResponse.bodyText)
-                              : <Map<String, dynamic>>[];
+                          final unemploymentData =
+                              unemploymentResponse.succeeded
+                                  ? WorldBankApiService.parseWorldBankResponse(
+                                      unemploymentResponse.bodyText)
+                                  : <Map<String, dynamic>>[];
                           final inflationData = inflationResponse.succeeded
                               ? WorldBankApiService.parseWorldBankResponse(
                                   inflationResponse.bodyText)
                               : <Map<String, dynamic>>[];
 
                           // Get latest values
-                          final latestGDP = WorldBankApiService.getLatestValue(gdpData);
+                          final latestGDP =
+                              WorldBankApiService.getLatestValue(gdpData);
                           final latestUnemployment =
-                              WorldBankApiService.getLatestValue(unemploymentData);
+                              WorldBankApiService.getLatestValue(
+                                  unemploymentData);
                           final latestInflation =
                               WorldBankApiService.getLatestValue(inflationData);
 
@@ -510,21 +241,24 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                               Expanded(
                                 child: _buildEconomicCard(
                                   'GDP (USD \$)',
-                                  WorldBankApiService.formatLargeNumber(latestGDP),
+                                  WorldBankApiService.formatLargeNumber(
+                                      latestGDP),
                                 ),
                               ),
                               SizedBox(width: 10.0),
                               Expanded(
                                 child: _buildEconomicCard(
                                   'Unemployment Rate',
-                                  WorldBankApiService.formatPercentage(latestUnemployment),
+                                  WorldBankApiService.formatPercentage(
+                                      latestUnemployment),
                                 ),
                               ),
                               SizedBox(width: 10.0),
                               Expanded(
                                 child: _buildEconomicCard(
                                   'Inflation Rate',
-                                  WorldBankApiService.formatPercentage(latestInflation),
+                                  WorldBankApiService.formatPercentage(
+                                      latestInflation),
                                 ),
                               ),
                             ],
@@ -534,361 +268,912 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                     ),
 
                     SizedBox(height: 20.0),
+                    Padding(
+                      padding:
+                          EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 12.0, 12.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Continent Market Trends',
+                            style: FlutterFlowTheme.of(context)
+                                .labelLarge
+                                .override(
+                                  fontFamily: 'SF Pro Display',
+                                  useGoogleFonts: false,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  fontSize: 14.0,
+                                  letterSpacing: 0.0,
+                                  //fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          Text(
+                            'Last 5 years ',
+                            style: FlutterFlowTheme.of(context)
+                                .labelLarge
+                                .override(
+                                  fontFamily: 'SF Pro Display',
+                                  useGoogleFonts: false,
+                                  fontWeight: FontWeight.normal,
+                                  color: Color(0xFF00FF0C),
+                                  fontSize: 14.0,
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width -
+                                32.0, // Full width minus padding
+                            height:
+                                200.0, // Increased height for better visibility
+                            child: FutureBuilder<List<ApiCallResponse>>(
+                              key: _refreshKey,
+                              future: Future.wait([
+                                WorldBankApiService.getAfricanCountriesData(
+                                  indicator: 'NY.GDP.MKTP.CD', // GDP indicator
+                                  startYear: '2020',
+                                  endYear: '2024',
+                                ).then((response) {
+                                  debugPrint(
+                                      'GDP API Response: ${response.jsonBody}');
+                                  return response;
+                                }),
+                                WorldBankApiService.getAfricanCountriesData(
+                                  indicator:
+                                      'BX.KLT.DINV.CD.WD', // FDI indicator
+                                  startYear: '2020',
+                                  endYear: '2024',
+                                ).then((response) {
+                                  debugPrint(
+                                      'FDI API Response: ${response.jsonBody}');
+                                  return response;
+                                }),
+                              ]),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF39EF8C),
+                                    ),
+                                  );
+                                }
+
+                                // Replace your chart data processing section with this normalized approach
+                                List<FlSpot> gdpSpots = [];
+                                List<FlSpot> fdiSpots = [];
+
+                                if (snapshot.hasData && snapshot.data != null) {
+                                  // Parse GDP data for African continent
+                                  try {
+                                    final gdpResponse = snapshot.data![0];
+                                    if (gdpResponse.jsonBody != null) {
+                                      final data = gdpResponse.jsonBody;
+                                      if (data is List &&
+                                          data.length > 1 &&
+                                          data[1] is List) {
+                                        final gdpData = data[1] as List;
+
+                                        // Group data by year and sum values across all African countries
+                                        Map<String, double> yearlyGDP = {};
+                                        for (var item in gdpData) {
+                                          if (item != null &&
+                                              item['date'] != null &&
+                                              item['value'] != null) {
+                                            String year =
+                                                item['date'].toString();
+                                            double value =
+                                                (item['value'] as num)
+                                                    .toDouble();
+                                            yearlyGDP[year] =
+                                                (yearlyGDP[year] ?? 0) + value;
+                                          }
+                                        }
+
+                                        debugPrint(
+                                            'Available GDP years: ${yearlyGDP.keys.toList()}');
+
+                                        // Create normalized GDP data points (scale to 0-100 range)
+                                        List<String> years = [
+                                          '2020',
+                                          '2021',
+                                          '2022',
+                                          '2023'
+                                        ];
+                                        List<double> rawGdpValues = [];
+
+                                        // Collect raw values first
+                                        for (String year in years) {
+                                          if (yearlyGDP.containsKey(year)) {
+                                            rawGdpValues.add(yearlyGDP[year]! /
+                                                1000000000000); // Convert to trillions
+                                          }
+                                        }
+
+                                        // Find min and max for normalization
+                                        if (rawGdpValues.isNotEmpty) {
+                                          double minGdp = rawGdpValues
+                                              .reduce((a, b) => a < b ? a : b);
+                                          double maxGdp = rawGdpValues
+                                              .reduce((a, b) => a > b ? a : b);
+
+                                          // Normalize GDP values to 0-100 scale for better visualization
+                                          for (int i = 0;
+                                              i < years.length;
+                                              i++) {
+                                            String year = years[i];
+                                            if (yearlyGDP.containsKey(year)) {
+                                              double rawValue =
+                                                  yearlyGDP[year]! /
+                                                      1000000000000;
+                                              double normalizedValue =
+                                                  ((rawValue - minGdp) /
+                                                              (maxGdp -
+                                                                  minGdp)) *
+                                                          80 +
+                                                      10; // Scale to 10-90 range
+                                              gdpSpots.add(FlSpot(i.toDouble(),
+                                                  normalizedValue));
+                                              debugPrint(
+                                                  'GDP $year: ${rawValue.toStringAsFixed(2)}T -> Normalized: ${normalizedValue.toStringAsFixed(1)}');
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Error parsing GDP data: $e');
+                                  }
+
+                                  // Parse FDI data for African continent
+                                  try {
+                                    final fdiResponse = snapshot.data![1];
+                                    if (fdiResponse.jsonBody != null) {
+                                      final data = fdiResponse.jsonBody;
+                                      if (data is List &&
+                                          data.length > 1 &&
+                                          data[1] is List) {
+                                        final fdiData = data[1] as List;
+
+                                        // Group data by year and sum values across all African countries
+                                        Map<String, double> yearlyFDI = {};
+                                        for (var item in fdiData) {
+                                          if (item != null &&
+                                              item['date'] != null &&
+                                              item['value'] != null) {
+                                            String year =
+                                                item['date'].toString();
+                                            double value =
+                                                (item['value'] as num)
+                                                    .toDouble();
+                                            yearlyFDI[year] =
+                                                (yearlyFDI[year] ?? 0) + value;
+                                          }
+                                        }
+
+                                        debugPrint(
+                                            'Available FDI years: ${yearlyFDI.keys.toList()}');
+
+                                        // Create normalized FDI data points
+                                        List<String> years = [
+                                          '2020',
+                                          '2021',
+                                          '2022',
+                                          '2023'
+                                        ];
+                                        List<double> rawFdiValues = [];
+
+                                        // Collect raw values first
+                                        for (String year in years) {
+                                          if (yearlyFDI.containsKey(year)) {
+                                            rawFdiValues.add(yearlyFDI[year]! /
+                                                1000000000); // Convert to billions
+                                          }
+                                        }
+
+                                        // Find min and max for normalization
+                                        if (rawFdiValues.isNotEmpty) {
+                                          double minFdi = rawFdiValues
+                                              .reduce((a, b) => a < b ? a : b);
+                                          double maxFdi = rawFdiValues
+                                              .reduce((a, b) => a > b ? a : b);
+
+                                          // Normalize FDI values to 0-100 scale for better visualization
+                                          for (int i = 0;
+                                              i < years.length;
+                                              i++) {
+                                            String year = years[i];
+                                            if (yearlyFDI.containsKey(year)) {
+                                              double rawValue =
+                                                  yearlyFDI[year]! / 1000000000;
+                                              double normalizedValue =
+                                                  ((rawValue - minFdi) /
+                                                              (maxFdi -
+                                                                  minFdi)) *
+                                                          80 +
+                                                      10; // Scale to 10-90 range
+                                              fdiSpots.add(FlSpot(i.toDouble(),
+                                                  normalizedValue));
+                                              debugPrint(
+                                                  'FDI $year: ${rawValue.toStringAsFixed(1)}B -> Normalized: ${normalizedValue.toStringAsFixed(1)}');
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Error parsing FDI data: $e');
+                                  }
+                                }
+
+                                // Fallback to sample normalized data if API fails
+                                if (gdpSpots.isEmpty) {
+                                  gdpSpots = [
+                                    FlSpot(
+                                        0, 25.0), // 2020 - Normalized low point
+                                    FlSpot(1,
+                                        85.0), // 2021 - Normalized high point
+                                    FlSpot(2, 90.0), // 2022 - Normalized peak
+                                    FlSpot(3, 20.0), // 2023 - Normalized drop
+                                  ];
+                                }
+
+                                if (fdiSpots.isEmpty) {
+                                  fdiSpots = [
+                                    FlSpot(
+                                        0, 15.0), // 2020 - Normalized low point
+                                    FlSpot(1, 95.0), // 2021 - Normalized peak
+                                    FlSpot(
+                                        2, 45.0), // 2022 - Normalized mid point
+                                    FlSpot(
+                                        3, 35.0), // 2023 - Normalized recovery
+                                  ];
+                                }
+
+                                return LineChart(
+                                  LineChartData(
+                                    gridData: FlGridData(
+                                      show: true,
+                                      drawVerticalLine: true,
+                                      drawHorizontalLine: true,
+                                      horizontalInterval: 20,
+                                      verticalInterval: 1,
+                                      getDrawingHorizontalLine: (value) {
+                                        return FlLine(
+                                          color: Colors.grey
+                                              .withValues(alpha: 0.3),
+                                          strokeWidth: 1.0,
+                                        );
+                                      },
+                                      getDrawingVerticalLine: (value) {
+                                        return FlLine(
+                                          color: Colors.grey
+                                              .withValues(alpha: 0.3),
+                                          strokeWidth: 1.0,
+                                        );
+                                      },
+                                    ),
+                                    titlesData: FlTitlesData(
+                                      show: true,
+                                      rightTitles: AxisTitles(
+                                        sideTitles:
+                                            SideTitles(showTitles: false),
+                                      ),
+                                      topTitles: AxisTitles(
+                                        sideTitles:
+                                            SideTitles(showTitles: false),
+                                      ),
+                                      bottomTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          reservedSize: 30,
+                                          getTitlesWidget: (value, meta) {
+                                            const years = [
+                                              '2020',
+                                              '2021',
+                                              '2022',
+                                              '2023'
+                                            ];
+                                            if (value.toInt() >= 0 &&
+                                                value.toInt() < years.length) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 8.0),
+                                                child: Text(
+                                                  years[value.toInt()],
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                            return Text('');
+                                          },
+                                        ),
+                                      ),
+                                      leftTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          reservedSize: 50,
+                                          interval: 25,
+                                          getTitlesWidget: (value, meta) {
+                                            // Show relative scale indicators
+                                            if (value == 0)
+                                              return Text('Low',
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 10));
+                                            if (value == 50)
+                                              return Text('Mid',
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 10));
+                                            if (value == 100)
+                                              return Text('High',
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 10));
+                                            return Text('');
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    borderData: FlBorderData(
+                                      show: true,
+                                      border: Border(
+                                        left: BorderSide(
+                                            color: Colors.grey
+                                                .withValues(alpha: 0.3),
+                                            width: 1),
+                                        bottom: BorderSide(
+                                            color: Colors.grey
+                                                .withValues(alpha: 0.3),
+                                            width: 1),
+                                      ),
+                                    ),
+                                    minX: 0,
+                                    maxX:
+                                        3, // 4 data points (0-3) for 2020-2023 data
+                                    minY: 0,
+                                    maxY: 100, // Normalized scale
+                                    lineBarsData: [
+                                      // GDP Line (Green with enhanced styling)
+                                      LineChartBarData(
+                                        spots: gdpSpots,
+                                        isCurved: true,
+                                        curveSmoothness: 0.3,
+                                        color: Color(0xFF39EF8C),
+                                        barWidth: 3,
+                                        isStrokeCapRound: true,
+                                        dotData: FlDotData(
+                                          show: false,
+                                        ),
+                                        belowBarData: BarAreaData(
+                                          show: true,
+                                          color: Color(0xFF39EF8C)
+                                              .withValues(alpha: 0.1),
+                                        ),
+                                        shadow: Shadow(
+                                          color: Color(0xFF39EF8C)
+                                              .withValues(alpha: 0.3),
+                                          offset: Offset(0, 2),
+                                          blurRadius: 4,
+                                        ),
+                                      ),
+                                      // FDI Line (Red with enhanced styling)
+                                      LineChartBarData(
+                                        spots: fdiSpots,
+                                        isCurved: true,
+                                        curveSmoothness: 0.3,
+                                        color: Color(0xFFFF6B6B),
+                                        barWidth: 3,
+                                        isStrokeCapRound: true,
+                                        dotData: FlDotData(
+                                          show: false,
+                                        ),
+                                        belowBarData: BarAreaData(
+                                          show: true,
+                                          color: Color(0xFFFF6B6B)
+                                              .withValues(alpha: 0.1),
+                                        ),
+                                        shadow: Shadow(
+                                          color: Color(0xFFFF6B6B)
+                                              .withValues(alpha: 0.3),
+                                          offset: Offset(0, 2),
+                                          blurRadius: 4,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          // Chart Legend
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 16,
+                                          height: 3,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF39EF8C),
+                                            borderRadius:
+                                                BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Africa GDP (Normalized)',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'Inter',
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondaryText,
+                                                fontSize: 10,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(width: 24),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 16,
+                                          height: 3,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFFF6B6B),
+                                            borderRadius:
+                                                BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Africa FDI (Normalized)',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'Inter',
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondaryText,
+                                                fontSize: 10,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Values normalized to show relative trends',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodySmall
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        color: Colors.grey,
+                                        fontSize: 10,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ].divide(SizedBox(height: 5.0)),
+                      ),
+                    ),
+
+                    // Economic Indicators with World Bank API
 
                     // Business Index and Natural Resources Row
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(16.0, 10.0, 16.0, 0.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.pushNamed('BusinessIndex');
-                                },
-                                child: Material(
-                                  color: Colors.transparent,
-                                  elevation: 1.0,
-                                  shape: RoundedRectangleBorder(
+                      padding:
+                          EdgeInsetsDirectional.fromSTEB(16.0, 10.0, 16.0, 0.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.pushNamed('BusinessIndex');
+                              },
+                              child: Material(
+                                color: Colors.transparent,
+                                elevation: 1.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(6.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/Screenshot_2025-06-22_213055-removebg-preview.png',
-                                            width: 128.8,
-                                            height: 185.51,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          GradientText(
-                                            'Business Index',
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
+                                  child: Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/Screenshot_2025-06-22_213055-removebg-preview.png',
+                                          width: 128.8,
+                                          height: 185.51,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        GradientText(
+                                          'Business Index',
+                                          style: FlutterFlowTheme.of(context)
+                                              .titleSmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
                                                 useGoogleFonts: false,
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .secondary,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                            colors: [Color(0xFF5715AC), Color(0xFF47605D)],
-                                            gradientDirection: GradientDirection.ltr,
-                                            gradientType: GradientType.linear,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondary,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          colors: [
+                                            Color(0xFF5715AC),
+                                            Color(0xFF47605D)
+                                          ],
+                                          gradientDirection:
+                                              GradientDirection.ltr,
+                                          gradientType: GradientType.linear,
+                                        ),
+                                        Text(
+                                          'Explore diverse sectors from tech startups to financial services.',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color: Color(0xFFEFAF39),
+                                                letterSpacing: 0.0,
+                                              ),
+                                        ),
+                                        FFButtonWidget(
+                                          onPressed: () {
+                                            context.pushNamed('BusinessIndex');
+                                          },
+                                          text: 'Navigate the landscape',
+                                          options: FFButtonOptions(
+                                            height: 32.0,
+                                            padding: EdgeInsets.all(8.0),
+                                            iconPadding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 0.0, 0.0, 0.0),
+                                            color: Color(0xFFEF7D39),
+                                            textStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodySmall
+                                                    .override(
+                                                      fontFamily:
+                                                          'SF Pro Display',
+                                                      useGoogleFonts: false,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.0,
+                                                    ),
+                                            elevation: 0.0,
+                                            borderRadius:
+                                                BorderRadius.circular(16.0),
                                           ),
-                                          Text(
-                                            'Explore diverse sectors from tech startups to financial services.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodySmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                           useGoogleFonts: false,
-                                                  color: Color(0xFFEFAF39),
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                          FFButtonWidget(
-                                            onPressed: () {
-                                              context.pushNamed('BusinessIndex');
-                                            },
-                                            text: 'Navigate the landscape',
-                                            options: FFButtonOptions(
-                                              height: 32.0,
-                                              padding: EdgeInsets.all(8.0),
-                                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 0.0, 0.0, 0.0),
-                                              color: Color(0xFFEF7D39),
-                                              textStyle: FlutterFlowTheme.of(context)
-                                                  .bodySmall
-                                                  .override(
-                                                    fontFamily: 'SF Pro Display',
-                                           useGoogleFonts: false,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.0,
-                                                  ),
-                                              elevation: 0.0,
-                                              borderRadius: BorderRadius.circular(16.0),
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 12.0)),
-                                      ),
+                                        ),
+                                      ].divide(SizedBox(height: 12.0)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(width: 16.0),
-                            Flexible(
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.pushNamed('naturalResources');
-                                },
-                                child: Material(
-                                  color: Colors.transparent,
-                                  elevation: 1.0,
-                                  shape: RoundedRectangleBorder(
+                          ),
+                          SizedBox(width: 16.0),
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.pushNamed('naturalResources');
+                              },
+                              child: Material(
+                                color: Colors.transparent,
+                                elevation: 1.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(6.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/Screenshot_2025-06-22_195536-removebg-preview.png',
-                                            width: 128.8,
-                                            height: 185.5,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          GradientText(
-                                            'Natural Resources',
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
+                                  child: Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/Screenshot_2025-06-22_195536-removebg-preview.png',
+                                          width: 128.8,
+                                          height: 185.5,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        GradientText(
+                                          'Natural Resources',
+                                          style: FlutterFlowTheme.of(context)
+                                              .titleSmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
                                                 useGoogleFonts: false,
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .secondary,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                            colors: [Color(0xFF5715AC), Color(0xFF83B4AE)],
-                                            gradientDirection: GradientDirection.ltr,
-                                            gradientType: GradientType.linear,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondary,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          colors: [
+                                            Color(0xFF5715AC),
+                                            Color(0xFF83B4AE)
+                                          ],
+                                          gradientDirection:
+                                              GradientDirection.ltr,
+                                          gradientType: GradientType.linear,
+                                        ),
+                                        Text(
+                                          'Discover opportunities in mining, energy, and agriculture.',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color: Color(0xFFEFAF39),
+                                                letterSpacing: 0.0,
+                                              ),
+                                        ),
+                                        FFButtonWidget(
+                                          onPressed: () {
+                                            context
+                                                .pushNamed('naturalResources');
+                                          },
+                                          text: 'Discover Resources',
+                                          options: FFButtonOptions(
+                                            height: 32.0,
+                                            padding: EdgeInsets.all(8.0),
+                                            iconPadding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 0.0, 0.0, 0.0),
+                                            color: Color(0xFFEF7D39),
+                                            textStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodySmall
+                                                    .override(
+                                                      fontFamily:
+                                                          'SF Pro Display',
+                                                      useGoogleFonts: false,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.0,
+                                                    ),
+                                            elevation: 0.0,
+                                            borderRadius:
+                                                BorderRadius.circular(16.0),
                                           ),
-                                          Text(
-                                            'Discover opportunities in mining, energy, and agriculture.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodySmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                             useGoogleFonts: false,
-                                                  color: Color(0xFFEFAF39),
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                          FFButtonWidget(
-                                            onPressed: () {
-                                              context.pushNamed('naturalResources');
-                                            },
-                                            text: 'Discover Resources',
-                                            options: FFButtonOptions(
-                                              height: 32.0,
-                                              padding: EdgeInsets.all(8.0),
-                                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 0.0, 0.0, 0.0),
-                                              color: Color(0xFFEF7D39),
-                                              textStyle: FlutterFlowTheme.of(context)
-                                                  .bodySmall
-                                                  .override(
-                                                    fontFamily: 'SF Pro Display',
-                                                   useGoogleFonts: false,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.0,
-                                                  ),
-                                              elevation: 0.0,
-                                              borderRadius: BorderRadius.circular(16.0),
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 12.0)),
-                                      ),
+                                        ),
+                                      ].divide(SizedBox(height: 12.0)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     // Influential Figures and Country Profile Row
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(16.0, 10.0, 16.0, 0.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.pushNamed('ProminentPeople');
-                                },
-                                child: Material(
-                                  color: Colors.transparent,
-                                  elevation: 1.0,
-                                  shape: RoundedRectangleBorder(
+                      padding:
+                          EdgeInsetsDirectional.fromSTEB(16.0, 10.0, 16.0, 0.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.pushNamed('ProminentPeople');
+                              },
+                              child: Material(
+                                color: Colors.transparent,
+                                elevation: 1.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(6.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/wmremove-transformed-removebg-preview_(1).png',
-                                            width: 128.8,
-                                            height: 185.5,
-                                            fit: BoxFit.cover,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/wmremove-transformed-removebg-preview_(1).png',
+                                          width: 128.8,
+                                          height: 185.5,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        GradientText(
+                                          'Influential Figures',
+                                          style: FlutterFlowTheme.of(context)
+                                              .titleSmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondary,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          colors: [
+                                            Color(0xFF5715AC),
+                                            Color(0xFFA5BDBB)
+                                          ],
+                                          gradientDirection:
+                                              GradientDirection.ltr,
+                                          gradientType: GradientType.linear,
+                                        ),
+                                        Text(
+                                          'Learn from leading entrepreneurs and strategists.',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color: Color(0xFFEFAF39),
+                                                letterSpacing: 0.0,
+                                              ),
+                                        ),
+                                        FFButtonWidget(
+                                          onPressed: () {
+                                            context
+                                                .pushNamed('ProminentPeople');
+                                          },
+                                          text: 'See the top Players',
+                                          options: FFButtonOptions(
+                                            height: 32.0,
+                                            padding: EdgeInsets.all(8.0),
+                                            iconPadding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 0.0, 0.0, 0.0),
+                                            color: Color(0xFFEF7D39),
+                                            textStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodySmall
+                                                    .override(
+                                                      fontFamily:
+                                                          'SF Pro Display',
+                                                      useGoogleFonts: false,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.0,
+                                                    ),
+                                            elevation: 0.0,
+                                            borderRadius:
+                                                BorderRadius.circular(16.0),
                                           ),
-                                          GradientText(
-                                            'Influential Figures',
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                  useGoogleFonts: false,
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .secondary,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                            colors: [Color(0xFF5715AC), Color(0xFFA5BDBB)],
-                                            gradientDirection: GradientDirection.ltr,
-                                            gradientType: GradientType.linear,
-                                          ),
-                                          Text(
-                                            'Learn from leading entrepreneurs and strategists.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodySmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                  useGoogleFonts: false,
-                                                  color: Color(0xFFEFAF39),
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                          FFButtonWidget(
-                                            onPressed: () {
-                                              context.pushNamed('ProminentPeople');
-                                            },
-                                            text: 'See the top Players',
-                                            options: FFButtonOptions(
-                                              height: 32.0,
-                                              padding: EdgeInsets.all(8.0),
-                                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 0.0, 0.0, 0.0),
-                                              color: Color(0xFFEF7D39),
-                                              textStyle: FlutterFlowTheme.of(context)
-                                                  .bodySmall
-                                                  .override(
-                                                    fontFamily: 'SF Pro Display',
-                                                    useGoogleFonts: false,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.0,
-                                                  ),
-                                              elevation: 0.0,
-                                              borderRadius: BorderRadius.circular(16.0),
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 12.0)),
-                                      ),
+                                        ),
+                                      ].divide(SizedBox(height: 12.0)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(width: 16.0),
-                            Flexible(
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.pushNamed('CountriesList');
-                                },
-                                child: Material(
-                                  color: Colors.transparent,
-                                  elevation: 1.0,
-                                  shape: RoundedRectangleBorder(
+                          ),
+                          SizedBox(width: 16.0),
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.pushNamed('CountriesList');
+                              },
+                              child: Material(
+                                color: Colors.transparent,
+                                elevation: 1.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(6.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/Screenshot_2025-06-22_195558-removebg-preview.png',
-                                            width: 128.8,
-                                            height: 185.5,
-                                            fit: BoxFit.contain,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/Screenshot_2025-06-22_195558-removebg-preview.png',
+                                          width: 128.8,
+                                          height: 185.5,
+                                          fit: BoxFit.contain,
+                                        ),
+                                        GradientText(
+                                          'Country Profile',
+                                          style: FlutterFlowTheme.of(context)
+                                              .titleSmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .secondary,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          colors: [
+                                            Color(0xFF5715AC),
+                                            Color(0xFFD4D4D4)
+                                          ],
+                                          gradientDirection:
+                                              GradientDirection.ltr,
+                                          gradientType: GradientType.linear,
+                                        ),
+                                        Text(
+                                          'Stay informed with the latest information and metric on each country.',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                useGoogleFonts: false,
+                                                color: Color(0xFFEFAF39),
+                                                letterSpacing: 0.0,
+                                              ),
+                                        ),
+                                        FFButtonWidget(
+                                          onPressed: () {
+                                            context.pushNamed('CountriesList');
+                                          },
+                                          text: 'View Insights',
+                                          options: FFButtonOptions(
+                                            height: 32.0,
+                                            padding: EdgeInsets.all(8.0),
+                                            iconPadding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 0.0, 0.0, 0.0),
+                                            color: Color(0xFFEF7D39),
+                                            textStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodySmall
+                                                    .override(
+                                                      fontFamily:
+                                                          'SF Pro Display',
+                                                      useGoogleFonts: false,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.0,
+                                                    ),
+                                            elevation: 0.0,
+                                            borderRadius:
+                                                BorderRadius.circular(16.0),
                                           ),
-                                          GradientText(
-                                            'Country Profile',
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                  useGoogleFonts: false,
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .secondary,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                            colors: [Color(0xFF5715AC), Color(0xFFD4D4D4)],
-                                            gradientDirection: GradientDirection.ltr,
-                                            gradientType: GradientType.linear,
-                                          ),
-                                          Text(
-                                            'Stay informed with the latest information and metric on each country.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodySmall
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                     useGoogleFonts: false,
-                                                  color: Color(0xFFEFAF39),
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                          FFButtonWidget(
-                                            onPressed: () {
-                                              context.pushNamed('CountriesList');
-                                            },
-                                            text: 'View Insights',
-                                            options: FFButtonOptions(
-                                              height: 32.0,
-                                              padding: EdgeInsets.all(8.0),
-                                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 0.0, 0.0, 0.0),
-                                              color: Color(0xFFEF7D39),
-                                              textStyle: FlutterFlowTheme.of(context)
-                                                  .bodySmall
-                                                  .override(
-                                                    fontFamily: 'SF Pro Display',
-                                                   useGoogleFonts: false,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.0,
-                                                  ),
-                                              elevation: 0.0,
-                                              borderRadius: BorderRadius.circular(16.0),
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 12.0)),
-                                      ),
+                                        ),
+                                      ].divide(SizedBox(height: 12.0)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                     ),
                   ].divide(SizedBox(height: 20.0)),
                 ),
@@ -928,7 +1213,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                       title,
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             fontFamily: 'SF Pro Display',
-                             useGoogleFonts: false,
+                            useGoogleFonts: false,
                             color: Colors.white,
                             fontSize: 12.0,
                             letterSpacing: 0.0,
@@ -948,7 +1233,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                       value,
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             fontFamily: 'SF Pro Display',
-                             useGoogleFonts: false,
+                            useGoogleFonts: false,
                             color: Color(0xFF00FF24),
                             letterSpacing: 0.0,
                           ),
@@ -990,22 +1275,22 @@ class MiniGraphPainter extends CustomPainter {
       ..color = const Color(0xFF4A90E2)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-    
+
     final redPaint = Paint()
       ..color = const Color(0xFFFF6B6B)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-    
+
     final greenPaint = Paint()
       ..color = const Color(0xFF4ECDC4)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-    
+
     // Create zigzag line pattern similar to the image
     final path1 = Path();
     final path2 = Path();
     final path3 = Path();
-    
+
     // Blue line (top)
     path1.moveTo(0, size.height * 0.3);
     path1.lineTo(size.width * 0.2, size.height * 0.2);
@@ -1013,7 +1298,7 @@ class MiniGraphPainter extends CustomPainter {
     path1.lineTo(size.width * 0.6, size.height * 0.1);
     path1.lineTo(size.width * 0.8, size.height * 0.3);
     path1.lineTo(size.width, size.height * 0.2);
-    
+
     // Red line (middle)
     path2.moveTo(0, size.height * 0.6);
     path2.lineTo(size.width * 0.2, size.height * 0.5);
@@ -1021,7 +1306,7 @@ class MiniGraphPainter extends CustomPainter {
     path2.lineTo(size.width * 0.6, size.height * 0.4);
     path2.lineTo(size.width * 0.8, size.height * 0.6);
     path2.lineTo(size.width, size.height * 0.5);
-    
+
     // Green line (bottom)
     path3.moveTo(0, size.height * 0.8);
     path3.lineTo(size.width * 0.2, size.height * 0.9);
@@ -1029,20 +1314,20 @@ class MiniGraphPainter extends CustomPainter {
     path3.lineTo(size.width * 0.6, size.height * 0.8);
     path3.lineTo(size.width * 0.8, size.height * 0.9);
     path3.lineTo(size.width, size.height * 0.8);
-    
+
     canvas.drawPath(path1, paint);
     canvas.drawPath(path2, redPaint);
     canvas.drawPath(path3, greenPaint);
-    
+
     // Add small dots at key points
     final dotPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(Offset(size.width * 0.6, size.height * 0.1), 2, dotPaint);
     canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.3), 2, dotPaint);
   }
-  
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

@@ -53,10 +53,20 @@ class _InvestmentOpportunitiesWidgetState
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: Color(0xFF1E2022),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: Colors.transparent,
           automaticallyImplyLeading: false,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+          ),
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
             borderRadius: 30.0,
@@ -72,7 +82,7 @@ class _InvestmentOpportunitiesWidgetState
             },
           ),
           title: Text(
-            'Investment Opportunities',
+            selectedSector != null ? '$selectedSector Investments' : 'Investment Opportunities',
             style: FlutterFlowTheme.of(context).headlineMedium.override(
                   fontFamily: 'SF Pro Display',
                   color: Colors.white,
@@ -87,7 +97,17 @@ class _InvestmentOpportunitiesWidgetState
         ),
         body: SafeArea(
           top: true,
-          child: _buildOpportunitiesList(selectedSector),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: _buildOpportunitiesList(selectedSector),
+          ),
         ),
       ),
     );
@@ -103,12 +123,16 @@ class _InvestmentOpportunitiesWidgetState
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
-            child: SizedBox(
-              width: 50.0,
-              height: 50.0,
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  FlutterFlowTheme.of(context).primary,
+            child: Container(
+              padding: EdgeInsets.all(48.0),
+              child: SizedBox(
+                width: 40.0,
+                height: 40.0,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Color(0xFFFF8000),
+                  ),
+                  strokeWidth: 3.0,
                 ),
               ),
             ),
@@ -117,9 +141,53 @@ class _InvestmentOpportunitiesWidgetState
 
         if (snapshot.hasError) {
           return Center(
-            child: Text(
-              'Error loading opportunities',
-              style: FlutterFlowTheme.of(context).bodyMedium,
+            child: Container(
+              padding: EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Color(0xFF2A2D30),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: Color(0xFF3A3D41),
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64.0,
+                    color: Color(0xFFFF6B6B),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    'Error loading opportunities',
+                    style: FlutterFlowTheme.of(context)
+                        .titleMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    'Please try again later',
+                    style: FlutterFlowTheme.of(context)
+                        .bodyMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Color(0xFFB0B3B8),
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -128,27 +196,53 @@ class _InvestmentOpportunitiesWidgetState
 
         if (opportunities.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.business_center,
-                  size: 64.0,
-                  color: FlutterFlowTheme.of(context).secondaryText,
+            child: Container(
+              padding: EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Color(0xFF2A2D30),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: Color(0xFF3A3D41),
+                  width: 1.0,
                 ),
-                const SizedBox(height: 16.0),
-                Text(
-                  sector == null
-                      ? 'No investment opportunities available'
-                      : 'No opportunities in $sector sector',
-                  style: FlutterFlowTheme.of(context).headlineSmall.override(
-                        fontFamily: 'SF Pro Display',
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        letterSpacing: 0.0,
-                        useGoogleFonts: false,
-                      ),
-                ),
-              ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.business_center,
+                    size: 64.0,
+                    color: Color(0xFF6C7075),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    sector == null
+                        ? 'No investment opportunities available'
+                        : 'No opportunities in $sector sector',
+                    style: FlutterFlowTheme.of(context).titleMedium.override(
+                          fontFamily: 'SF Pro Display',
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                          useGoogleFonts: false,
+                        ),
+                  ),
+                  const SizedBox(height: 6.0),
+                  Text(
+                    'Check back later for new opportunities',
+                    style: FlutterFlowTheme.of(context)
+                        .bodyMedium
+                        .override(
+                          fontFamily: 'SF Pro Display',
+                          useGoogleFonts: false,
+                          color: Color(0xFFB0B3B8),
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -177,7 +271,7 @@ class _InvestmentOpportunitiesWidgetState
                       sectorName,
                       style: FlutterFlowTheme.of(context).headlineSmall.override(
                             fontFamily: 'SF Pro Display',
-                            color: FlutterFlowTheme.of(context).primary,
+                            color: Color(0x47FF8000),
                             letterSpacing: 0.0,
                             fontWeight: FontWeight.w600,
                             useGoogleFonts: false,
@@ -208,19 +302,12 @@ class _InvestmentOpportunitiesWidgetState
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16.0),
       decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
+        color: Color(0xFF2A2D30),
+        borderRadius: BorderRadius.circular(15.0),
         border: Border.all(
-          color: FlutterFlowTheme.of(context).alternate,
+          color: Color(0xFF3A3D41),
           width: 1.0,
         ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4.0,
-            color: const Color(0x1A000000),
-            offset: const Offset(0.0, 2.0),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -235,7 +322,7 @@ class _InvestmentOpportunitiesWidgetState
                     opportunity.title ?? 'Untitled Opportunity',
                     style: FlutterFlowTheme.of(context).headlineSmall.override(
                           fontFamily: 'SF Pro Display',
-                          color: FlutterFlowTheme.of(context).primaryText,
+                          color: Colors.white,
                           fontSize: 18.0,
                           letterSpacing: 0.0,
                           fontWeight: FontWeight.w600,
@@ -272,7 +359,7 @@ class _InvestmentOpportunitiesWidgetState
               opportunity.description ?? 'No description available',
               style: FlutterFlowTheme.of(context).bodyMedium.override(
                     fontFamily: 'SF Pro Display',
-                    color: FlutterFlowTheme.of(context).secondaryText,
+                    color: Color(0xFFB0B3B8),
                     letterSpacing: 0.0,
                     useGoogleFonts: false,
                   ),

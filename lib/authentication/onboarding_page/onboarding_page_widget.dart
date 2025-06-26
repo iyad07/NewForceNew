@@ -356,9 +356,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                                                               return AlertDialog(
                                                                                 title: Text(country),
                                                                                 content: Text('Population: ${_mapData[index].population}\n'
-                                                                                    'GDP: ${_mapData[index].gdp}\n'
-                                                                                    'Income Group: ${_mapData[index].incomeGroup}\n'
-                                                                                    'Region: ${_mapData[index].region}'),
+                                                                                    'GDP: ${_mapData[index].gdp}'),
                                                                                 actions: <Widget>[
                                                                                   TextButton(
                                                                                     child: const Text('Close'),

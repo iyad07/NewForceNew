@@ -74,21 +74,31 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: Color(0xFF1E2022),
         appBar: _buildAppBar(),
         body: SafeArea(
           top: true,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: _buildCountriesList(),
-                ),
-              ],
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _buildCountriesList(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -98,8 +108,18 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      backgroundColor: Colors.transparent,
       automaticallyImplyLeading: false,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+            stops: [0.0, 1.0],
+            begin: AlignmentDirectional(0.59, -1.0),
+            end: AlignmentDirectional(-0.59, 1.0),
+          ),
+        ),
+      ),
       leading: FlutterFlowIconButton(
         borderColor: Colors.transparent,
         borderRadius: 30.0,
@@ -107,7 +127,7 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
         buttonSize: 60.0,
         icon: Icon(
           Icons.arrow_back_rounded,
-          color: FlutterFlowTheme.of(context).primaryText,
+          color: Colors.white,
           size: 30.0,
         ),
         onPressed: () => context.pop(),
@@ -116,7 +136,7 @@ class _CountriesListWidgetState extends State<CountriesListWidget>
         'African Countries',
         style: FlutterFlowTheme.of(context).headlineMedium.override(
               fontFamily: 'SFPro',
-              color: FlutterFlowTheme.of(context).primaryText,
+              color: Colors.white,
               fontSize: 20.0,
               letterSpacing: 0.0,
               useGoogleFonts: false,

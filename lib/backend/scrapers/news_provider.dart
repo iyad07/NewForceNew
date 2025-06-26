@@ -156,17 +156,13 @@ class EnhancedNewsProvider extends ChangeNotifier {
   }
 
   Future<void> _loadCachedFeedYourCuriosityFromLocal(SharedPreferences prefs) async {
-    final cachedData = prefs.getString(_feedYourCuriosityKey);
-    final lastFetchStr = prefs.getString(_lastFetchFeedKey);
+    // Use fallback articles instead of cached data for the three topics
+    debugPrint('Loading fallback Feed Your Curiosity articles instead of cache');
+    final fallbackNews = EnhancedNewsScraperService.getFallbackFeedYourCuriosityNews();
+    _feedYourCuriosityNews = EnhancedNewsScraperService.convertToFeedYourCuriosityTopics(fallbackNews);
     
-    if (cachedData != null) {
-      final List<dynamic> decodedList = json.decode(cachedData);
-      _feedYourCuriosityNews = decodedList.map((item) => FeedYourCuriosityTopicsRow(Map<String, dynamic>.from(item))).toList();
-    }
-    
-    if (lastFetchStr != null) {
-      _lastFeedYourCuriosityFetch = DateTime.parse(lastFetchStr);
-    }
+    // Set last fetch time to current time to prevent immediate re-fetch
+    _lastFeedYourCuriosityFetch = DateTime.now();
   }
 
   Future<void> _loadCachedInvestmentNewsFromLocal(SharedPreferences prefs) async {
@@ -240,12 +236,14 @@ class EnhancedNewsProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
-      final scrapedNews = await EnhancedNewsScraperService.scrapeFeedYourCuriosity();
-      final newArticles = EnhancedNewsScraperService.convertToFeedYourCuriosityTopics(scrapedNews);
+      // Use only fallback articles for the three topics
+      debugPrint('Using fallback Feed Your Curiosity articles for background fetch');
+      final fallbackNews = EnhancedNewsScraperService.getFallbackFeedYourCuriosityNews();
+      final newArticles = EnhancedNewsScraperService.convertToFeedYourCuriosityTopics(fallbackNews);
       
       if (newArticles.isNotEmpty) {
         _feedYourCuriosityNews = newArticles;
-        _ensureTopicDistribution();
+        // Skip _ensureTopicDistribution() for fallback articles as they already have correct tags
         _lastFeedYourCuriosityFetch = DateTime.now();
         
         await _saveFeedYourCuriosityToLocal(_feedYourCuriosityNews);
@@ -433,14 +431,16 @@ class EnhancedNewsProvider extends ChangeNotifier {
       debugPrint('WARNING: ${stillEmptyCountries.length} countries still empty. Creating fallback articles.');
       
       for (final country in stillEmptyCountries) {
-        // Create a fallback article for this country
-        final fallbackArticle = _createFallbackArticleForCountry(country);
-        final newArticleRow = NewForceArticlesRow(fallbackArticle);
+        // Create multiple fallback articles for this country
+        final fallbackArticles = _createFallbackArticlesForCountry(country);
         
-        _newsByCountry[country]!.add(newArticleRow);
-        _africanNews.add(newArticleRow);
+        for (final articleData in fallbackArticles) {
+          final newArticleRow = NewForceArticlesRow(articleData);
+          _newsByCountry[country]!.add(newArticleRow);
+          _africanNews.add(newArticleRow);
+        }
         
-        debugPrint('FALLBACK: Created article for $country');
+        debugPrint('FALLBACK: Created ${fallbackArticles.length} articles for $country');
       }
     }
     
@@ -458,20 +458,74 @@ class EnhancedNewsProvider extends ChangeNotifier {
     }
   }
 
-  Map<String, dynamic> _createFallbackArticleForCountry(String country) {
+  List<Map<String, dynamic>> _createFallbackArticlesForCountry(String country) {
     final now = DateTime.now().toIso8601String();
     final region = _getRegionForCountry(country);
     
-    return {
-      'title': '$country Advances National Development Through Strategic Partnerships',
-      'description': '$country implements new initiatives to boost economic growth and improve living standards for citizens.',
-      'articleBody': '$country has implemented comprehensive development initiatives aimed at boosting economic growth and improving living standards for its citizens. The government has focused on infrastructure development, education improvements, and healthcare enhancements as key priorities. Recent partnerships with regional and international organizations are providing technical assistance and funding for critical development projects. These efforts include investments in transportation networks, digital infrastructure, and renewable energy systems. The initiatives are creating employment opportunities and positioning $country for sustainable long-term growth. Community development programs are ensuring that benefits reach rural and urban populations alike.',
-      'articleImage': _getDefaultImageUrl(),
-      'publishers': _getPublisherForCountry(country),
-      'created_at': now,
-      'articleUrl': '',
-      'country': country,
-    };
+    final fallbackArticles = [
+      {
+        'title': '$country Advances National Development Through Strategic Partnerships',
+        'description': '$country implements new initiatives to boost economic growth and improve living standards for citizens.',
+        'articleBody': '$country has implemented comprehensive development initiatives aimed at boosting economic growth and improving living standards for its citizens. The government has focused on infrastructure development, education improvements, and healthcare enhancements as key priorities. Recent partnerships with regional and international organizations are providing technical assistance and funding for critical development projects. These efforts include investments in transportation networks, digital infrastructure, and renewable energy systems. The initiatives are creating employment opportunities and positioning $country for sustainable long-term growth. Community development programs are ensuring that benefits reach rural and urban populations alike.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      },
+      {
+        'title': '$country Launches Digital Innovation Hub to Drive Technology Sector',
+        'description': 'New technology initiative aims to position $country as a regional leader in digital innovation and entrepreneurship.',
+        'articleBody': '$country has unveiled plans for a state-of-the-art digital innovation hub designed to accelerate technological advancement and foster entrepreneurship. The facility will provide startups and tech companies with access to cutting-edge resources, mentorship programs, and funding opportunities. Government officials emphasize that this initiative is part of a broader strategy to diversify the economy and create high-skilled employment opportunities for young people. The hub will focus on emerging technologies including artificial intelligence, blockchain, and mobile applications. International tech giants have expressed interest in partnering with local developers, promising knowledge transfer and investment in the growing sector.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      },
+      {
+        'title': '$country Expands Healthcare Access Through Mobile Medical Units',
+        'description': 'Revolutionary healthcare program brings medical services directly to rural communities across $country.',
+        'articleBody': 'A groundbreaking healthcare initiative in $country is transforming medical access for rural populations through a fleet of mobile medical units. These specially equipped vehicles provide essential health services including vaccinations, maternal care, and chronic disease management to remote areas previously underserved by traditional healthcare infrastructure. The program has already reached over 100,000 residents in its first phase, with plans to expand coverage nationwide. Healthcare workers report significant improvements in early disease detection and preventive care uptake. The initiative represents a innovative approach to addressing healthcare disparities and ensuring equitable access to quality medical services for all citizens.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      },
+      {
+        'title': '$country Invests in Renewable Energy Infrastructure for Sustainable Future',
+        'description': 'Major solar and wind energy projects set to transform $country\'s energy landscape and reduce carbon emissions.',
+        'articleBody': '$country is making significant strides toward energy independence through ambitious renewable energy projects spanning solar, wind, and hydroelectric power generation. The government has allocated substantial funding for clean energy infrastructure, aiming to achieve 50% renewable energy capacity within the next decade. These projects are expected to create thousands of jobs while reducing dependence on fossil fuel imports. International environmental organizations have praised $country\'s commitment to sustainable development and climate change mitigation. Rural electrification programs are bringing reliable power to previously disconnected communities, supporting economic development and improving quality of life.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      },
+      {
+        'title': '$country Strengthens Agricultural Sector Through Modern Farming Techniques',
+        'description': 'Innovative agricultural programs boost food security and farmer incomes across $country.',
+        'articleBody': 'Agricultural transformation is underway in $country as farmers adopt modern techniques and technologies to increase productivity and sustainability. Government extension services are providing training in precision farming, drought-resistant crop varieties, and efficient irrigation systems. The introduction of digital platforms connects farmers directly with markets, eliminating intermediaries and ensuring better prices for agricultural products. Cooperative farming initiatives are helping small-scale farmers access credit, equipment, and technical expertise. These efforts are contributing to food security while positioning agriculture as a key driver of economic growth and rural development.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      },
+      {
+        'title': '$country Enhances Education System with Digital Learning Platforms',
+        'description': 'Comprehensive education reform introduces technology-enhanced learning to improve student outcomes.',
+        'articleBody': 'Educational innovation is transforming learning experiences across $country through the implementation of digital learning platforms and modern teaching methodologies. The government has invested in teacher training programs, educational technology, and infrastructure improvements to ensure quality education reaches all students. Online learning resources are making education more accessible, particularly in remote areas where traditional schooling faces challenges. STEM education programs are preparing students for future careers in technology and innovation sectors. International partnerships are facilitating knowledge exchange and best practice sharing, contributing to the overall improvement of educational standards and outcomes.',
+        'articleImage': _getDefaultImageUrl(),
+        'publishers': _getPublisherForCountry(country),
+        'created_at': now,
+        'articleUrl': '',
+        'country': country,
+      }
+    ];
+    
+    return fallbackArticles;
   }
 
   String _getPublisherForCountry(String country) {
@@ -680,12 +734,7 @@ class EnhancedNewsProvider extends ChangeNotifier {
     final topics = [
       'African Culture & Lifestyle', 
       'African Agriculture', 
-      'African Technology', 
-      'African Education',
-      'African Health',
-      'African Environment',
-      'African Sports',
-      'African Arts'
+      'African Technology'
     ];
     
     if (_feedYourCuriosityNews.isEmpty) return;
@@ -810,8 +859,10 @@ class EnhancedNewsProvider extends ChangeNotifier {
       () => _isLoadingFeedYourCuriosity = false,
       () async {
         try {
-          final scrapedNews = await EnhancedNewsScraperService.scrapeFeedYourCuriosity();
-          _feedYourCuriosityNews = EnhancedNewsScraperService.convertToFeedYourCuriosityTopics(scrapedNews);
+          // Use only fallback articles for the three topics
+          debugPrint('Using fallback Feed Your Curiosity articles for the three topics');
+          final fallbackNews = EnhancedNewsScraperService.getFallbackFeedYourCuriosityNews();
+          _feedYourCuriosityNews = EnhancedNewsScraperService.convertToFeedYourCuriosityTopics(fallbackNews);
           
           _ensureTopicDistribution();
           _lastFeedYourCuriosityFetch = DateTime.now();

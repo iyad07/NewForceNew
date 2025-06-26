@@ -57,19 +57,29 @@ class _CountryNewsDetailsWidgetState extends State<CountryNewsDetailsWidget> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+        backgroundColor: Color(0xFF1E2022),
         appBar: _buildAppBar(),
         body: SafeArea(
           top: true,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroImage(),
-                _buildArticleContent(),
-                _buildActionButtons(),
-              ].divide(const SizedBox(height: 16.0)),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeroImage(),
+                  _buildArticleContent(),
+                  _buildActionButtons(),
+                ].divide(const SizedBox(height: 16.0)),
+              ),
             ),
           ),
         ),
@@ -79,8 +89,18 @@ class _CountryNewsDetailsWidgetState extends State<CountryNewsDetailsWidget> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      backgroundColor: Colors.transparent,
       automaticallyImplyLeading: false,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+            stops: [0.0, 1.0],
+            begin: AlignmentDirectional(0.59, -1.0),
+            end: AlignmentDirectional(-0.59, 1.0),
+          ),
+        ),
+      ),
       leading: FlutterFlowIconButton(
         borderColor: Colors.transparent,
         borderRadius: 30.0,
@@ -88,7 +108,7 @@ class _CountryNewsDetailsWidgetState extends State<CountryNewsDetailsWidget> {
         buttonSize: 50.0,
         icon: Icon(
           Icons.arrow_back_rounded,
-          color: FlutterFlowTheme.of(context).primaryText,
+          color: Colors.white,
           size: 20.0,
         ),
         onPressed: () => context.safePop(),
@@ -97,6 +117,7 @@ class _CountryNewsDetailsWidgetState extends State<CountryNewsDetailsWidget> {
         'Article Details',
         style: FlutterFlowTheme.of(context).bodyLarge.override(
           fontFamily: 'Tiro Bangla',
+          color: Colors.white,
           letterSpacing: 0.0,
         ),
       ),

@@ -571,26 +571,35 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 40,
+                        reservedSize: 60,
+                        interval: maxY / 5, // Add proper interval to prevent overlapping
                         getTitlesWidget: (value, meta) {
+                          // Only show labels at specific intervals to prevent overlapping
+                          if (value % (maxY / 5) != 0 && value != 0) {
+                            return const SizedBox.shrink();
+                          }
                           return AnimatedOpacity(
                             opacity: animationValue,
                             duration: const Duration(milliseconds: 500),
-                            child: Text(
-                              '\$${value.toInt()}B',
-                              style: FlutterFlowTheme.of(context)
-                                  .bodySmall
-                                  .override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 10.0,
-                                    useGoogleFonts: false,
-                                  ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                '\$${value.toInt()}B',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodySmall
+                                    .override(
+                                      fontFamily: 'SF Pro Display',
+                                      fontSize: 9.0,
+                                      useGoogleFonts: false,
+                                    ),
+                                textAlign: TextAlign.right,
+                              ),
                             ),
                           );
                         },
                       ),
-                    ),
-                    topTitles: const AxisTitles(
+                     ),
+                     topTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
                     rightTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
@@ -625,13 +634,24 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: Color(0xFF1E2022),
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50.0),
           child: AppBar(
-            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+            backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0x2C7E5F1A), Color(0xFF201D1B)],
+                  stops: [0.0, 1.0],
+                  begin: AlignmentDirectional(0.59, -1.0),
+                  end: AlignmentDirectional(-0.59, 1.0),
+                ),
+              ),
+            ),
             leading: FlutterFlowIconButton(
               borderColor: Colors.transparent,
               borderRadius: 30.0,
@@ -639,7 +659,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
               buttonSize: 60.0,
               icon: Icon(
                 Icons.arrow_back_rounded,
-                color: FlutterFlowTheme.of(context).primaryText,
+                color: Colors.white,
                 size: 30.0,
               ),
               onPressed: () async {
@@ -650,7 +670,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
               'Business Index',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
                     fontFamily: 'SF Pro Display',
-                    color: FlutterFlowTheme.of(context).primaryText,
+                    color: Colors.white,
                     fontSize: 22.0,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w600,
@@ -664,11 +684,20 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ),
         body: SafeArea(
           top: true,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF222426), Color(0xFF121416)],
+                stops: [0.0, 1.0],
+                begin: AlignmentDirectional(1.0, -0.34),
+                end: AlignmentDirectional(-1.0, 0.34),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Continental Overview Header
                 Container(
                   width: double.infinity,
@@ -810,7 +839,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                       ).animateOnPageLoad(
                           animationsMap['chartContainerAnimation']!),
 
-                      _buildContinentalContent(),
+                      //_buildContinentalContent(),
 
                       // GDP & Investment Inflows Chart Section
 
@@ -1043,7 +1072,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
           ),
         ),
       ),
-    ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!);
+    ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!));
   }
 
   Widget _buildContinentalContent() {
@@ -1245,19 +1274,12 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         width: double.infinity,
         padding: const EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
         decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(12.0),
+          color: Color(0xFF2A2D30),
+          borderRadius: BorderRadius.circular(16.0),
           border: Border.all(
-            color: FlutterFlowTheme.of(context).alternate,
+            color: Color(0xFF3A3D41),
             width: 1.0,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: FlutterFlowTheme.of(context).alternate.withOpacity(0.1),
-              blurRadius: 8.0,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1268,14 +1290,14 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                   padding:
                       const EdgeInsetsDirectional.fromSTEB(8.0, 4.0, 8.0, 4.0),
                   decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6.0),
+                    color: Color(0xFFFF8000),
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(
                     category,
                     style: FlutterFlowTheme.of(context).bodySmall.override(
                           fontFamily: 'SF Pro Display',
-                          color: categoryColor,
+                          color: Colors.white,
                           fontSize: 10.0,
                           letterSpacing: 0.0,
                           fontWeight: FontWeight.w600,
@@ -1286,7 +1308,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                 const Spacer(),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: FlutterFlowTheme.of(context).secondaryText,
+                  color: Color(0xFFB0B3B8),
                   size: 16.0,
                 ),
               ],
@@ -1296,7 +1318,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
               title,
               style: FlutterFlowTheme.of(context).bodyLarge.override(
                     fontFamily: 'SF Pro Display',
-                    color: FlutterFlowTheme.of(context).primaryText,
+                    color: Colors.white,
                     fontSize: 16.0,
                     letterSpacing: 0.0,
                     fontWeight: FontWeight.w600,
@@ -1310,7 +1332,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
               children: [
                 Icon(
                   Icons.location_on,
-                  color: FlutterFlowTheme.of(context).secondaryText,
+                  color: Color(0xFFB0B3B8),
                   size: 14.0,
                 ),
                 const SizedBox(width: 4.0),
@@ -1318,7 +1340,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                   location,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'SF Pro Display',
-                        color: FlutterFlowTheme.of(context).secondaryText,
+                        color: Color(0xFFB0B3B8),
                         fontSize: 14.0,
                         letterSpacing: 0.0,
                         useGoogleFonts: false,
@@ -1336,12 +1358,12 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
       String name, String type, String focus, Color color) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
+      padding: const EdgeInsetsDirectional.fromSTEB(12.0, 12.0, 12.0, 12.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12.0),
+        color: Color(0xFF2A2D30),
+        borderRadius: BorderRadius.circular(15.0),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: Color(0xFF3A3D41),
           width: 1.0,
         ),
       ),
@@ -1351,12 +1373,12 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
             width: 50.0,
             height: 50.0,
             decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(10.0),
+              color: Color(0xFF3A3D41),
+              borderRadius: BorderRadius.circular(8.0),
             ),
             child: Icon(
               Icons.business,
-              color: Colors.white,
+              color: Color(0xFFFF8000),
               size: 24.0,
             ),
           ),
@@ -1369,7 +1391,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                   name,
                   style: FlutterFlowTheme.of(context).bodyLarge.override(
                         fontFamily: 'SF Pro Display',
-                        color: FlutterFlowTheme.of(context).primaryText,
+                        color: Colors.white,
                         fontSize: 16.0,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w600,
@@ -1381,7 +1403,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                   type,
                   style: FlutterFlowTheme.of(context).bodySmall.override(
                         fontFamily: 'SF Pro Display',
-                        color: FlutterFlowTheme.of(context).secondaryText,
+                        color: Color(0xFFB0B3B8),
                         fontSize: 12.0,
                         letterSpacing: 0.0,
                         useGoogleFonts: false,
@@ -1392,7 +1414,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                   focus,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'SF Pro Display',
-                        color: color,
+                        color: Color(0xFFFF8000),
                         fontSize: 14.0,
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w500,
