@@ -34,6 +34,8 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   late CountryProfileModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final animationsMap = <String, AnimationInfo>{};
+  TheCountryProfileRow? _countryProfileData;
+  bool _isLoadingProfile = true;
 
   @override
   void initState() {
@@ -82,6 +84,100 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     }
 
     unawaited(newsProvider.fetchAllNews());
+    
+    // Test Supabase connection first
+    await _testSupabaseConnection();
+    
+    // Fetch country profile data from theCountryProfile table
+    await _fetchCountryProfileData();
+  }
+
+  Future<void> _testSupabaseConnection() async {
+    try {
+      debugPrint('=== SUPABASE CONNECTION TEST ===');
+      final testResponse = await SupaFlow.client
+          .from('theCountryProfiles')
+          .select('country')
+          .limit(5);
+      
+      debugPrint('Table exists and returned ${testResponse.length} records');
+      if (testResponse.isNotEmpty) {
+        debugPrint('Sample countries: ${testResponse.map((r) => r['country']).toList()}');
+      }
+    } catch (e) {
+      debugPrint('Supabase connection test failed: $e');
+    }
+    debugPrint('=== CONNECTION TEST END ===');
+  }
+
+  Future<void> _fetchCountryProfileData() async {
+    try {
+      final countryName = widget.countrydetails?.country ?? '';
+      debugPrint('=== FETCH DEBUG ===');
+      debugPrint('Attempting to fetch data for country: "$countryName"');
+      
+      if (countryName.isNotEmpty) {
+        // Try exact match first
+        var response = await SupaFlow.client
+            .from('theCountryProfiles')
+            .select()
+            .eq('country', countryName)
+            .maybeSingle();
+        
+        // If no exact match, try case-insensitive search
+        if (response == null) {
+          debugPrint('No exact match found, trying case-insensitive search...');
+          final allRows = await SupaFlow.client
+              .from('theCountryProfiles')
+              .select();
+          
+          debugPrint('All available countries in table: ${allRows.map((row) => row['country']).toList()}');
+          
+          // Find case-insensitive match
+          for (final row in allRows) {
+            if (row['country']?.toString().toLowerCase() == countryName.toLowerCase()) {
+              response = row;
+              debugPrint('Found case-insensitive match: ${row['country']}');
+              break;
+            }
+          }
+        }
+        
+        debugPrint('Supabase response: $response');
+        
+        if (response != null) {
+          debugPrint('Data found! Creating TheCountryProfileRow...');
+          debugPrint('Response data: $response');
+          setState(() {
+            _countryProfileData = TheCountryProfileRow(response!);
+            _isLoadingProfile = false;
+          });
+          debugPrint('Country profile data set successfully');
+          debugPrint('GDP from new data: ${_countryProfileData?.gdp}');
+        } else {
+          debugPrint('No data found for country: $countryName');
+          debugPrint('This could mean:');
+          debugPrint('1. The table is empty');
+          debugPrint('2. The country name does not match any records');
+          debugPrint('3. There is a connection issue with Supabase');
+          setState(() {
+            _isLoadingProfile = false;
+          });
+        }
+      } else {
+        debugPrint('Country name is empty!');
+        setState(() {
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching country profile data: $e');
+      debugPrint('Error type: ${e.runtimeType}');
+      setState(() {
+        _isLoadingProfile = false;
+      });
+    }
+    debugPrint('=== FETCH DEBUG END ===');
   }
 
   @override
@@ -119,7 +215,14 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                 backgroundColor: Color(0xFF2A2D30),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCountryHeader(),
+                      _buildCountryDetailsCards(),
+                    ].addToEnd(const SizedBox(height: 44.0)),
+                  ),
                 ),
               ),
             ),
@@ -132,6 +235,172 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   Future<void> _refreshNews() async {
     final newsProvider = Provider.of<EnhancedNewsProvider>(context, listen: false);
     await newsProvider.fetchAllNews(force: true);
+  }
+
+  Widget _buildCountryDetailsCards() {
+    if (_isLoadingProfile) {
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(48.0),
+          child: const SizedBox(
+            width: 40.0,
+            height: 40.0,
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF8000)),
+              strokeWidth: 3.0,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_countryProfileData == null) {
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A2D30),
+            borderRadius: BorderRadius.circular(16.0),
+            border: Border.all(
+              color: const Color(0xFF3A3D41),
+              width: 1.0,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.info_outline,
+                size: 64.0,
+                color: Color(0xFF6C7075),
+              ),
+              const SizedBox(height: 16.0),
+              Text(
+                'No additional data available',
+                style: FlutterFlowTheme.of(context).titleMedium.override(
+                  fontFamily: 'SFPro',
+                  color: Colors.white,
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.0,
+                  useGoogleFonts: false,
+                ),
+              ),
+              const SizedBox(height: 6.0),
+              Text(
+                'Country profile data is not available',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                  fontFamily: 'SFPro',
+                  color: const Color(0xFFB0B3B8),
+                  fontSize: 14.0,
+                  letterSpacing: 0.0,
+                  useGoogleFonts: false,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
+          child: Text(
+            'Country Details',
+            style: FlutterFlowTheme.of(context).titleLarge.override(
+              fontFamily: 'SFPro',
+              fontSize: 20.0,
+              letterSpacing: 0.0,
+              fontWeight: FontWeight.normal,
+              useGoogleFonts: false,
+            ),
+          ),
+        ),
+        _buildDetailCard('FDI Inflows', _countryProfileData!.fdiinflows?.toString() ?? 'N/A', Icons.trending_up),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('Key Industries', _countryProfileData!.keyindustries ?? 'N/A', Icons.factory),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('Ease of Business', _countryProfileData!.easeofbusiness?.toString() ?? 'N/A', Icons.business),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('Corporate Tax', _countryProfileData!.corporatetaxpercentage != null ? '${_countryProfileData!.corporatetaxpercentage}%' : 'N/A', Icons.account_balance),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('VAT Percentage', _countryProfileData!.vatpercentage != null ? '${_countryProfileData!.vatpercentage}%' : 'N/A', Icons.receipt),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('Withholding Tax', _countryProfileData!.witholdingtaxpercentage != null ? '${_countryProfileData!.witholdingtaxpercentage}%' : 'N/A', Icons.money_off),
+        const SizedBox(height: 12.0),
+        _buildDetailCard('Political Stability Index', _countryProfileData!.politicalstabilityindex?.toString() ?? 'N/A', Icons.gavel),
+      ],
+    );
+  }
+
+  Widget _buildDetailCard(String title, String value, IconData icon) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2D30),
+        borderRadius: BorderRadius.circular(15.0),
+        border: Border.all(
+          color: const Color(0xFF3A3D41),
+          width: 1.0,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Container(
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3A3D41),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Icon(
+                icon,
+                color: const Color(0xFFFF8000),
+                size: 24.0,
+              ),
+            ),
+            const SizedBox(width: 16.0),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: FlutterFlowTheme.of(context).titleMedium.override(
+                      fontFamily: 'SFPro',
+                      color: Colors.white,
+                      fontSize: 16.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
+                    ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    value,
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'SFPro',
+                      color: const Color(0xFFB0B3B8),
+                      fontSize: 14.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts: false,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -213,15 +482,18 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildCountryStats() {
+    // Use data from theCountryProfile table if available, otherwise fallback to old data
+    final countryName = _countryProfileData?.country ?? widget.countrydetails?.country ?? 'Unknown';
+    final gdp = _countryProfileData?.gdp ?? widget.countrydetails?.countryGDP ?? '0';
+    final gdpRate = _countryProfileData?.rateofgdp ?? widget.countrydetails?.gdpRate ?? '0.0';
+    
     // Debug print to check database values
     if (kDebugMode) {
       print('=== COUNTRY PROFILE DEBUG ===');
-      print('Country: ${widget.countrydetails?.country}');
-      print('GDP: ${widget.countrydetails?.countryGDP}');
-      print('GDP Rate: ${widget.countrydetails?.gdpRate}');
-      print('Population: ${widget.countrydetails?.population}');
-      print('Currency: ${widget.countrydetails?.currency}');
-      print('Flag URL: ${widget.countrydetails?.flagImageUrl}');
+      print('Country: $countryName');
+      print('GDP: $gdp');
+      print('GDP Rate: $gdpRate');
+      print('Using new data: ${_countryProfileData != null}');
       print('============================');
     }
     
@@ -231,7 +503,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          valueOrDefault<String>(widget.countrydetails?.country, 'Unknown'),
+          countryName,
           style: FlutterFlowTheme.of(context).labelMedium.override(
                 fontFamily: 'SFPro',
                 fontSize: 12.0,
@@ -254,7 +526,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
             const SizedBox(width: 6.0),
             Expanded(
               child: Text(
-                _formatCurrency(widget.countrydetails?.countryGDP ?? '0'),
+                _formatCurrency(gdp),
                 style: FlutterFlowTheme.of(context).displaySmall.override(
                       fontFamily: 'SFPro',
                       fontSize: 20.0,
@@ -282,8 +554,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: valueOrDefault<String>(
-                          widget.countrydetails?.gdpRate, '0'),
+                      text: gdpRate + "B",
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             fontFamily: 'Tiro Bangla',
                             color: FlutterFlowTheme.of(context).primary,
@@ -311,6 +582,10 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
   }
 
   Widget _buildCountryInfo() {
+    // Use data from theCountryProfile table if available, otherwise fallback to old data
+    final population = _countryProfileData?.population ?? widget.countrydetails?.population ?? '0';
+    final currency = _countryProfileData?.currency ?? widget.countrydetails?.currency ?? 'N/A';
+    
     return Column(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -320,8 +595,8 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
           child: _buildFlagImage(),
         ),
         const SizedBox(height: 5.0),
-        _buildInfoRow('Population:', _formatPopulation(widget.countrydetails?.population ?? '0')),
-        _buildInfoRow('Currency:', widget.countrydetails?.currency ?? 'N/A'),
+        _buildInfoRow('', _formatPopulation(population + " Million")),
+        _buildInfoRow('', currency),
       ],
     );
   }
@@ -813,7 +1088,8 @@ void _navigateToArticleDetails(dynamic article) {
   }
 
   Widget _buildFlagImage() {
-    final flagUrl = widget.countrydetails?.flagImageUrl;
+    // Use flag image from theCountryProfile table if available, otherwise fallback to old data
+    final flagUrl = _countryProfileData?.flagimage ?? widget.countrydetails?.flagImageUrl;
     
     // Check if URL is valid and not empty
     if (flagUrl == null || flagUrl.isEmpty || !_isValidImageUrl(flagUrl)) {

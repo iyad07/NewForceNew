@@ -343,6 +343,11 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 // Replace your chart data processing section with this normalized approach
                                 List<FlSpot> gdpSpots = [];
                                 List<FlSpot> fdiSpots = [];
+                                
+                                // Store raw values for tooltips
+                                Map<int, double> rawGdpValues = {};
+                                Map<int, double> rawFdiValues = {};
+                                List<String> years = ['2020', '2021', '2022', '2023'];
 
                                 if (snapshot.hasData && snapshot.data != null) {
                                   // Parse GDP data for African continent
@@ -375,27 +380,21 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                             'Available GDP years: ${yearlyGDP.keys.toList()}');
 
                                         // Create normalized GDP data points (scale to 0-100 range)
-                                        List<String> years = [
-                                          '2020',
-                                          '2021',
-                                          '2022',
-                                          '2023'
-                                        ];
-                                        List<double> rawGdpValues = [];
+                                        List<double> gdpValuesForNormalization = [];
 
                                         // Collect raw values first
                                         for (String year in years) {
                                           if (yearlyGDP.containsKey(year)) {
-                                            rawGdpValues.add(yearlyGDP[year]! /
+                                            gdpValuesForNormalization.add(yearlyGDP[year]! /
                                                 1000000000000); // Convert to trillions
                                           }
                                         }
 
                                         // Find min and max for normalization
-                                        if (rawGdpValues.isNotEmpty) {
-                                          double minGdp = rawGdpValues
+                                        if (gdpValuesForNormalization.isNotEmpty) {
+                                          double minGdp = gdpValuesForNormalization
                                               .reduce((a, b) => a < b ? a : b);
-                                          double maxGdp = rawGdpValues
+                                          double maxGdp = gdpValuesForNormalization
                                               .reduce((a, b) => a > b ? a : b);
 
                                           // Normalize GDP values to 0-100 scale for better visualization
@@ -407,6 +406,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                               double rawValue =
                                                   yearlyGDP[year]! /
                                                       1000000000000;
+                                              // Store raw value for tooltip
+                                              rawGdpValues[i] = rawValue;
+                                              
                                               double normalizedValue =
                                                   ((rawValue - minGdp) /
                                                               (maxGdp -
@@ -456,27 +458,21 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                             'Available FDI years: ${yearlyFDI.keys.toList()}');
 
                                         // Create normalized FDI data points
-                                        List<String> years = [
-                                          '2020',
-                                          '2021',
-                                          '2022',
-                                          '2023'
-                                        ];
-                                        List<double> rawFdiValues = [];
+                                        List<double> fdiValuesForNormalization = [];
 
                                         // Collect raw values first
                                         for (String year in years) {
                                           if (yearlyFDI.containsKey(year)) {
-                                            rawFdiValues.add(yearlyFDI[year]! /
+                                            fdiValuesForNormalization.add(yearlyFDI[year]! /
                                                 1000000000); // Convert to billions
                                           }
                                         }
 
                                         // Find min and max for normalization
-                                        if (rawFdiValues.isNotEmpty) {
-                                          double minFdi = rawFdiValues
+                                        if (fdiValuesForNormalization.isNotEmpty) {
+                                          double minFdi = fdiValuesForNormalization
                                               .reduce((a, b) => a < b ? a : b);
-                                          double maxFdi = rawFdiValues
+                                          double maxFdi = fdiValuesForNormalization
                                               .reduce((a, b) => a > b ? a : b);
 
                                           // Normalize FDI values to 0-100 scale for better visualization
@@ -487,6 +483,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                             if (yearlyFDI.containsKey(year)) {
                                               double rawValue =
                                                   yearlyFDI[year]! / 1000000000;
+                                              // Store raw value for tooltip
+                                              rawFdiValues[i] = rawValue;
+                                              
                                               double normalizedValue =
                                                   ((rawValue - minFdi) /
                                                               (maxFdi -
@@ -632,6 +631,50 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                             color: Colors.grey
                                                 .withValues(alpha: 0.3),
                                             width: 1),
+                                      ),
+                                    ),
+                                    lineTouchData: LineTouchData(
+                                      enabled: true,
+                                      touchTooltipData: LineTouchTooltipData(
+                                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                                          return touchedSpots.map((LineBarSpot touchedSpot) {
+                                            final spotIndex = touchedSpot.x.toInt();
+                                            final years = ['2020', '2021', '2022', '2023'];
+                                            
+                                            if (spotIndex >= 0 && spotIndex < years.length) {
+                                              final year = years[spotIndex];
+                                              
+                                              if (touchedSpot.barIndex == 0) {
+                                                // GDP line
+                                                final rawValue = rawGdpValues[spotIndex];
+                                                if (rawValue != null) {
+                                                  return LineTooltipItem(
+                                                    'GDP $year\n${rawValue.toStringAsFixed(2)}T USD',
+                                                    TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 12,
+                                                    ),
+                                                  );
+                                                }
+                                              } else if (touchedSpot.barIndex == 1) {
+                                                // FDI line
+                                                final rawValue = rawFdiValues[spotIndex];
+                                                if (rawValue != null) {
+                                                  return LineTooltipItem(
+                                                    'FDI $year\n${rawValue.toStringAsFixed(2)}B USD',
+                                                    TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 12,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                            return null;
+                                          }).toList();
+                                        },
                                       ),
                                     ),
                                     minX: 0,

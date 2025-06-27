@@ -57,3 +57,4 @@ export 'tables/topics.dart';
 export 'tables/community_posts.dart';
 export 'tables/post_comments.dart';
 export 'tables/africa_resources.dart';
+export 'tables/the_country_profile.dart';
