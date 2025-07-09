@@ -45,6 +45,44 @@ class MapModel {
   final String incomeGroup;
   final String region;
 
+  // Getter for formatted population
+  String get formattedPopulation {
+    if (population == null) return 'N/A';
+    final num pop = population is String ? num.tryParse(population) ?? 0 : population;
+    
+    if (pop >= 1000000000) {
+      final double value = pop / 1000000000;
+      return '${_formatDecimal(value)} billion';
+    } else if (pop >= 1000000) {
+      final double value = pop / 1000000;
+      return '${_formatDecimal(value)} million';
+    } else if (pop >= 1000) {
+      final double value = pop / 1000;
+      return '${_formatDecimal(value)} thousand';
+    } else {
+      return pop.round().toString();
+    }
+  }
+
+  // Getter for formatted GDP
+  String get formattedGdp {
+    if (gdp == null) return 'N/A';
+    final num gdpValue = gdp is String ? num.tryParse(gdp) ?? 0 : gdp;
+    
+    if (gdpValue >= 1000000000) {
+      final double value = gdpValue / 1000000000;
+      return '${_formatDecimal(value)} billion USD';
+    } else if (gdpValue >= 1000000) {
+      final double value = gdpValue / 1000000;
+      return '${_formatDecimal(value)} million USD';
+    } else if (gdpValue >= 1000) {
+      final double value = gdpValue / 1000;
+      return '${_formatDecimal(value)} thousand USD';
+    } else {
+      return '${gdpValue.round()} USD';
+    }
+  }
+
   // Factory method to create a MapModel from JSON data
   factory MapModel.fromJson(Map<String, dynamic> json) {
     return MapModel(
@@ -56,6 +94,12 @@ class MapModel {
       json['properties']['income_grp'],
       json['properties']['region_un'],
     );
+  }
+
+  // Helper method to format decimal values to the nearest appropriate unit
+  String _formatDecimal(double value) {
+    // Always round to nearest whole number for cleaner display without decimals
+    return value.round().toString();
   }
 
   // Helper method to map color values

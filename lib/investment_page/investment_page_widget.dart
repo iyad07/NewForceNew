@@ -28,15 +28,70 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
   
   // Add refresh key to force FutureBuilder to rebuild
   Key _refreshKey = UniqueKey();
+  
+  // Animation controllers for chart lines
+  late AnimationController _gdpLineController;
+  late AnimationController _fdiLineController;
+  late Animation<double> _gdpLineAnimation;
+  late Animation<double> _fdiLineAnimation;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => InvestmentPageModel());
+    
+    // Initialize animation controllers
+    _gdpLineController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    
+    _fdiLineController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    
+    // Create animations with curves
+    _gdpLineAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _gdpLineController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _fdiLineAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fdiLineController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Don't start animations immediately - wait for data to load
+  }
+  
+  void _startAnimations() {
+    _gdpLineController.forward();
+    
+    // Start FDI animation 500ms after GDP
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _fdiLineController.forward();
+      }
+    });
+  }
+  
+  void _resetAnimations() {
+    _gdpLineController.reset();
+    _fdiLineController.reset();
+    // Don't start animations immediately - let data loading trigger them
   }
 
   @override
   void dispose() {
+    _gdpLineController.dispose();
+    _fdiLineController.dispose();
     _model.dispose();
     super.dispose();
   }
@@ -93,7 +148,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                           padding: EdgeInsets.all(6.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
@@ -109,7 +164,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                       //fontWeight: FontWeight.bold,
                                     ),
                               ),
-                              Material(
+                              /*Material(
                                 color: Colors.transparent,
                                 elevation: 1.0,
                                 shape: RoundedRectangleBorder(
@@ -117,10 +172,12 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 ),
                                 child: InkWell(
                                   onTap: () {
-                                    // Refresh the World Bank data
+                                    // Clear cache, refresh the World Bank data and reset animations
+                                    _model.clearCache();
                                     setState(() {
                                       _refreshKey = UniqueKey();
                                     });
+                                    _resetAnimations();
                                   },
                                   borderRadius: BorderRadius.circular(16.0),
                                   child: Container(
@@ -157,7 +214,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                     ),
                                   ),
                                 ),
-                              ),
+                              ),*/
                             ],
                           ),
                         ),
@@ -169,28 +226,21 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                     // Market Trends Section
                     Padding(
                       padding: EdgeInsets.all(10.0),
-                      child: FutureBuilder<List<ApiCallResponse>>(
+                      child: FutureBuilder<ChartData>(
                         key: _refreshKey,
-                        future: Future.wait([
-                          WorldBankApiService.getGDPData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                          WorldBankApiService.getFDIData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                          WorldBankApiService.getInflationData(
-                            countryCode: 'ZA',
-                            startYear: '2020',
-                            endYear: '2024',
-                          ),
-                        ]),
+                        future: _model.getEconomicData(forceRefresh: _refreshKey != UniqueKey()),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          // Check if we have cached economic data to show immediately
+                          ChartData? economicData;
+                          
+                          if (_model.hasValidEconomicCache) {
+                            // Use cached data immediately
+                            economicData = _model.cachedEconomicData;
+                          } else if (snapshot.hasData) {
+                            // Use fresh data if no cache
+                            economicData = snapshot.data!;
+                          } else if (snapshot.connectionState == ConnectionState.waiting) {
+                            // Show loading only if no cache available
                             return const Center(
                               child: SizedBox(
                                 width: 50.0,
@@ -203,38 +253,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                             );
                           }
 
-                          if (snapshot.hasError || !snapshot.hasData) {
+                          if (economicData == null) {
                             return _buildDefaultIndicators();
                           }
-
-                          final responses = snapshot.data!;
-                          final gdpResponse = responses[0];
-                          final fdiResponse = responses[1];
-                          final inflationResponse = responses[2];
-
-                          // Parse World Bank API responses
-                          final gdpData = gdpResponse.succeeded
-                              ? WorldBankApiService.parseWorldBankResponse(
-                                  gdpResponse.bodyText)
-                              : <Map<String, dynamic>>[];
-                          final fdiData =
-                              fdiResponse.succeeded
-                                  ? WorldBankApiService.parseWorldBankResponse(
-                                      fdiResponse.bodyText)
-                                  : <Map<String, dynamic>>[];
-                          final inflationData = inflationResponse.succeeded
-                              ? WorldBankApiService.parseWorldBankResponse(
-                                  inflationResponse.bodyText)
-                              : <Map<String, dynamic>>[];
-
-                          // Get latest values
-                          final latestGDP =
-                              WorldBankApiService.getLatestValue(gdpData);
-                          final latestFDI =
-                              WorldBankApiService.getLatestValue(
-                                  fdiData);
-                          final latestInflation =
-                              WorldBankApiService.getLatestValue(inflationData);
 
                           return Row(
                             children: [
@@ -242,7 +263,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 child: _buildEconomicCard(
                                   'GDP (USD \$)',
                                   WorldBankApiService.formatLargeNumber(
-                                      latestGDP),
+                                      economicData.latestGDP),
                                 ),
                               ),
                               SizedBox(width: 10.0),
@@ -250,7 +271,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 child: _buildEconomicCard(
                                   'FDI (USD \$)',
                                   WorldBankApiService.formatLargeNumber(
-                                      latestFDI),
+                                      economicData.latestFDI),
                                 ),
                               ),
                               SizedBox(width: 10.0),
@@ -258,7 +279,7 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 child: _buildEconomicCard(
                                   'Inflation Rate',
                                   WorldBankApiService.formatPercentage(
-                                      latestInflation),
+                                      economicData!.latestInflation),
                                 ),
                               ),
                             ],
@@ -307,32 +328,21 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                 32.0, // Full width minus padding
                             height:
                                 200.0, // Increased height for better visibility
-                            child: FutureBuilder<List<ApiCallResponse>>(
+                            child: FutureBuilder<ChartData>(
                               key: _refreshKey,
-                              future: Future.wait([
-                                WorldBankApiService.getAfricanCountriesData(
-                                  indicator: 'NY.GDP.MKTP.CD', // GDP indicator
-                                  startYear: '2020',
-                                  endYear: '2024',
-                                ).then((response) {
-                                  debugPrint(
-                                      'GDP API Response: ${response.jsonBody}');
-                                  return response;
-                                }),
-                                WorldBankApiService.getAfricanCountriesData(
-                                  indicator:
-                                      'BX.KLT.DINV.CD.WD', // FDI indicator
-                                  startYear: '2020',
-                                  endYear: '2024',
-                                ).then((response) {
-                                  debugPrint(
-                                      'FDI API Response: ${response.jsonBody}');
-                                  return response;
-                                }),
-                              ]),
+                              future: _model.getChartData(forceRefresh: _refreshKey != UniqueKey()),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
+                                // Check if we have cached data to show immediately
+                                ChartData? chartData;
+                                
+                                if (_model.hasValidChartCache) {
+                                  // Use cached data immediately
+                                  chartData = _model.cachedChartData;
+                                } else if (snapshot.hasData) {
+                                  // Use fresh data if no cache
+                                  chartData = snapshot.data!;
+                                } else if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // Show loading only if no cache available
                                   return Center(
                                     child: CircularProgressIndicator(
                                       color: Color(0xFF39EF8C),
@@ -340,219 +350,109 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                   );
                                 }
 
-                                // Replace your chart data processing section with this normalized approach
-                                List<FlSpot> gdpSpots = [];
-                                List<FlSpot> fdiSpots = [];
-                                
-                                // Store raw values for tooltips
-                                Map<int, double> rawGdpValues = {};
-                                Map<int, double> rawFdiValues = {};
-                                List<String> years = ['2020', '2021', '2022', '2023'];
-
-                                if (snapshot.hasData && snapshot.data != null) {
-                                  // Parse GDP data for African continent
-                                  try {
-                                    final gdpResponse = snapshot.data![0];
-                                    if (gdpResponse.jsonBody != null) {
-                                      final data = gdpResponse.jsonBody;
-                                      if (data is List &&
-                                          data.length > 1 &&
-                                          data[1] is List) {
-                                        final gdpData = data[1] as List;
-
-                                        // Group data by year and sum values across all African countries
-                                        Map<String, double> yearlyGDP = {};
-                                        for (var item in gdpData) {
-                                          if (item != null &&
-                                              item['date'] != null &&
-                                              item['value'] != null) {
-                                            String year =
-                                                item['date'].toString();
-                                            double value =
-                                                (item['value'] as num)
-                                                    .toDouble();
-                                            yearlyGDP[year] =
-                                                (yearlyGDP[year] ?? 0) + value;
-                                          }
-                                        }
-
-                                        debugPrint(
-                                            'Available GDP years: ${yearlyGDP.keys.toList()}');
-
-                                        // Create normalized GDP data points (scale to 0-100 range)
-                                        List<double> gdpValuesForNormalization = [];
-
-                                        // Collect raw values first
-                                        for (String year in years) {
-                                          if (yearlyGDP.containsKey(year)) {
-                                            gdpValuesForNormalization.add(yearlyGDP[year]! /
-                                                1000000000000); // Convert to trillions
-                                          }
-                                        }
-
-                                        // Find min and max for normalization
-                                        if (gdpValuesForNormalization.isNotEmpty) {
-                                          double minGdp = gdpValuesForNormalization
-                                              .reduce((a, b) => a < b ? a : b);
-                                          double maxGdp = gdpValuesForNormalization
-                                              .reduce((a, b) => a > b ? a : b);
-
-                                          // Normalize GDP values to 0-100 scale for better visualization
-                                          for (int i = 0;
-                                              i < years.length;
-                                              i++) {
-                                            String year = years[i];
-                                            if (yearlyGDP.containsKey(year)) {
-                                              double rawValue =
-                                                  yearlyGDP[year]! /
-                                                      1000000000000;
-                                              // Store raw value for tooltip
-                                              rawGdpValues[i] = rawValue;
-                                              
-                                              double normalizedValue =
-                                                  ((rawValue - minGdp) /
-                                                              (maxGdp -
-                                                                  minGdp)) *
-                                                          80 +
-                                                      10; // Scale to 10-90 range
-                                              gdpSpots.add(FlSpot(i.toDouble(),
-                                                  normalizedValue));
-                                              debugPrint(
-                                                  'GDP $year: ${rawValue.toStringAsFixed(2)}T -> Normalized: ${normalizedValue.toStringAsFixed(1)}');
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Error parsing GDP data: $e');
-                                  }
-
-                                  // Parse FDI data for African continent
-                                  try {
-                                    final fdiResponse = snapshot.data![1];
-                                    if (fdiResponse.jsonBody != null) {
-                                      final data = fdiResponse.jsonBody;
-                                      if (data is List &&
-                                          data.length > 1 &&
-                                          data[1] is List) {
-                                        final fdiData = data[1] as List;
-
-                                        // Group data by year and sum values across all African countries
-                                        Map<String, double> yearlyFDI = {};
-                                        for (var item in fdiData) {
-                                          if (item != null &&
-                                              item['date'] != null &&
-                                              item['value'] != null) {
-                                            String year =
-                                                item['date'].toString();
-                                            double value =
-                                                (item['value'] as num)
-                                                    .toDouble();
-                                            yearlyFDI[year] =
-                                                (yearlyFDI[year] ?? 0) + value;
-                                          }
-                                        }
-
-                                        debugPrint(
-                                            'Available FDI years: ${yearlyFDI.keys.toList()}');
-
-                                        // Create normalized FDI data points
-                                        List<double> fdiValuesForNormalization = [];
-
-                                        // Collect raw values first
-                                        for (String year in years) {
-                                          if (yearlyFDI.containsKey(year)) {
-                                            fdiValuesForNormalization.add(yearlyFDI[year]! /
-                                                1000000000); // Convert to billions
-                                          }
-                                        }
-
-                                        // Find min and max for normalization
-                                        if (fdiValuesForNormalization.isNotEmpty) {
-                                          double minFdi = fdiValuesForNormalization
-                                              .reduce((a, b) => a < b ? a : b);
-                                          double maxFdi = fdiValuesForNormalization
-                                              .reduce((a, b) => a > b ? a : b);
-
-                                          // Normalize FDI values to 0-100 scale for better visualization
-                                          for (int i = 0;
-                                              i < years.length;
-                                              i++) {
-                                            String year = years[i];
-                                            if (yearlyFDI.containsKey(year)) {
-                                              double rawValue =
-                                                  yearlyFDI[year]! / 1000000000;
-                                              // Store raw value for tooltip
-                                              rawFdiValues[i] = rawValue;
-                                              
-                                              double normalizedValue =
-                                                  ((rawValue - minFdi) /
-                                                              (maxFdi -
-                                                                  minFdi)) *
-                                                          80 +
-                                                      10; // Scale to 10-90 range
-                                              fdiSpots.add(FlSpot(i.toDouble(),
-                                                  normalizedValue));
-                                              debugPrint(
-                                                  'FDI $year: ${rawValue.toStringAsFixed(1)}B -> Normalized: ${normalizedValue.toStringAsFixed(1)}');
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Error parsing FDI data: $e');
-                                  }
-                                }
-
-                                // Fallback to sample normalized data if API fails
-                                if (gdpSpots.isEmpty) {
-                                  gdpSpots = [
-                                    FlSpot(
-                                        0, 25.0), // 2020 - Normalized low point
-                                    FlSpot(1,
-                                        85.0), // 2021 - Normalized high point
-                                    FlSpot(2, 90.0), // 2022 - Normalized peak
-                                    FlSpot(3, 20.0), // 2023 - Normalized drop
-                                  ];
-                                }
-
-                                if (fdiSpots.isEmpty) {
-                                  fdiSpots = [
-                                    FlSpot(
-                                        0, 15.0), // 2020 - Normalized low point
-                                    FlSpot(1, 95.0), // 2021 - Normalized peak
-                                    FlSpot(
-                                        2, 45.0), // 2022 - Normalized mid point
-                                    FlSpot(
-                                        3, 35.0), // 2023 - Normalized recovery
-                                  ];
-                                }
-
-                                return LineChart(
-                                  LineChartData(
-                                    gridData: FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                      drawHorizontalLine: true,
-                                      horizontalInterval: 20,
-                                      verticalInterval: 1,
-                                      getDrawingHorizontalLine: (value) {
-                                        return FlLine(
-                                          color: Colors.grey
-                                              .withValues(alpha: 0.3),
-                                          strokeWidth: 1.0,
-                                        );
-                                      },
-                                      getDrawingVerticalLine: (value) {
-                                        return FlLine(
-                                          color: Colors.grey
-                                              .withValues(alpha: 0.3),
-                                          strokeWidth: 1.0,
-                                        );
-                                      },
+                                if (chartData == null) {
+                                  return Center(
+                                    child: Text(
+                                      'Failed to load chart data',
+                                      style: TextStyle(color: Colors.white),
                                     ),
+                                  );
+                                }
+                                
+                                // Get chart data (either cached or fresh)
+                                final gdpSpots = chartData.gdpSpots;
+                                final fdiSpots = chartData.fdiSpots;
+                                final rawGdpValues = chartData.rawGdpValues;
+                                final rawFdiValues = chartData.rawFdiValues;
+                                
+                                // Log cache status
+                                debugPrint('Using ${_model.hasValidChartCache ? "cached" : "fresh"} chart data');
+                                
+                                // Start animations only after data is loaded
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (_gdpLineController.status == AnimationStatus.dismissed) {
+                                    _startAnimations();
+                                  }
+                                });
+                                
+                                // If we have no data, show a message
+                                if (gdpSpots.isEmpty || fdiSpots.isEmpty) {
+                                  return Center(
+                                    child: Text(
+                                      'No chart data available',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  );
+                                }
+
+                                return AnimatedBuilder(
+                                  animation: Listenable.merge([_gdpLineAnimation, _fdiLineAnimation]),
+                                  builder: (context, child) {
+                                    // Create animated spots for progressive line drawing
+                                    List<FlSpot> animatedGdpSpots = [];
+                                    List<FlSpot> animatedFdiSpots = [];
+                                    
+                                    // Calculate how many points to show based on animation progress
+                                    int gdpPointsToShow = (_gdpLineAnimation.value * gdpSpots.length).round();
+                                    int fdiPointsToShow = (_fdiLineAnimation.value * fdiSpots.length).round();
+                                    
+                                    // Add points progressively for GDP
+                                    for (int i = 0; i < gdpPointsToShow && i < gdpSpots.length; i++) {
+                                      animatedGdpSpots.add(gdpSpots[i]);
+                                    }
+                                    
+                                    // Add partial point for smooth animation
+                                    if (gdpPointsToShow < gdpSpots.length && _gdpLineAnimation.value > 0) {
+                                      double progress = (_gdpLineAnimation.value * gdpSpots.length) - gdpPointsToShow;
+                                      if (gdpPointsToShow > 0 && gdpPointsToShow < gdpSpots.length) {
+                                        FlSpot currentSpot = gdpSpots[gdpPointsToShow - 1];
+                                        FlSpot nextSpot = gdpSpots[gdpPointsToShow];
+                                        double interpolatedX = currentSpot.x + (nextSpot.x - currentSpot.x) * progress;
+                                        double interpolatedY = currentSpot.y + (nextSpot.y - currentSpot.y) * progress;
+                                        animatedGdpSpots.add(FlSpot(interpolatedX, interpolatedY));
+                                      }
+                                    }
+                                    
+                                    // Add points progressively for FDI
+                                    for (int i = 0; i < fdiPointsToShow && i < fdiSpots.length; i++) {
+                                      animatedFdiSpots.add(fdiSpots[i]);
+                                    }
+                                    
+                                    // Add partial point for smooth animation
+                                    if (fdiPointsToShow < fdiSpots.length && _fdiLineAnimation.value > 0) {
+                                      double progress = (_fdiLineAnimation.value * fdiSpots.length) - fdiPointsToShow;
+                                      if (fdiPointsToShow > 0 && fdiPointsToShow < fdiSpots.length) {
+                                        FlSpot currentSpot = fdiSpots[fdiPointsToShow - 1];
+                                        FlSpot nextSpot = fdiSpots[fdiPointsToShow];
+                                        double interpolatedX = currentSpot.x + (nextSpot.x - currentSpot.x) * progress;
+                                        double interpolatedY = currentSpot.y + (nextSpot.y - currentSpot.y) * progress;
+                                        animatedFdiSpots.add(FlSpot(interpolatedX, interpolatedY));
+                                      }
+                                    }
+                                    
+                                    return LineChart(
+                                      LineChartData(
+                                        gridData: FlGridData(
+                                          show: true,
+                                          drawVerticalLine: true,
+                                          drawHorizontalLine: true,
+                                          horizontalInterval: 20,
+                                          verticalInterval: 1,
+                                          getDrawingHorizontalLine: (value) {
+                                            return FlLine(
+                                              color: Colors.grey
+                                                  .withValues(alpha: 0.3),
+                                              strokeWidth: 1.0,
+                                            );
+                                          },
+                                          getDrawingVerticalLine: (value) {
+                                            return FlLine(
+                                              color: Colors.grey
+                                                  .withValues(alpha: 0.3),
+                                              strokeWidth: 1.0,
+                                            );
+                                          },
+                                        ),
                                     titlesData: FlTitlesData(
                                       show: true,
                                       rightTitles: AxisTitles(
@@ -682,55 +582,83 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                         3, // 4 data points (0-3) for 2020-2023 data
                                     minY: 0,
                                     maxY: 100, // Normalized scale
-                                    lineBarsData: [
-                                      // GDP Line (Green with enhanced styling)
-                                      LineChartBarData(
-                                        spots: gdpSpots,
-                                        isCurved: true,
-                                        curveSmoothness: 0.3,
-                                        color: Color(0xFF39EF8C),
-                                        barWidth: 3,
-                                        isStrokeCapRound: true,
-                                        dotData: FlDotData(
-                                          show: false,
-                                        ),
-                                        belowBarData: BarAreaData(
-                                          show: true,
-                                          color: Color(0xFF39EF8C)
-                                              .withValues(alpha: 0.1),
-                                        ),
-                                        shadow: Shadow(
-                                          color: Color(0xFF39EF8C)
-                                              .withValues(alpha: 0.3),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 4,
-                                        ),
+                                        lineBarsData: [
+                                          // GDP Line (Green with enhanced styling and animation)
+                                          if (animatedGdpSpots.isNotEmpty)
+                                            LineChartBarData(
+                                              spots: animatedGdpSpots,
+                                              isCurved: true,
+                                              curveSmoothness: 0.3,
+                                              color: Color(0xFF39EF8C).withValues(
+                                                alpha: _gdpLineAnimation.value,
+                                              ),
+                                              barWidth: 3,
+                                              isStrokeCapRound: true,
+                                              dotData: FlDotData(
+                                                show: _gdpLineAnimation.value > 0.8,
+                                                getDotPainter: (spot, percent, barData, index) {
+                                                  return FlDotCirclePainter(
+                                                    radius: 4,
+                                                    color: Color(0xFF39EF8C),
+                                                    strokeWidth: 2,
+                                                    strokeColor: Colors.white,
+                                                  );
+                                                },
+                                              ),
+                                              belowBarData: BarAreaData(
+                                                show: true,
+                                                color: Color(0xFF39EF8C).withValues(
+                                                  alpha: 0.1 * _gdpLineAnimation.value,
+                                                ),
+                                              ),
+                                              shadow: Shadow(
+                                                color: Color(0xFF39EF8C).withValues(
+                                                  alpha: 0.3 * _gdpLineAnimation.value,
+                                                ),
+                                                offset: Offset(0, 2),
+                                                blurRadius: 4,
+                                              ),
+                                            ),
+                                          // FDI Line (Red with enhanced styling and animation)
+                                          if (animatedFdiSpots.isNotEmpty)
+                                            LineChartBarData(
+                                              spots: animatedFdiSpots,
+                                              isCurved: true,
+                                              curveSmoothness: 0.3,
+                                              color: Color(0xFFFF6B6B).withValues(
+                                                alpha: _fdiLineAnimation.value,
+                                              ),
+                                              barWidth: 3,
+                                              isStrokeCapRound: true,
+                                              dotData: FlDotData(
+                                                show: _fdiLineAnimation.value > 0.8,
+                                                getDotPainter: (spot, percent, barData, index) {
+                                                  return FlDotCirclePainter(
+                                                    radius: 4,
+                                                    color: Color(0xFFFF6B6B),
+                                                    strokeWidth: 2,
+                                                    strokeColor: Colors.white,
+                                                  );
+                                                },
+                                              ),
+                                              belowBarData: BarAreaData(
+                                                show: true,
+                                                color: Color(0xFFFF6B6B).withValues(
+                                                  alpha: 0.1 * _fdiLineAnimation.value,
+                                                ),
+                                              ),
+                                              shadow: Shadow(
+                                                color: Color(0xFFFF6B6B).withValues(
+                                                  alpha: 0.3 * _fdiLineAnimation.value,
+                                                ),
+                                                offset: Offset(0, 2),
+                                                blurRadius: 4,
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                      // FDI Line (Red with enhanced styling)
-                                      LineChartBarData(
-                                        spots: fdiSpots,
-                                        isCurved: true,
-                                        curveSmoothness: 0.3,
-                                        color: Color(0xFFFF6B6B),
-                                        barWidth: 3,
-                                        isStrokeCapRound: true,
-                                        dotData: FlDotData(
-                                          show: false,
-                                        ),
-                                        belowBarData: BarAreaData(
-                                          show: true,
-                                          color: Color(0xFFFF6B6B)
-                                              .withValues(alpha: 0.1),
-                                        ),
-                                        shadow: Shadow(
-                                          color: Color(0xFFFF6B6B)
-                                              .withValues(alpha: 0.3),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 4,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
                               },
                             ),

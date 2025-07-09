@@ -34,7 +34,7 @@ final RouteObserver<ModalRoute> routeObserver = RouteObserver<PageRoute>();
 class GroqConfig {
   // Replace this with your actual Groq API key
   // You can get one from: https://console.groq.com/keys
-  static const String apiKey = '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';
+  static const String apiKey = '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';
   
   // Available Llama models on Groq
   static const String llamaModel = 'llama-3.1-8b-instant'; // Fast model

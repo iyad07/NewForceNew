@@ -115,6 +115,41 @@ class _EventDetailsWidgetState extends State<EventDetailsWidget>
     }
   }
 
+  String _getEventImage() {
+    final title = widget.eventTitle.toLowerCase();
+    
+    // Check for specific keywords in the title first
+    if (title.contains('energy') || title.contains('power') || title.contains('renewable')) {
+      return 'assets/images/energy_summit.jpeg';
+    } else if (title.contains('investment') || title.contains('finance') || title.contains('capital')) {
+      return 'assets/images/investment_forum.jpeg';
+    } else if (title.contains('trade') || title.contains('export') || title.contains('market')) {
+      return 'assets/images/trade_expo.jpeg';
+    } else if (title.contains('agriculture') || title.contains('farming') || title.contains('natural resources')) {
+      return 'assets/images/naturalResources.jpg';
+    } else if (title.contains('nana') || title.contains('bediako') || title.contains('new force') || title.contains('pillars')) {
+      return 'assets/images/Nana-Bediako.jpg';
+    } else if (title.contains('cheddar') || title.contains('interview') || title.contains('media')) {
+      return 'assets/images/cheddar.jpg';
+    }
+    
+    // Fall back to category-based selection
+    switch (widget.eventCategory.toLowerCase()) {
+      case 'agriculture':
+        return 'assets/images/naturalResources.jpg';
+      case 'energy':
+        return 'assets/images/energy_summit.jpeg';
+      case 'investment':
+        return 'assets/images/investment_forum.jpeg';
+      case 'market update':
+        return 'assets/images/trade_expo.jpeg';
+      case 'business':
+        return 'assets/images/investment_forum.jpeg';
+      default:
+        return 'assets/images/Nana-Bediako.jpg';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -166,6 +201,66 @@ class _EventDetailsWidgetState extends State<EventDetailsWidget>
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Event Image
+                  Container(
+                    width: double.infinity,
+                    height: 200.0,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: FlutterFlowTheme.of(context).alternate.withOpacity(0.2),
+                          blurRadius: 8.0,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Image.asset(
+                        _getEventImage(),
+                        width: double.infinity,
+                        height: 200.0,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: double.infinity,
+                            height: 200.0,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context).alternate.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(16.0),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.event,
+                                    size: 48.0,
+                                    color: FlutterFlowTheme.of(context).secondaryText,
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Text(
+                                    'Event Image',
+                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                      fontFamily: 'SF Pro Display',
+                                      color: FlutterFlowTheme.of(context).secondaryText,
+                                      fontSize: 14.0,
+                                      letterSpacing: 0.0,
+                                      useGoogleFonts: false,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16.0),
+                  
                   // Event Header Card
                   Container(
                     width: double.infinity,

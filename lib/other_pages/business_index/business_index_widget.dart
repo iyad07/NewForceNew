@@ -5,6 +5,8 @@ import 'package:new_force_new_hope/backend/supabase/database/tables/country_prof
 import 'package:new_force_new_hope/backend/supabase/database/tables/investment_news.dart';
 import 'package:new_force_new_hope/backend/supabase/supabase.dart';
 
+import '/backend/supabase/database/tables/country_top_stocks.dart';
+
 import '/backend/api_requests/world_bank_api.dart';
 import '/event_details/event_details_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
@@ -26,13 +28,17 @@ class BusinessIndexWidget extends StatefulWidget {
 }
 
 class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late BusinessIndexModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Tab state management - removed sectors, showing general continental data
   late TabController _regionalTabController;
+  
+  // Keep alive to prevent rebuilds when navigating back
+  @override
+  bool get wantKeepAlive => true;
 
   // Regional mapping for African countries
   final Map<String, String> _countryToRegion = {
@@ -103,9 +109,9 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
   final animationsMap = <String, AnimationInfo>{};
   late AnimationController _tabAnimationController;
-  late AnimationController _cardAnimationController;
+  // Removed _cardAnimationController to fix random reload issues
   late Animation<double> _tabSlideAnimation;
-  late Animation<double> _cardScaleAnimation;
+  // Removed _cardScaleAnimation to fix random reload issues
 
   @override
   void initState() {
@@ -120,10 +126,11 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _cardAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
+    // Removed _cardAnimationController initialization to fix random reload issues
+    // _cardAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200);
+      vsync: this
+    ;
 
     _tabSlideAnimation = Tween<double>(
       begin: 0.0,
@@ -133,17 +140,11 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
       curve: Curves.easeInOut,
     ));
 
-    _cardScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _cardAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    // Removed _cardScaleAnimation to fix random reload issues
 
     animationsMap.addAll({
       'containerOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -162,7 +163,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'tabContainerAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -181,7 +182,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'economicCardAnimation1': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -200,7 +201,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'economicCardAnimation2': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -219,7 +220,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'economicCardAnimation3': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -238,7 +239,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'chartContainerAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -257,7 +258,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
         ],
       ),
       'eventCardAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
+        trigger: AnimationTrigger.onActionTrigger,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
@@ -277,22 +278,31 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
       ),
     });
 
-    setupAnimations(
-      animationsMap.values.where((anim) =>
-          anim.trigger == AnimationTrigger.onActionTrigger ||
-          !anim.applyInitialState),
-      this,
-    );
+    // Defer all animations to prevent initial rebuild
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setupAnimations(
+          animationsMap.values.where((anim) =>
+              anim.trigger == AnimationTrigger.onActionTrigger ||
+              !anim.applyInitialState),
+          this,
+        );
+      }
+    });
 
-    // Start tab animation
-    _tabAnimationController.forward();
+    // Defer tab animation to prevent initial rebuild
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _tabAnimationController.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
     _regionalTabController.dispose();
     _tabAnimationController.dispose();
-    _cardAnimationController.dispose();
+    // Removed _cardAnimationController.dispose(); to fix random reload issues
     _model.dispose();
     super.dispose();
   }
@@ -331,6 +341,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(8.0, 16.0, 8.0, 8.0),
             child: FutureBuilder<List<InvestmentNewsRow>>(
+              key: const ValueKey('investment_opportunities_future'), // Prevent unnecessary rebuilds
               future: InvestmentNewsTable().queryRows(
                 queryFn: (q) => q
                     .not('name', 'ilike', '%politics%')
@@ -703,8 +714,9 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      //onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         extendBodyBehindAppBar: true,
         key: scaffoldKey,
@@ -771,7 +783,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                 // Continental Overview Header
-                Container(
+                /*Container(
                   width: double.infinity,
                   padding: const EdgeInsetsDirectional.fromSTEB(
                       16.0, 16.0, 16.0, 16.0),
@@ -782,11 +794,11 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [],
                   ),
-                ).animateOnPageLoad(animationsMap['tabContainerAnimation']!),
+                ).animateOnPageLoad(animationsMap['tabContainerAnimation']!),*/
 
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(
-                      16.0, 0.0, 16.0, 0.0),
+                      16.0, 16.0, 16.0, 0.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -862,6 +874,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               16.0, 16.0, 16.0, 16.0),
                           child: FutureBuilder<ApiCallResponse>(
+                            key: const ValueKey('gdp_chart_future'), // Prevent unnecessary rebuilds
                             future: WorldBankApiService.getGDPData(
                               countryCode: 'ZA',
                               startYear: '2015',
@@ -933,6 +946,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                       const SizedBox(height: 16.0),
 
                       FutureBuilder<List<AfricanMarketRow>>(
+                        key: const ValueKey('african_market_future'), // Prevent unnecessary rebuilds
                         future: AfricanMarketTable().queryRows(
                           queryFn: (q) =>
                               q.order('created_at', ascending: false).limit(3),
@@ -1233,12 +1247,9 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
 
   Widget _buildEventCard(
       String title, String location, String category, Color categoryColor) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         HapticFeedback.lightImpact();
-        _cardAnimationController.forward().then((_) {
-          _cardAnimationController.reverse();
-        });
         
         // Navigate to event details page
         Navigator.push(
@@ -1253,6 +1264,9 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
           ),
         );
       },
+      borderRadius: BorderRadius.circular(16.0),
+      splashColor: categoryColor.withOpacity(0.1),
+      highlightColor: categoryColor.withOpacity(0.05),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
@@ -1560,8 +1574,12 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
   // Build stocks list for a specific region
   Widget _buildRegionalStocksList(String region) {
     return FutureBuilder<List<CountryTopStocksRow>>(
-      future: CountryTopStocksTable().queryRows(
-        queryFn: (q) => q.order('stockRate', ascending: false),
+      key: ValueKey('stocks_future_$region'), // Prevent unnecessary rebuilds
+      future: _model.countryTopStocks(
+        uniqueQueryKey: 'stocks_$region',
+        requestFn: () => CountryTopStocksTable().queryRows(
+          queryFn: (q) => q.order('stockRate', ascending: false),
+        ),
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

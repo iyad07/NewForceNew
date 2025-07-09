@@ -489,12 +489,15 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     
     // Debug print to check database values
     if (kDebugMode) {
-      print('=== COUNTRY PROFILE DEBUG ===');
-      print('Country: $countryName');
-      print('GDP: $gdp');
-      print('GDP Rate: $gdpRate');
-      print('Using new data: ${_countryProfileData != null}');
-      print('============================');
+      // Debug output for development
+      if (kDebugMode) {
+        print('=== COUNTRY PROFILE DEBUG ===');
+        print('Country: $countryName');
+        print('GDP: ${_formatGDP(gdp)}');
+        print('GDP Rate: ${_formatGDPGrowthRate(gdpRate)} growth from 2023');
+        //print('Using new data: ${widget.newData}');
+        print('============================');
+      }
     }
     
     return Column(
@@ -514,19 +517,9 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
         Row(
           mainAxisSize: MainAxisSize.max,
           children: [
-            Text(
-              '\$',
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Tiro Bangla',
-                    fontSize: 20.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(width: 6.0),
             Expanded(
               child: Text(
-                _formatCurrency(gdp),
+                _formatGDP(gdp),
                 style: FlutterFlowTheme.of(context).displaySmall.override(
                       fontFamily: 'SFPro',
                       fontSize: 20.0,
@@ -554,7 +547,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: gdpRate + "B",
+                      text: _formatGDPGrowthRate(gdpRate),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             fontFamily: 'Tiro Bangla',
                             color: FlutterFlowTheme.of(context).primary,
@@ -562,7 +555,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
                             fontWeight: FontWeight.bold,
                           ),
                     ),
-                    const TextSpan(text: ' from 2023'),
+                    const TextSpan(text: ' growth from 2023'),
                   ],
                   style: FlutterFlowTheme.of(context).labelMedium.override(
                         fontFamily: 'SFPro',
@@ -586,6 +579,11 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
     final population = _countryProfileData?.population ?? widget.countrydetails?.population ?? '0';
     final currency = _countryProfileData?.currency ?? widget.countrydetails?.currency ?? 'N/A';
     
+    // Debug population formatting in development mode
+    if (kDebugMode) {
+      print('Population: ${_formatPopulationWithLabel(population)}');
+    }
+    
     return Column(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -595,7 +593,7 @@ class _CountryProfileWidgetState extends State<CountryProfileWidget>
           child: _buildFlagImage(),
         ),
         const SizedBox(height: 5.0),
-        _buildInfoRow('', _formatPopulation(population + " Million")),
+        _buildInfoRow('', _formatPopulationWithLabel(population)),
         _buildInfoRow('', currency),
       ],
     );
@@ -1035,7 +1033,61 @@ void _navigateToArticleDetails(dynamic article) {
     );  
   }
 
-  // Helper method to format currency values
+  // Helper method to format GDP values with currency symbol and units
+  String _formatGDP(String value) {
+    if (value.isEmpty || value == '0') return '\$0';
+    
+    // Check if value already contains units (Billion, Million, etc.)
+    if (value.toLowerCase().contains('billion') || 
+        value.toLowerCase().contains('million') || 
+        value.toLowerCase().contains('trillion')) {
+      // If it already has units, just add currency symbol if missing
+      if (value.startsWith('\$')) {
+        return value;
+      } else {
+        return '\$' + value.toLowerCase();
+      }
+    }
+    
+    // Remove any existing formatting for numeric processing
+    String cleanValue = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    try {
+      double numValue = double.parse(cleanValue);
+      
+      // Format based on magnitude with currency symbol
+      if (numValue >= 1000000000000) {
+        return '\$${(numValue / 1000000000000).toStringAsFixed(1)} trillion';
+      } else if (numValue >= 1000000000) {
+        return '\$${(numValue / 1000000000).toStringAsFixed(1)} billion';
+      } else if (numValue >= 1000000) {
+        return '\$${(numValue / 1000000).toStringAsFixed(1)} million';
+      } else if (numValue >= 1000) {
+        return '\$${(numValue / 1000).toStringAsFixed(1)}K';
+      } else {
+        return '\$${numValue.toStringAsFixed(0)}';
+      }
+    } catch (e) {
+      return '\$' + value; // Return original with currency symbol if parsing fails
+    }
+  }
+
+  // Helper method to format GDP growth rate
+  String _formatGDPGrowthRate(String value) {
+    if (value.isEmpty || value == '0') return '0%';
+    
+    // Remove any existing formatting except decimal points
+    String cleanValue = value.replaceAll(RegExp(r'[^0-9.-]'), '');
+    
+    try {
+      double numValue = double.parse(cleanValue);
+      return '${numValue.toStringAsFixed(1)}%';
+    } catch (e) {
+      return value.contains('%') ? value : value + '%';
+    }
+  }
+
+  // Helper method to format currency values (keeping original for other uses)
   String _formatCurrency(String value) {
     if (value.isEmpty || value == '0') return '0';
     
@@ -1062,7 +1114,45 @@ void _navigateToArticleDetails(dynamic article) {
     }
   }
 
-  // Helper method to format population values
+  // Helper method to format population values with label
+  String _formatPopulationWithLabel(String value) {
+    if (value.isEmpty || value == '0') return 'Population: 0';
+    
+    // Check if value already contains units or text
+    if (value.toLowerCase().contains('million') || 
+        value.toLowerCase().contains('billion') || 
+        value.toLowerCase().contains('thousand') ||
+        value.toLowerCase().contains('population')) {
+      // If it already has formatting, ensure it starts with "Population:"
+      if (value.toLowerCase().startsWith('population:')) {
+        return value;
+      } else {
+        return value.toLowerCase();
+      }
+    }
+    
+    // Remove any existing formatting for numeric processing
+    String cleanValue = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    try {
+      double numValue = double.parse(cleanValue);
+      
+      // Format based on magnitude with Population label
+      if (numValue >= 1000000000) {
+        return 'Population: ${(numValue / 1000000000).toStringAsFixed(1)} billion';
+      } else if (numValue >= 1000000) {
+        return 'Population: ${(numValue / 1000000).toStringAsFixed(1)} million';
+      } else if (numValue >= 1000) {
+        return 'Population: ${(numValue / 1000).toStringAsFixed(1)}K';
+      } else {
+        return 'Population: ${numValue.toStringAsFixed(0)}';
+      }
+    } catch (e) {
+      return 'Population: ' + value; // Return original with label if parsing fails
+    }
+  }
+
+  // Helper method to format population values (keeping original for other uses)
   String _formatPopulation(String value) {
     if (value.isEmpty || value == '0') return '0';
     

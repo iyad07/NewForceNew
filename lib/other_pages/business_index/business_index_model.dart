@@ -39,6 +39,21 @@ class BusinessIndexModel extends FlutterFlowModel<BusinessIndexWidget> {
   void clearAfricanMarketCacheKey(String? uniqueKey) =>
       _africanMarketManager.clearRequest(uniqueKey);
 
+  final _countryTopStocksManager = FutureRequestManager<List<CountryTopStocksRow>>();
+  Future<List<CountryTopStocksRow>> countryTopStocks({
+    String? uniqueQueryKey,
+    bool? overrideCache,
+    required Future<List<CountryTopStocksRow>> Function() requestFn,
+  }) =>
+      _countryTopStocksManager.performRequest(
+        uniqueQueryKey: uniqueQueryKey,
+        overrideCache: overrideCache,
+        requestFn: requestFn,
+      );
+  void clearCountryTopStocksCache() => _countryTopStocksManager.clear();
+  void clearCountryTopStocksCacheKey(String? uniqueKey) =>
+      _countryTopStocksManager.clearRequest(uniqueKey);
+
   @override
   void initState(BuildContext context) {}
 
@@ -46,5 +61,6 @@ class BusinessIndexModel extends FlutterFlowModel<BusinessIndexWidget> {
   void dispose() {
     _economicIndicatorsManager.clear();
     _africanMarketManager.clear();
+    _countryTopStocksManager.clear();
   }
 }

@@ -14,6 +14,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/flutter_flow_youtube_player.dart';
 import '/flutter_flow/utils/loading_indicator.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
+import '/home_page/home_article_details/home_article_details_widget.dart';
 import '/main.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'dart:async';
@@ -672,7 +673,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                         0.0, 4.0, 0.0, 0.0),
                     child: Container(
                       width: double.infinity,
-                      height: 350.0,
+                      height: 160.0,
                       decoration: BoxDecoration(
                         color: FlutterFlowTheme.of(context)
                             .primaryBackground,
@@ -689,28 +690,45 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                             Padding(
                               padding: const EdgeInsetsDirectional
                                   .fromSTEB(16.0, 8.0, 0.0, 8.0),
-                              child: Container(
-                                width: 200.0,
-                                height: 100.0,
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryBackground,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      blurRadius: 4.0,
-                                      color: Color(0x430F1113),
-                                      offset: Offset(
-                                        0.0,
-                                        1.0,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomeArticleDetailsWidget(
+                                        title: 'The New Force Movement pledges to change the country\'s fortunes with Save Ghana Fund',
+                                        articleImage: 'assets/images/WhatsApp-Image-2024-05-06-at-17.57.29-768x552.jpeg',
+                                        description: 'The New Force Movement has announced a comprehensive plan to transform Ghana\'s economic landscape through the establishment of the Save Ghana Fund.',
+                                        content: 'The New Force Movement has unveiled an ambitious initiative to revitalize Ghana\'s economy through the creation of the Save Ghana Fund. This comprehensive economic recovery plan aims to address the country\'s financial challenges while promoting sustainable development and growth.\n\nThe Save Ghana Fund represents a strategic approach to economic transformation, focusing on key sectors that will drive long-term prosperity. The movement believes that through careful planning and implementation, Ghana can overcome its current economic difficulties and emerge as a stronger, more resilient nation.\n\nKey components of the Save Ghana Fund include investments in infrastructure, education, healthcare, and technology. The fund will also support small and medium enterprises, which are crucial for job creation and economic diversification.\n\nThe New Force Movement emphasizes that this initiative is not just about immediate relief but about building a foundation for sustained economic growth that will benefit all Ghanaians.',
+                                        author: 'New Force Movement',
+                                        publishDate: DateTime(2024, 5, 6),
+                                        category: 'Economic Policy',
                                       ),
-                                    )
-                                  ],
-                                  borderRadius:
-                                      BorderRadius.circular(12.0),
-                                ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 320.0,
+                                  height: 160.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        blurRadius: 4.0,
+                                        color: Color(0x430F1113),
+                                        offset: Offset(
+                                          0.0,
+                                          1.0,
+                                        ),
+                                      )
+                                    ],
+                                    borderRadius:
+                                        BorderRadius.circular(12.0),
+                                  ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Column(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -725,27 +743,46 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                   8.0),
                                           child: Image.asset(
                                             'assets/images/WhatsApp-Image-2024-05-06-at-17.57.29-768x552.jpeg',
-                                            width: double.infinity,
-                                            height: 220.0,
+                                            width: 100.0,
+                                            height: 100.0,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
                                       ),
-                                      Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional
-                                                .fromSTEB(
-                                                0.0, 16.0, 0.0, 0.0),
-                                        child: Text(
-                                          'The New Force Movement pledges to change the country\'s fortunes with Save Ghana Fund',
-                                          style: FlutterFlowTheme.of(
-                                                  context)
-                                              .labelSmall
-                                              .override(
-                                                fontFamily: 'SFPro',
-                                                letterSpacing: 0.0,
-                                                useGoogleFonts: false,
-                                              ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'The New Force Movement pledges to change the country\'s fortunes with Save Ghana Fund',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .labelSmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 20.0),
+                                            Text(
+                                              'May 6, 2024',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodySmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    color: FlutterFlowTheme.of(context).secondaryText,
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       Row(
@@ -787,32 +824,49 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-                            ),
+                            ),),
                             Padding(
                               padding: const EdgeInsetsDirectional
                                   .fromSTEB(8.0, 8.0, 0.0, 8.0),
-                              child: Container(
-                                width: 200.0,
-                                height: 100.0,
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryBackground,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      blurRadius: 4.0,
-                                      color: Color(0x430F1113),
-                                      offset: Offset(
-                                        0.0,
-                                        1.0,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomeArticleDetailsWidget(
+                                        title: 'New Africa Foundation Convention cancelled after tension at Independence Square',
+                                        articleImage: 'assets/images/GDRkcASX0AAU8ws.jpeg',
+                                        description: 'The highly anticipated New Africa Foundation Convention has been cancelled following unexpected tensions that arose at Independence Square.',
+                                        content: 'The New Africa Foundation Convention, which was scheduled to be a landmark event bringing together leaders, activists, and citizens from across the continent, has been cancelled due to rising tensions at Independence Square.\n\nThe convention was intended to address critical issues facing Africa, including economic development, governance, and social justice. However, organizers made the difficult decision to cancel the event after security concerns arose from demonstrations at the venue.\n\nIndependence Square, a historically significant location for political gatherings in Ghana, became the center of controversy as various groups expressed conflicting views about the convention\'s agenda and participants.\n\nThe New Africa Foundation expressed disappointment at the cancellation but emphasized that the safety of all participants was their primary concern. They have indicated that they are exploring alternative venues and dates for the convention.\n\nThis incident highlights the complex political landscape in Ghana and the challenges faced when organizing large-scale political and social events.',
+                                        author: 'New Africa Foundation',
+                                        publishDate: DateTime(2023, 12, 15),
+                                        category: 'Political Events',
                                       ),
-                                    )
-                                  ],
-                                  borderRadius:
-                                      BorderRadius.circular(12.0),
-                                ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 320.0,
+                                  height: 160.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        blurRadius: 4.0,
+                                        color: Color(0x430F1113),
+                                        offset: Offset(
+                                          0.0,
+                                          1.0,
+                                        ),
+                                      )
+                                    ],
+                                    borderRadius:
+                                        BorderRadius.circular(12.0),
+                                  ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Column(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -823,26 +877,45 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                 8.0),
                                         child: Image.asset(
                                           'assets/images/GDRkcASX0AAU8ws.jpeg',
-                                          width: double.infinity,
-                                          height: 220.0,
+                                          width: 100.0,
+                                          height: 100.0,
                                           fit: BoxFit.cover,
                                         ),
                                       ),
-                                      Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional
-                                                .fromSTEB(
-                                                0.0, 16.0, 0.0, 0.0),
-                                        child: Text(
-                                          'New Africa Foundation Convention cancelled after tension at Independence Square',
-                                          style: FlutterFlowTheme.of(
-                                                  context)
-                                              .labelSmall
-                                              .override(
-                                                fontFamily: 'SFPro',
-                                                letterSpacing: 0.0,
-                                                useGoogleFonts: false,
-                                              ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'New Africa Foundation Convention cancelled after tension at Independence Square',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .labelSmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 20.0),
+                                            Text(
+                                              'Dec 15, 2023',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodySmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    color: FlutterFlowTheme.of(context).secondaryText,
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       Row(
@@ -894,32 +967,49 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-                            ),
+                            ),),
                             Padding(
                               padding: const EdgeInsetsDirectional
                                   .fromSTEB(8.0, 8.0, 16.0, 8.0),
-                              child: Container(
-                                width: 200.0,
-                                height: 100.0,
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryBackground,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      blurRadius: 4.0,
-                                      color: Color(0x430F1113),
-                                      offset: Offset(
-                                        0.0,
-                                        1.0,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomeArticleDetailsWidget(
+                                        title: 'Launch of 12 pillars for economic freedom by the New Force: Quotable quotes',
+                                        articleImage: 'assets/images/cheddar.jpg',
+                                        description: 'The New Force has officially launched their comprehensive 12 pillars for economic freedom, outlining a transformative vision for Ghana\'s economic future.',
+                                        content: 'The New Force has unveiled their ambitious 12 pillars for economic freedom, a comprehensive framework designed to transform Ghana\'s economic landscape and create sustainable prosperity for all citizens.\n\nThese 12 pillars represent a holistic approach to economic development, addressing key areas such as fiscal responsibility, monetary policy, trade liberalization, and institutional reforms. Each pillar is carefully designed to work in synergy with the others, creating a robust foundation for long-term economic growth.\n\nKey highlights from the launch include:\n\n1. Fiscal Discipline and Debt Management\n2. Monetary Policy Reform\n3. Trade and Investment Liberalization\n4. Infrastructure Development\n5. Education and Skills Development\n6. Healthcare System Strengthening\n7. Agricultural Modernization\n8. Digital Economy Advancement\n9. Financial Sector Development\n10. Environmental Sustainability\n11. Governance and Institutional Reforms\n12. Social Protection and Inclusion\n\nThe New Force leadership emphasized that these pillars are not just theoretical concepts but practical solutions that can be implemented to address Ghana\'s current economic challenges while building a foundation for future prosperity.\n\nThe launch event featured notable quotes from key leaders, highlighting their commitment to economic transformation and their vision for a prosperous Ghana.',
+                                        author: 'New Force Leadership',
+                                        publishDate: DateTime(2024, 3, 20),
+                                        category: 'Economic Policy',
                                       ),
-                                    )
-                                  ],
-                                  borderRadius:
-                                      BorderRadius.circular(12.0),
-                                ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 320.0,
+                                  height: 160.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        blurRadius: 4.0,
+                                        color: Color(0x430F1113),
+                                        offset: Offset(
+                                          0.0,
+                                          1.0,
+                                        ),
+                                      )
+                                    ],
+                                    borderRadius:
+                                        BorderRadius.circular(12.0),
+                                  ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Column(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -930,26 +1020,45 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                 8.0),
                                         child: Image.asset(
                                           'assets/images/cheddar.jpg',
-                                          width: double.infinity,
-                                          height: 220.0,
+                                          width: 100.0,
+                                          height: 100.0,
                                           fit: BoxFit.cover,
                                         ),
                                       ),
-                                      Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional
-                                                .fromSTEB(
-                                                0.0, 16.0, 0.0, 0.0),
-                                        child: Text(
-                                          'Launch of 12 pillars for economic freedom by the New Force: Quotable quotes',
-                                          style: FlutterFlowTheme.of(
-                                                  context)
-                                              .labelSmall
-                                              .override(
-                                                fontFamily: 'SFPro',
-                                                letterSpacing: 0.0,
-                                                useGoogleFonts: false,
-                                              ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Launch of 12 pillars for economic freedom by the New Force: Quotable quotes',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .labelSmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 20.0),
+                                            Text(
+                                              'Mar 20, 2024',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodySmall
+                                                  .override(
+                                                    fontFamily: 'SFPro',
+                                                    color: FlutterFlowTheme.of(context).secondaryText,
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    useGoogleFonts: false,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       Row(
@@ -1001,7 +1110,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-                            ),
+                            ),),
                           ],
                         ),
                       ),

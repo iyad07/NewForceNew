@@ -134,8 +134,8 @@ Widget _buildResourceCard(Map<String, dynamic> resourceData) {
   return _buildGlassmorphicContainer(
     color: resourceData['color'],
     child: Container(
-      height: 280.0,
-      padding: const EdgeInsets.all(8.0),
+      height: 200.0,
+      padding: const EdgeInsets.all(6.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -213,7 +213,7 @@ Widget _buildCountryCard(Map<String, dynamic> country, Map<String, dynamic> reso
     },
     child: Container(
       margin: const EdgeInsets.only(bottom: 4.0),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
         color: Colors.white.withOpacity(0.12),
@@ -223,10 +223,13 @@ Widget _buildCountryCard(Map<String, dynamic> country, Map<String, dynamic> reso
         ),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Flag and country name column
           Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Country flag
               Text(
@@ -246,7 +249,7 @@ Widget _buildCountryCard(Map<String, dynamic> country, Map<String, dynamic> reso
                       fontWeight: FontWeight.w600,
                     ),
                 overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
               ),
             ],
           ),
@@ -1222,40 +1225,6 @@ Widget build(BuildContext context) {
           ),
           child: Column(
             children: [
-              // Header Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Africa\'s Natural Wealth',
-                      style: FlutterFlowTheme.of(context)
-                          .headlineLarge
-                          .override(
-                            fontFamily: 'SF Pro Display',
-                            useGoogleFonts: false,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      'Explore the continent\'s rich mineral deposits and agricultural exports with detailed export data and market insights.',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'SF Pro Display',
-                            useGoogleFonts: false,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                  ],
-                ),
-              ).animateOnPageLoad(
-                  animationsMap['containerOnPageLoadAnimation']!),
-
               // Content - Sectioned Layout
               Expanded(
                 child: SingleChildScrollView(
@@ -1263,21 +1232,26 @@ Widget build(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Minerals Section
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                          'MINERALS',
-                          style: FlutterFlowTheme.of(context)
-                              .headlineSmall
-                              .override(
-                                fontFamily: 'SF Pro Display',
-                                useGoogleFonts: false,
-                                color: FlutterFlowTheme.of(context).primary,
-                                fontSize: 24.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Text(
+                              'MINERALS',
+                              style: FlutterFlowTheme.of(context)
+                                  .headlineSmall
+                                  .override(
+                                    fontFamily: 'SF Pro Display',
+                                    useGoogleFonts: false,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 24.0,
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       // Minerals Carousel
@@ -1292,7 +1266,7 @@ Widget build(BuildContext context) {
                               return Container(
                                 key: ValueKey('mineral_${index}_${mineralsData[index]['name']}'),
                                 margin: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
+                                    horizontal: 4.0),
                                 child: _buildResourceCard(mineralsData[index]),
                               );
                             },
@@ -1301,21 +1275,26 @@ Widget build(BuildContext context) {
                       ),
 
                       // Cash Crops Section
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                          'CASH CROPS',
-                          style: FlutterFlowTheme.of(context)
-                              .headlineSmall
-                              .override(
-                                fontFamily: 'SF Pro Display',
-                                useGoogleFonts: false,
-                                color: FlutterFlowTheme.of(context).primary,
-                                fontSize: 24.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Text(
+                              'CASH CROPS',
+                              style: FlutterFlowTheme.of(context)
+                                  .headlineSmall
+                                  .override(
+                                    fontFamily: 'SF Pro Display',
+                                    useGoogleFonts: false,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 24.0,
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       // Cash Crops Carousel
@@ -1330,7 +1309,7 @@ Widget build(BuildContext context) {
                               return Container(
                                 key: ValueKey('cashcrop_${index}_${cashCropsData[index]['name']}'),
                                 margin: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
+                                    horizontal: 4.0),
                                 child: _buildResourceCard(cashCropsData[index]),
                               );
                             },
