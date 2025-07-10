@@ -1045,7 +1045,7 @@ class _BusinessIndexWidgetState extends State<BusinessIndexWidget>
                       // Regional Top Stocks Section
                       const SizedBox(height: 32.0),
                       Text(
-                        'Top Stocks by African Region',
+                        'Top Partners',
                         style: FlutterFlowTheme.of(context)
                             .headlineSmall
                             .override(

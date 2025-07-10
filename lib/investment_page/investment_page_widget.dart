@@ -499,9 +499,9 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                           reservedSize: 50,
                                           interval: 25,
                                           getTitlesWidget: (value, meta) {
-                                            // Show relative scale indicators
-                                            if (value == 0)
-                                              return Text('0%',
+                                            // Show actual values using formatLargeNumber
+                                            return Text(
+                                              _formatMixedScaleValue(value),
                                                   style: TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 10));
@@ -515,7 +515,6 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                                   style: TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 10));
-                                            return Text('');
                                           },
                                         ),
                                       ),
@@ -536,6 +535,12 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
                                     lineTouchData: LineTouchData(
                                       enabled: true,
                                       touchTooltipData: LineTouchTooltipData(
+                                        //tooltipBgColor: Colors.black87,
+                                        tooltipRoundedRadius: 8,
+                                        tooltipPadding: EdgeInsets.all(8),
+                                        tooltipMargin: 16,
+                                        fitInsideHorizontally: true,
+                                        fitInsideVertically: true,
                                         getTooltipItems: (List<LineBarSpot> touchedSpots) {
                                           return touchedSpots.map((LineBarSpot touchedSpot) {
                                             final spotIndex = touchedSpot.x.toInt();
@@ -1154,6 +1159,22 @@ class _InvestmentPageWidgetState extends State<InvestmentPageWidget>
         ),
       ),
     );
+  }
+
+  String _formatMixedScaleValue(double value) {
+    if (value >= 1000) {
+      // For values in trillions (GDP)
+      return '${(value / 1000).toStringAsFixed(1)}T';
+    } else if (value >= 1) {
+      // For values in billions (FDI)
+      return '${value.toStringAsFixed(1)}B';
+    } else if (value >= 0.1) {
+      // For smaller values
+      return '${(value * 10).toStringAsFixed(1)}B';
+    } else {
+      // For very small values
+      return '${(value * 100).toStringAsFixed(0)}M';
+    }
   }
 
   Widget _buildEconomicCard(String title, String value) {
